@@ -16,13 +16,13 @@ import fr.iolabs.leaf.authentication.model.LeafAccount;
 @Component
 public class ApplicationStartup implements ApplicationListener<ApplicationReadyEvent> {
 
-    @Value("${core.firstuser.enabled}")
+    @Value("${leaf.firstuser.enabled}")
     private Boolean firstUserFeatureEnabled;
 
-    @Value("${core.firstuser.email}")
+    @Value("${leaf.firstuser.email}")
     private String firstUserEmail;
 
-    @Value("${core.firstuser.password}")
+    @Value("${leaf.firstuser.password}")
     private String firstUserPassword;
 
     @Autowired

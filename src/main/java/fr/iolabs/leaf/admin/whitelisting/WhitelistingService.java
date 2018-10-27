@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class WhitelistingService {
 
-    @Value("${core.whitelisting.enabled}")
+    @Value("${leaf.whitelisting.enabled}")
     private Boolean whitelistingFeatureEnabled;
 
     @Autowired

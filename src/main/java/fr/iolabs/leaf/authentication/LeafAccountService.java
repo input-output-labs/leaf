@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import fr.iolabs.leaf.LeafEmailService;
 import fr.iolabs.leaf.LeafContext;
-import fr.iolabs.leaf.EmailService;
 import fr.iolabs.leaf.admin.whitelisting.WhitelistingService;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.model.PasswordChanger;
@@ -31,9 +31,13 @@ public class LeafAccountService<T extends LeafAccount> {
     @Autowired
     private TokenService tokenService;
     @Autowired
-    private EmailService emailService;
+    private LeafEmailService emailService;
     @Autowired
     private TemplateEngine templateEngine;
+
+    public T me() {
+        return this.coreContext.getAccount();
+    }
 
     public String register(T account) {
         if (Strings.isBlank(account.getEmail()) || Strings.isBlank(account.getPassword())) {

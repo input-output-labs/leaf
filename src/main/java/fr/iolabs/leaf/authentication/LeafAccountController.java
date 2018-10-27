@@ -2,7 +2,6 @@ package fr.iolabs.leaf.authentication;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
-import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import fr.iolabs.leaf.LeafContext;
-import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.model.JWT;
+import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.model.PasswordChanger;
 import fr.iolabs.leaf.authentication.model.PasswordResetter;
 
@@ -41,7 +40,7 @@ public class LeafAccountController<T extends LeafAccount> {
 
     @CrossOrigin
     @RequestMapping(method = RequestMethod.GET, path = "/account/me")
-    public T getUser(HttpServletRequest request) {
+    public T getUser() {
         T me = this.coreContext.getAccount();
         me.setPassword("******");
         return me;

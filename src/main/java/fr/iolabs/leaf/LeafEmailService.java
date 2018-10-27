@@ -9,7 +9,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import fr.iolabs.leaf.errors.InternalServerErrorException;
 
 @Service
-public class EmailService {
+public class LeafEmailService {
 
     @Value("${mailgun.api.url}")
     String mailGunAPIUrl;
