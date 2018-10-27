@@ -25,7 +25,7 @@ Import the dependency:
 	<dependency>
 		<groupId>fr.io-labs</groupId>
 		<artifactId>leaf</artifactId>
-		<version>0.0.2-SNAPSHOT</version>
+		<version>0.0.3-SNAPSHOT</version>
 	</dependency>
 
 Annotate your main application class:
