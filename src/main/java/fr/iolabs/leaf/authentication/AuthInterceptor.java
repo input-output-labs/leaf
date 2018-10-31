@@ -16,7 +16,7 @@ import fr.iolabs.leaf.annotations.AdminOnly;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.errors.UnauthorizedException;
 
-public class AuthInterceptor extends HandlerInterceptorAdapter {
+public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAdapter {
 
     @Resource(name = "coreContext")
     private LeafContext coreContext;
@@ -25,19 +25,21 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
     private TokenService tokenService;
 
     @Autowired
-    private LeafAccountRepository<LeafAccount> accountRepository;
+    private LeafAccountRepository<T> accountRepository;
 
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String token = request.getHeader("Authorization");
 
         if (token != null && tokenService.isTokenValid(token)) {
             String accountId = tokenService.getUserIdFromToken(token);
-            Optional<LeafAccount> account = this.accountRepository.findById(accountId);
+            Optional<T> account = this.accountRepository.findById(accountId);
 
             if (!account.isPresent()) {
                 throw new UnauthorizedException();
             }
 
+            System.out.println(account.get().getClass().getName());
+            
             coreContext.setAccount(account.get());
         }
 
