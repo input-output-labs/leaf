@@ -39,7 +39,7 @@ public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAd
             }
 
             System.out.println(account.get().getClass().getName());
-            
+
             coreContext.setAccount(account.get());
         }
 
