@@ -38,8 +38,6 @@ public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAd
                 throw new UnauthorizedException();
             }
 
-            System.out.println(account.get().getClass().getName());
-
             coreContext.setAccount(account.get());
         }
 
