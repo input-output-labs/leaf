@@ -1,4 +1,4 @@
-package fr.iolabs.leaf.errors;
+package fr.iolabs.leaf.common.errors;
 
 public class WebException extends RuntimeException {
 	private static final long serialVersionUID = 6295151762267787645L;

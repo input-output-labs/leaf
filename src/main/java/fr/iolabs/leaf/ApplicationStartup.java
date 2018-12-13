@@ -9,9 +9,9 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
-import fr.iolabs.leaf.annotations.UseAccount;
 import fr.iolabs.leaf.authentication.LeafAccountRepository;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
+import fr.iolabs.leaf.common.annotations.UseAccount;
 
 @Component
 public class ApplicationStartup implements ApplicationListener<ApplicationReadyEvent> {

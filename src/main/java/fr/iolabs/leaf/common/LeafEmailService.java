@@ -1,4 +1,4 @@
-package fr.iolabs.leaf;
+package fr.iolabs.leaf.common;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
-import fr.iolabs.leaf.errors.InternalServerErrorException;
+import fr.iolabs.leaf.common.errors.InternalServerErrorException;
 
 @Service
 public class LeafEmailService {

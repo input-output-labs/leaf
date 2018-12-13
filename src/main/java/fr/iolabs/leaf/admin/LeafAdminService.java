@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 
 import fr.iolabs.leaf.authentication.LeafAccountRepository;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
-import fr.iolabs.leaf.errors.NotFoundException;
+import fr.iolabs.leaf.common.errors.NotFoundException;
 
 @Service
 public class LeafAdminService<T extends LeafAccount> {

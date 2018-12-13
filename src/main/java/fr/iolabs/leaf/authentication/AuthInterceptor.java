@@ -12,9 +12,9 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import fr.iolabs.leaf.LeafContext;
-import fr.iolabs.leaf.annotations.AdminOnly;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
-import fr.iolabs.leaf.errors.UnauthorizedException;
+import fr.iolabs.leaf.common.annotations.AdminOnly;
+import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
 public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAdapter {
 

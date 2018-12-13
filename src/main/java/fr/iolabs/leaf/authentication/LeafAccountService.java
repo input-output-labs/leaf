@@ -8,14 +8,14 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import fr.iolabs.leaf.LeafEmailService;
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.admin.whitelisting.WhitelistingService;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.model.PasswordChanger;
 import fr.iolabs.leaf.authentication.model.PasswordResetter;
-import fr.iolabs.leaf.errors.BadRequestException;
-import fr.iolabs.leaf.errors.UnauthorizedException;
+import fr.iolabs.leaf.common.LeafEmailService;
+import fr.iolabs.leaf.common.errors.BadRequestException;
+import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
 @Service
 public class LeafAccountService<T extends LeafAccount> {

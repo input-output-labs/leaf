@@ -1,4 +1,4 @@
-package fr.iolabs.leaf.errors;
+package fr.iolabs.leaf.common.errors;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;

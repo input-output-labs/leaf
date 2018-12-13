@@ -2,9 +2,9 @@
 
 Leaf is a **Spring based** library that offers conveniant turnkey  **Services** for Web App backends.
 The main features are:
- - [x] Account/User management
  - [x] Administration management
- - [x] Whitelisting
+ - [x] Account/User management
+ 	- [x] Whitelisting
  - [x] Email sending services
  - [ ] Content Management Service
  - [ ] Account/User notifications

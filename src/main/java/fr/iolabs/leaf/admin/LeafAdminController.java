@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import fr.iolabs.leaf.admin.whitelisting.AuthorizedEmail;
 import fr.iolabs.leaf.admin.whitelisting.WhitelistingService;
-import fr.iolabs.leaf.annotations.AdminOnly;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
+import fr.iolabs.leaf.common.annotations.AdminOnly;
 
 public class LeafAdminController<T extends LeafAccount> {
 

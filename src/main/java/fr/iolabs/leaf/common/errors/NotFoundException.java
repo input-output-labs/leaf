@@ -1,4 +1,4 @@
-package fr.iolabs.leaf.errors;
+package fr.iolabs.leaf.common.errors;
 
 public class NotFoundException extends WebException {
     private static final long serialVersionUID = 1L;
