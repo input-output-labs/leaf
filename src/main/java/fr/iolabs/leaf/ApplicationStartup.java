@@ -16,6 +16,9 @@ import fr.iolabs.leaf.common.annotations.UseAccount;
 @Component
 public class ApplicationStartup implements ApplicationListener<ApplicationReadyEvent> {
 
+    @Value("${leaf.myapp.package}")
+    private String appPackage;
+
     @Value("${leaf.firstuser.enabled}")
     private Boolean firstUserFeatureEnabled;
 
@@ -59,7 +62,7 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
     }
 
     private Class<? extends LeafAccount> scanAndFindClass() {
-        Reflections reflections = new Reflections("");
+        Reflections reflections = new Reflections(this.appPackage);
 
         Set<Class<? extends LeafAccount>> subTypes = reflections.getSubTypesOf(LeafAccount.class);
 
