@@ -11,6 +11,7 @@ public class LeafAccount {
     protected String id;
     protected String email;
     protected String password;
+    protected String username;
     protected String resetPasswordKey;
 
     protected boolean admin;
@@ -67,5 +68,13 @@ public class LeafAccount {
 
     public void setResetPasswordKey(String resetPasswordKey) {
         this.resetPasswordKey = resetPasswordKey;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }

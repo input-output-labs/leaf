@@ -121,4 +121,15 @@ public class LeafAccountService<T extends LeafAccount> {
 
         this.accountRepository.save(fetchedAccount);
     }
+
+    public T changeName(String newName) {
+        if (Strings.isBlank(newName)) {
+            throw new BadRequestException();
+        }
+
+        T me = this.coreContext.getAccount();
+        me.setUsername(newName);
+
+        return this.accountRepository.save(me);
+    }
 }
