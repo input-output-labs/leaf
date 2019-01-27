@@ -53,7 +53,7 @@ public class LeafAccountController<T extends LeafAccount> {
     }
 
     @CrossOrigin
-    @RequestMapping(method = RequestMethod.POST, path = "/account/me/name")
+    @RequestMapping(method = RequestMethod.POST, path = "/account/me/username")
     public T changeName(@RequestBody String newName) {
         return this.accountService.changeName(newName);
     }
