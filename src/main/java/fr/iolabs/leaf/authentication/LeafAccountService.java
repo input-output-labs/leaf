@@ -132,4 +132,15 @@ public class LeafAccountService<T extends LeafAccount> {
 
         return this.accountRepository.save(me);
     }
+
+    public T changeAvatarUrl(String newAvatarUrl) {
+        if (Strings.isBlank(newAvatarUrl)) {
+            throw new BadRequestException();
+        }
+
+        T me = this.coreContext.getAccount();
+        me.setAvatarUrl(newAvatarUrl);
+
+        return this.accountRepository.save(me);
+    }
 }

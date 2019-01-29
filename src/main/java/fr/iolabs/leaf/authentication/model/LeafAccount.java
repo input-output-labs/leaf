@@ -12,6 +12,7 @@ public class LeafAccount {
     protected String email;
     protected String password;
     protected String username;
+    protected String avatarUrl;
     protected String resetPasswordKey;
 
     protected boolean admin;
@@ -76,5 +77,13 @@ public class LeafAccount {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 }

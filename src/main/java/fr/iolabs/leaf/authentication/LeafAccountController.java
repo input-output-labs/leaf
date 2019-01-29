@@ -59,6 +59,12 @@ public class LeafAccountController<T extends LeafAccount> {
     }
 
     @CrossOrigin
+    @RequestMapping(method = RequestMethod.POST, path = "/account/me/avatar")
+    public T changeAvatarUrl(@RequestBody String newAvatarUrl) {
+        return this.accountService.changeAvatarUrl(newAvatarUrl);
+    }
+
+    @CrossOrigin
     @PermitAll
     @RequestMapping(method = RequestMethod.POST, path = "/account/sendresetpasswordkey")
     public ResponseEntity<Void> sendResetPasswordKey(@RequestBody String email) {
