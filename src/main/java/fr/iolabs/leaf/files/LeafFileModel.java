@@ -11,6 +11,7 @@ public class LeafFileModel {
     private byte[] file;
     private String uploaderAccountId;
     private String contentType;
+    private String url;
 
     public static LeafFileModel from(byte[] fileBytes, String contentType, String uploaderAccountId) {
         LeafFileModel file = new LeafFileModel();
@@ -62,4 +63,12 @@ public class LeafFileModel {
     public void setContentType(String contentType) {
         this.contentType = contentType;
     }
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
 }
