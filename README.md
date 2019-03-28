@@ -16,7 +16,7 @@ Import the releases repository:
  	<repositories>
 		<repository>
 		  <id>io-labs-snapshots</id>
-		  <url>https://io-labs.fr/nexus/repository/maven-snapshots/</url>
+		  <url>https://io-labs.fr/repository/maven-snapshots/</url>
 		</repository>
 	</repositories>
 
