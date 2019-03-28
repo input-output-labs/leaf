@@ -76,7 +76,7 @@
 	<distributionManagement>
 	   <snapshotRepository>
 		  <id>io-labs-snapshots</id>
-		  <url>https://io-labs.fr/repository/maven-snapshots/</url>
+		  <url>https://nexus.io-labs.fr/repository/maven-snapshots/</url>
 	   </snapshotRepository>
 	</distributionManagement>
 	
@@ -97,7 +97,7 @@
 			   </executions>
 			   <configuration>
 				  <serverId>io-labs-snapshots</serverId>
-				  <nexusUrl>https://nexus.io-labs.fr/nexus/repository/maven-snapshots/</nexusUrl>
+				  <nexusUrl>https://nexus.io-labs.fr/repository/maven-snapshots/</nexusUrl>
 				  <skipStaging>true</skipStaging>
 			   </configuration>
 			</plugin>
