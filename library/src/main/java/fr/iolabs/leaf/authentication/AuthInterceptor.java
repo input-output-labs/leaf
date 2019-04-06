@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -28,7 +29,7 @@ public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAd
     private LeafAccountRepository<T> accountRepository;
 
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        String token = request.getHeader("Authorization");
+        String token = findToken(request);
 
         if (token != null && tokenService.isTokenValid(token)) {
             String accountId = tokenService.getUserIdFromToken(token);
@@ -60,5 +61,25 @@ public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAd
             }
         }
         return true;
+    }
+
+    private String findToken(HttpServletRequest request) {
+        String token = request.getParameter("Authorization");
+
+        if (token == null) {
+            token = request.getHeader("Authorization");
+        }
+
+        if (token == null) {
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("Authorization".equals(cookie.getName())) {
+                        token = cookie.getValue();
+                    }
+                }
+            }
+        }
+        return token;
     }
 }

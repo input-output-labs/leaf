@@ -86,4 +86,20 @@ public class LeafAccount {
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
     }
+
+    public void merge(LeafAccount account) {
+        if (account.email != null) {
+            this.email = account.email;
+        }
+        if (account.username != null) {
+            this.username = account.username;
+        }
+        if (account.password != null) {
+            this.password = account.password;
+        }
+        if (account.avatarUrl != null) {
+            this.avatarUrl = account.avatarUrl;
+        }
+        this.admin = account.admin;
+    }
 }

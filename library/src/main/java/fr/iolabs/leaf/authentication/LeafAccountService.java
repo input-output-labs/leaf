@@ -1,9 +1,15 @@
 package fr.iolabs.leaf.authentication;
 
+import java.util.Set;
+
 import javax.annotation.Resource;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.logging.log4j.util.Strings;
+import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -14,11 +20,15 @@ import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.model.PasswordChanger;
 import fr.iolabs.leaf.authentication.model.PasswordResetter;
 import fr.iolabs.leaf.common.LeafEmailService;
+import fr.iolabs.leaf.common.annotations.UseAccount;
 import fr.iolabs.leaf.common.errors.BadRequestException;
 import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
 @Service
-public class LeafAccountService<T extends LeafAccount> {
+public class LeafAccountService {
+
+    @Value("${leaf.myapp.package}")
+    private String appPackage;
 
     @Resource(name = "coreContext")
     private LeafContext coreContext;
@@ -27,24 +37,26 @@ public class LeafAccountService<T extends LeafAccount> {
     private WhitelistingService whitelistingService;
 
     @Autowired
-    private LeafAccountRepository<T> accountRepository;
+    private LeafAccountRepository<LeafAccount> accountRepository;
     @Autowired
     private TokenService tokenService;
     @Autowired
     private LeafEmailService emailService;
     @Autowired
     private TemplateEngine templateEngine;
+    @Autowired
+    private HttpServletResponse response;
 
-    public T me() {
+    public LeafAccount me() {
         return this.coreContext.getAccount();
     }
 
-    public String register(T account) {
+    public String register(LeafAccount account) {
         if (Strings.isBlank(account.getEmail()) || Strings.isBlank(account.getPassword())) {
             throw new BadRequestException();
         }
 
-        T existingAccount = this.accountRepository.findAccountByEmail(account.getEmail());
+        LeafAccount existingAccount = this.accountRepository.findAccountByEmail(account.getEmail());
         if (existingAccount != null) {
             throw new BadRequestException();
         }
@@ -53,31 +65,67 @@ public class LeafAccountService<T extends LeafAccount> {
             throw new UnauthorizedException();
         }
 
-        account.hashPassword();
+        LeafAccount instanciatedAccount = instanciate();
+        instanciatedAccount.merge(account);
 
-        T savedAccount = accountRepository.save(account);
-        return tokenService.createToken(savedAccount.getId());
+        instanciatedAccount.hashPassword();
+
+        LeafAccount savedAccount = accountRepository.save(instanciatedAccount);
+        return this.createSession(savedAccount);
     }
 
-    public String login(T account) {
+    private LeafAccount instanciate() {
+        Class<? extends LeafAccount> accountClass = scanAndFindClass();
+        LeafAccount account = null;
+        try {
+            account = accountClass.newInstance();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return account;
+    }
+
+    private Class<? extends LeafAccount> scanAndFindClass() {
+        Reflections reflections = new Reflections(this.appPackage);
+
+        Set<Class<? extends LeafAccount>> subTypes = reflections.getSubTypesOf(LeafAccount.class);
+
+        for (Class<? extends LeafAccount> subType : subTypes) {
+            if (subType.isAnnotationPresent(UseAccount.class)) {
+                return subType;
+            }
+        }
+
+        return LeafAccount.class;
+    }
+
+    public String login(LeafAccount account) {
 
         account.hashPassword();
 
-        T fetchedAccount = this.accountRepository.findAccountByEmail(account.getEmail());
+        LeafAccount fetchedAccount = this.accountRepository.findAccountByEmail(account.getEmail());
         if (fetchedAccount == null || !fetchedAccount.getPassword().equals(account.getPassword())) {
             throw new UnauthorizedException();
         }
-        return tokenService.createToken(fetchedAccount.getId());
+        return this.createSession(fetchedAccount);
     }
 
-    public T changePassword(PasswordChanger passwordChanger) {
+    private String createSession(LeafAccount account) {
+        String token = tokenService.createToken(account.getId());
+        this.response.addCookie(new Cookie("Authorization", token));
+        return token;
+    }
+
+    public LeafAccount changePassword(PasswordChanger passwordChanger) {
         if (Strings.isBlank(passwordChanger.getOldPassword()) || Strings.isBlank(passwordChanger.getNewPassword())) {
             throw new BadRequestException();
         }
 
         String hashedOldPassword = PasswordHasher.hashPassword(passwordChanger.getOldPassword());
 
-        T me = this.coreContext.getAccount();
+        LeafAccount me = this.coreContext.getAccount();
         if (!me.getPassword().equals(hashedOldPassword)) {
             throw new UnauthorizedException();
         }
@@ -89,7 +137,7 @@ public class LeafAccountService<T extends LeafAccount> {
     }
 
     public void sendResetPasswordKey(String email) {
-        T fetchedAccount = this.accountRepository.findAccountByEmail(email);
+        LeafAccount fetchedAccount = this.accountRepository.findAccountByEmail(email);
         if (fetchedAccount == null) {
             throw new UnauthorizedException();
         }
@@ -109,7 +157,7 @@ public class LeafAccountService<T extends LeafAccount> {
     }
 
     public void resetPassword(PasswordResetter passwordResetter) {
-        T fetchedAccount = this.accountRepository.findAccountByResetPasswordKey(passwordResetter.getKey());
+        LeafAccount fetchedAccount = this.accountRepository.findAccountByResetPasswordKey(passwordResetter.getKey());
 
         if (fetchedAccount == null) {
             throw new UnauthorizedException();
@@ -122,23 +170,23 @@ public class LeafAccountService<T extends LeafAccount> {
         this.accountRepository.save(fetchedAccount);
     }
 
-    public T changeName(String newName) {
+    public LeafAccount changeName(String newName) {
         if (Strings.isBlank(newName)) {
             throw new BadRequestException();
         }
 
-        T me = this.coreContext.getAccount();
+        LeafAccount me = this.coreContext.getAccount();
         me.setUsername(newName);
 
         return this.accountRepository.save(me);
     }
 
-    public T changeAvatarUrl(String newAvatarUrl) {
+    public LeafAccount changeAvatarUrl(String newAvatarUrl) {
         if (Strings.isBlank(newAvatarUrl)) {
             throw new BadRequestException();
         }
 
-        T me = this.coreContext.getAccount();
+        LeafAccount me = this.coreContext.getAccount();
         me.setAvatarUrl(newAvatarUrl);
 
         return this.accountRepository.save(me);

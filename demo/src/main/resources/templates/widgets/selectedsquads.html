@@ -1,0 +1,187 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>Selected Squads</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<style>
+.container[_ngcontent-c11] {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.squad {
+	width: 25%;
+}
+
+.mat-card {
+    font-family: Graphik;
+    transition: box-shadow 280ms cubic-bezier(.4,0,.2,1);
+    display: block;
+    position: relative;
+    padding: 24px;
+    border-radius: 2px;
+    background: #fff;
+    color: rgba(0,0,0,.87);
+}
+.mat-card:not([class*=mat-elevation-z]) {
+ 
+    box-shadow: 0 3px 1px -2px rgba(0,0,0,.2), 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12);
+}
+mat-card {
+    margin: 1em;
+    background-color: #fff;
+}
+
+.mat-card-header {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.mat-card-header-text {
+    margin: 0 8px;
+}
+
+.mat-card-title {
+    font-size: 1.2em;
+    font-weight: 700;
+    display: flex;
+}
+
+.mat-card-header, .mat-card-header > div.mat-card-header-text], .mat-card-title {
+    width: 100%;
+}
+
+.mat-card-subtitle:not(:first-child), .mat-card-title:not(:first-child) {
+    margin-top: -4px;
+}
+
+.mat-card-content, .mat-card-header .mat-card-title, .mat-card-subtitle {
+    font-size: 14px;
+}
+
+.mat-card-actions, .mat-card-content, .mat-card-subtitle, .mat-card-title {
+    display: block;
+    margin-bottom: 16px;
+}
+
+.mat-card-image {
+    -o-object-fit: cover;
+    object-fit: cover;
+    height: 235px;
+    width: calc(100% + 48px);
+    margin: 0 -24px 16px -24px;
+}
+
+.mat-card-content, .mat-card-header .mat-card-title, .mat-card-subtitle {
+    font-size: 14px;
+}
+.mat-card-actions, .mat-card-content, .mat-card-subtitle, .mat-card-title {
+    display: block;
+    margin-bottom: 16px;
+}
+.mat-card-content-no-detail {
+    height: 4em;
+}
+
+p {
+    display: block;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+}
+.mat-card-content>:first-child, .mat-card>:first-child {
+    margin-top: 0;
+}
+.squad-description-no-detail {
+    overflow: hidden;
+    position: relative;
+    line-height: 1.35em;
+    max-height: 4em;
+    text-align: justify;
+    margin-right: -1em;
+    padding-right: 1em;
+}
+
+.link {
+    display: flex;
+    flex-direction: row;
+    align-content: center;
+    align-items: center;
+}
+
+.material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+}
+.mat-icon {
+    background-repeat: no-repeat;
+    display: inline-block;
+    fill: currentColor;
+    height: 24px;
+    width: 24px;
+}
+.mat-icon {
+    padding-left: .3em;
+}
+</style>
+</head>
+<body>
+	<!-- <p th:text="'Hello, world !'" />  -->
+	<div class="container">
+		<div class="squad ng-star-inserted">
+			<mat-card class="mat-card card-in-modal">
+			<mat-card-header class="ppointer mat-card-header">
+			<div class="mat-card-header-text">
+				<mat-card-title _ngcontent-c12="" class="mat-card-title">
+					<span _ngcontent-c12="">erzrzetrdhdththtrhtrfjhyj </span>
+				</mat-card-title>
+			</div>
+			</mat-card-header>
+			<img alt="squad image"
+				class="ppointer mat-card-image" mat-card-image=""
+				src="https://images.pexels.com/photos/1153213/pexels-photo-1153213.jpeg?auto=compress&amp;cs=tinysrgb&amp;h=650&amp;w=940">
+			<mat-card-content class="mat-card-content mat-card-content-detail">
+			<p class="ppointer squad-description-detail">
+				srgzergregregergerggrgerger srgzergregregergerggrgerger
+				srgzergregregergerggrgerger srgzergregregergerggrgerger</p>
+			<!---->
+			<div class="link ng-star-inserted" style="">
+				<mat-icon class="mat-icon material-icons"
+					role="img" aria-hidden="true">link</mat-icon>
+				<a target="_blank" href="http://fdfgdf.vsdfd">Visiter
+					la collection</a>
+			</div>
+			<!---->
+			<div  class="link ng-star-inserted" style="">
+				<mat-icon class="mat-icon material-icons"
+					role="img" aria-hidden="true">link</mat-icon>
+				<a target="_blank" href="http://fdfgdf.vsdfd">Accèder
+					à la microsoft team</a>
+			</div>
+			<br>
+			<!----><!---->
+			<div class="ng-star-inserted" style="">
+				<b>Followers:</b> &nbsp;
+				<!---->
+				<span class="member-item ng-star-inserted">email</span>
+				<span class="member-item ng-star-inserted">admin</span>
+			</div>
+			</mat-card-content> </mat-card>
+		</div>
+	</div>
+</body>
+</html>
