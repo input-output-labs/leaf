@@ -75,7 +75,7 @@
 							<encoding>UTF-8</encoding>
 							<resources>
 								<resource>
-									<directory>${basedir}/../front-end/dist/escape</directory>
+									<directory>${basedir}/../front-end/dist/ngleaf-app</directory>
 									<includes>
 										<include>**/*</include>
 									</includes>
