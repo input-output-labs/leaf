@@ -26,7 +26,6 @@ public class LeafFileController {
     private HttpServletRequest request;
 
     @CrossOrigin
-    @AdminOnly
     @RequestMapping(method = RequestMethod.POST)
     public LeafFileModel create(@RequestParam("file") MultipartFile file) {
         return this.fileService.store(file, request.getRequestURL());
