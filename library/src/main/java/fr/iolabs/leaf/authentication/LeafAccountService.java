@@ -1,12 +1,17 @@
 package fr.iolabs.leaf.authentication;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
+import fr.iolabs.leaf.authentication.model.*;
+import fr.iolabs.leaf.common.utils.StringHasher;
+import fr.iolabs.leaf.common.TokenService;
 import org.apache.logging.log4j.util.Strings;
+import org.apache.tomcat.jni.Local;
 import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,9 +21,6 @@ import org.thymeleaf.context.Context;
 
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.admin.whitelisting.WhitelistingService;
-import fr.iolabs.leaf.authentication.model.LeafAccount;
-import fr.iolabs.leaf.authentication.model.PasswordChanger;
-import fr.iolabs.leaf.authentication.model.PasswordResetter;
 import fr.iolabs.leaf.common.LeafEmailService;
 import fr.iolabs.leaf.common.annotations.UseAccount;
 import fr.iolabs.leaf.common.errors.BadRequestException;
@@ -113,7 +115,7 @@ public class LeafAccountService {
     }
 
     private String createSession(LeafAccount account) {
-        String token = tokenService.createToken(account.getId());
+        String token = tokenService.createSessionJWT(account.getId());
         this.response.addCookie(new Cookie("Authorization", token));
         return token;
     }
@@ -123,7 +125,7 @@ public class LeafAccountService {
             throw new BadRequestException();
         }
 
-        String hashedOldPassword = PasswordHasher.hashPassword(passwordChanger.getOldPassword());
+        String hashedOldPassword = StringHasher.hashString(passwordChanger.getOldPassword());
 
         LeafAccount me = this.coreContext.getAccount();
         if (!me.getPassword().equals(hashedOldPassword)) {
@@ -190,5 +192,38 @@ public class LeafAccountService {
         me.setAvatarUrl(newAvatarUrl);
 
         return this.accountRepository.save(me);
+    }
+
+    public JWT addPrivateToken(PrivateToken privateToken) {
+        LeafAccount me = this.coreContext.getAccount();
+
+        String secretKey = System.currentTimeMillis() + me.getEmail();
+        privateToken.setAccountId(me.getId());
+        privateToken.setSecretKey(secretKey);
+        privateToken.setCreated(LocalDate.now());
+
+        String jwt = this.tokenService.createPrivateTokenJWT(privateToken);
+
+        privateToken.setSecretKey(StringHasher.hashString(privateToken.getSecretKey()));
+
+        me.getPrivateTokens().add(privateToken);
+
+        this.accountRepository.save(me);
+
+        return new JWT(jwt);
+    }
+
+    public LeafAccount revokePrivateToken(String name) {
+        LeafAccount me = this.coreContext.getAccount();
+        PrivateToken tokenToRevoke = null;
+        for(PrivateToken token : me.getPrivateTokens()) {
+            if(name.equals(token.getName())) {
+                tokenToRevoke = token;
+                break;
+            }
+        }
+        me.getPrivateTokens().remove(tokenToRevoke);
+        this.accountRepository.save(me);
+        return me;
     }
 }

@@ -8,6 +8,9 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import fr.iolabs.leaf.authentication.model.PrivateToken;
+import fr.iolabs.leaf.common.TokenService;
+import fr.iolabs.leaf.common.utils.StringHasher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
@@ -29,18 +32,7 @@ public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAd
     private LeafAccountRepository<T> accountRepository;
 
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        String token = findToken(request);
-
-        if (token != null && tokenService.isTokenValid(token)) {
-            String accountId = tokenService.getUserIdFromToken(token);
-            Optional<T> account = this.accountRepository.findById(accountId);
-
-            if (!account.isPresent()) {
-                throw new UnauthorizedException();
-            }
-
-            coreContext.setAccount(account.get());
-        }
+        this.findConnectedAccount(request);
 
         if (handler instanceof HandlerMethod) {
             HandlerMethod method = (HandlerMethod) handler;
@@ -61,6 +53,33 @@ public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAd
             }
         }
         return true;
+    }
+
+    private void findConnectedAccount(HttpServletRequest request) {
+        String token = findToken(request);
+
+        if (token != null && !token.isEmpty()) {
+            String accountId = tokenService.getAccountIdFromJWT(token);
+            if (accountId == null) {
+                throw new UnauthorizedException();
+            }
+            Optional<T> account = this.accountRepository.findById(accountId);
+            if (!account.isPresent()) {
+                throw new UnauthorizedException();
+            }
+
+            if(tokenService.isPrivateTokenJWT(token)) {
+                PrivateToken privateToken = tokenService.getPrivateTokenFromPrivateTokenJWT(token);
+                String hashSecretKey = StringHasher.hashString(privateToken.getSecretKey());
+                boolean oneAccountTokenIsMatching = account.get().getPrivateTokens().stream().anyMatch(aToken -> hashSecretKey.equals(aToken.getSecretKey()));
+
+                if (!oneAccountTokenIsMatching) {
+                    throw new UnauthorizedException();
+                }
+            }
+
+            coreContext.setAccount(account.get());
+        }
     }
 
     private String findToken(HttpServletRequest request) {

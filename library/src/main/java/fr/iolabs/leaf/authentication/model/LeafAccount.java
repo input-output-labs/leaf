@@ -1,28 +1,36 @@
 package fr.iolabs.leaf.authentication.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import fr.iolabs.leaf.authentication.PasswordHasher;
+import fr.iolabs.leaf.common.utils.StringHasher;
+
+import java.util.Set;
+import java.util.HashSet;
 
 @Document(collection = "account")
 public class LeafAccount {
     @Id
     protected String id;
     protected String email;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     protected String password;
     protected String username;
     protected String avatarUrl;
     protected String resetPasswordKey;
+    protected Set<PrivateToken> privateTokens;
 
     protected boolean admin;
 
     public LeafAccount() {
         this.admin = false;
+        this.privateTokens = new HashSet<>();
     }
 
     public void hashPassword() {
-        this.password = PasswordHasher.hashPassword(this.password);
+        this.password = StringHasher.hashString(this.password);
     }
 
     public String getId() {
@@ -59,7 +67,7 @@ public class LeafAccount {
 
     public void generateResetPasswordKey() {
         String key = System.currentTimeMillis() + this.email;
-        String shortHashKey = PasswordHasher.hashPassword(key).substring(0, 8);
+        String shortHashKey = StringHasher.hashString(key).substring(0, 8);
         this.resetPasswordKey = shortHashKey;
     }
 
@@ -87,6 +95,14 @@ public class LeafAccount {
         this.avatarUrl = avatarUrl;
     }
 
+    public Set<PrivateToken> getPrivateTokens() {
+        return privateTokens;
+    }
+
+    public void setPrivateTokens(Set<PrivateToken> privateTokens) {
+        this.privateTokens = privateTokens;
+    }
+
     public void merge(LeafAccount account) {
         if (account.email != null) {
             this.email = account.email;
@@ -101,5 +117,11 @@ public class LeafAccount {
             this.avatarUrl = account.avatarUrl;
         }
         this.admin = account.admin;
+    }
+
+    public LeafAccount obstrufy() {
+       this.password = null;
+       this.privateTokens.forEach(token -> token.setSecretKey(null));
+       return this;
     }
 }
