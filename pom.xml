@@ -10,8 +10,22 @@
   <name>Leaf Aggregator</name>
   <packaging>pom</packaging>
 
+  <properties>
+    <sonar.host.url>https://sonarqube.io-labs.fr</sonar.host.url>
+  </properties>
+
   <modules>
     <module>library</module>
     <module>demo</module>
   </modules>
+
+  <build>
+    <plugins>
+        <plugin>
+            <groupId>org.sonarsource.scanner.maven</groupId>
+            <artifactId>sonar-maven-plugin</artifactId>
+            <version>3.6.0.1398</version>
+        </plugin>
+    </plugins>
+</build>
 </project>

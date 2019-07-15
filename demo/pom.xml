@@ -12,7 +12,7 @@
 
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf-demo</artifactId>
-	<version>0.0.10-SNAPSHOT</version>
+	<version>0.0.11-SNAPSHOT</version>
 	<name>Leaf - demo</name>
 
 	<properties>
@@ -37,6 +37,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+		</dependency>
+		<!-- Spring devtools dependencies -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<optional>true</optional>
 		</dependency>
 		
 		<!-- Leaf dependencies -->
