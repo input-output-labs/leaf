@@ -15,19 +15,20 @@ import fr.iolabs.leaf.authentication.AuthInterceptor;
 @Configuration
 public class LeafConfig extends WebMvcConfigurerAdapter {
 
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(this.authInterceptor()).addPathPatterns("/api/**");
-    }
+	@Override
+	public void addInterceptors(InterceptorRegistry registry) {
+		registry.addInterceptor(this.authInterceptor()).addPathPatterns("/api/**")
+				.excludePathPatterns("/api/account/login").excludePathPatterns("/api/account/register");
+	}
 
-    @Bean
-    public AuthInterceptor authInterceptor() {
-        return new AuthInterceptor();
-    }
+	@Bean
+	public AuthInterceptor authInterceptor() {
+		return new AuthInterceptor();
+	}
 
-    @Bean
-    @Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
-    public LeafContext coreContext() {
-        return new LeafContext();
-    }
+	@Bean
+	@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
+	public LeafContext coreContext() {
+		return new LeafContext();
+	}
 }

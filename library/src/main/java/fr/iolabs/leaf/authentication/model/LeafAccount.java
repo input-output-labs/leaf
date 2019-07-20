@@ -21,12 +21,15 @@ public class LeafAccount {
     protected String avatarUrl;
     protected String resetPasswordKey;
     protected Set<PrivateToken> privateTokens;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    protected Set<String> hashedSessionTokens;
 
-    protected boolean admin;
+	protected boolean admin;
 
     public LeafAccount() {
         this.admin = false;
         this.privateTokens = new HashSet<>();
+        this.hashedSessionTokens = new HashSet<>();
     }
 
     public void hashPassword() {
@@ -103,6 +106,14 @@ public class LeafAccount {
         this.privateTokens = privateTokens;
     }
 
+    public Set<String> getHashedSessionTokens() {
+		return hashedSessionTokens;
+	}
+
+	public void setHashedSessionTokens(Set<String> hashedSessionTokens) {
+		this.hashedSessionTokens = hashedSessionTokens;
+	}
+
     public void merge(LeafAccount account) {
         if (account.email != null) {
             this.email = account.email;
@@ -122,6 +133,7 @@ public class LeafAccount {
     public LeafAccount obstrufy() {
        this.password = null;
        this.privateTokens.forEach(token -> token.setSecretKey(null));
+       this.hashedSessionTokens = null;
        return this;
     }
 }

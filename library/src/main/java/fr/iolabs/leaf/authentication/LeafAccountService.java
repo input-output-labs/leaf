@@ -1,5 +1,6 @@
 package fr.iolabs.leaf.authentication;
 
+import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -11,7 +12,6 @@ import fr.iolabs.leaf.authentication.model.*;
 import fr.iolabs.leaf.common.utils.StringHasher;
 import fr.iolabs.leaf.common.TokenService;
 import org.apache.logging.log4j.util.Strings;
-import org.apache.tomcat.jni.Local;
 import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,201 +29,224 @@ import fr.iolabs.leaf.common.errors.UnauthorizedException;
 @Service
 public class LeafAccountService {
 
-    @Value("${leaf.myapp.package}")
-    private String appPackage;
+	@Value("${leaf.myapp.package}")
+	private String appPackage;
 
-    @Resource(name = "coreContext")
-    private LeafContext coreContext;
+	@Resource(name = "coreContext")
+	private LeafContext coreContext;
 
-    @Autowired
-    private WhitelistingService whitelistingService;
+	@Autowired
+	private WhitelistingService whitelistingService;
 
-    @Autowired
-    private LeafAccountRepository<LeafAccount> accountRepository;
-    @Autowired
-    private TokenService tokenService;
-    @Autowired
-    private LeafEmailService emailService;
-    @Autowired
-    private TemplateEngine templateEngine;
-    @Autowired
-    private HttpServletResponse response;
+	@Autowired
+	private LeafAccountRepository<LeafAccount> accountRepository;
+	@Autowired
+	private TokenService tokenService;
+	@Autowired
+	private LeafEmailService emailService;
+	@Autowired
+	private TemplateEngine templateEngine;
+	@Autowired
+	private HttpServletResponse response;
 
-    public LeafAccount me() {
-        return this.coreContext.getAccount();
-    }
+	public LeafAccount me() {
+		return this.coreContext.getAccount();
+	}
 
-    public String register(LeafAccount account) {
-        if (Strings.isBlank(account.getEmail()) || Strings.isBlank(account.getPassword())) {
-            throw new BadRequestException();
-        }
+	public String registerAndLogin(LeafAccount account) {
+		LeafAccount registeredAccount = this.register(account);
 
-        LeafAccount existingAccount = this.accountRepository.findAccountByEmail(account.getEmail());
-        if (existingAccount != null) {
-            throw new BadRequestException();
-        }
+		String sessionToken = this.createSession(registeredAccount);
+		
+		// Re-save account to register newly created session
+		accountRepository.save(registeredAccount);
 
-        if (this.whitelistingService.enabled() && this.whitelistingService.isEmailAllowed(account.getEmail())) {
-            throw new UnauthorizedException();
-        }
+		return sessionToken;
+	}
 
-        LeafAccount instanciatedAccount = instanciate();
-        instanciatedAccount.merge(account);
+	public LeafAccount register(LeafAccount account) {
+		if (Strings.isBlank(account.getEmail()) || Strings.isBlank(account.getPassword())) {
+			throw new BadRequestException();
+		}
 
-        instanciatedAccount.hashPassword();
+		LeafAccount existingAccount = this.accountRepository.findAccountByEmail(account.getEmail());
+		if (existingAccount != null) {
+			throw new BadRequestException();
+		}
 
-        LeafAccount savedAccount = accountRepository.save(instanciatedAccount);
-        return this.createSession(savedAccount);
-    }
+		if (this.whitelistingService.enabled() && this.whitelistingService.isEmailAllowed(account.getEmail())) {
+			throw new UnauthorizedException();
+		}
 
-    private LeafAccount instanciate() {
-        Class<? extends LeafAccount> accountClass = scanAndFindClass();
-        LeafAccount account = null;
-        try {
-            account = accountClass.newInstance();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return account;
-    }
+		LeafAccount instanciatedAccount = instanciate();
+		instanciatedAccount.merge(account);
+		if(Strings.isBlank(instanciatedAccount.getUsername())) {
+			instanciatedAccount.setUsername(instanciatedAccount.getEmail());
+		}
 
-    private Class<? extends LeafAccount> scanAndFindClass() {
-        Reflections reflections = new Reflections(this.appPackage);
+		instanciatedAccount.hashPassword();
 
-        Set<Class<? extends LeafAccount>> subTypes = reflections.getSubTypesOf(LeafAccount.class);
+		return accountRepository.save(instanciatedAccount);
+	}
 
-        for (Class<? extends LeafAccount> subType : subTypes) {
-            if (subType.isAnnotationPresent(UseAccount.class)) {
-                return subType;
-            }
-        }
+	private LeafAccount instanciate() {
+		Class<? extends LeafAccount> accountClass = scanAndFindClass();
+		LeafAccount account = null;
+		try {
+			account = accountClass.getConstructor().newInstance();
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		}
+		return account;
+	}
 
-        return LeafAccount.class;
-    }
+	private Class<? extends LeafAccount> scanAndFindClass() {
+		Reflections reflections = new Reflections(this.appPackage);
+		
+		Set<Class<? extends LeafAccount>> subTypes = reflections.getSubTypesOf(LeafAccount.class);
 
-    public String login(LeafAccount account) {
+		for (Class<? extends LeafAccount> subType : subTypes) {
+			if (subType.isAnnotationPresent(UseAccount.class)) {
+				return subType;
+			}
+		}
 
-        account.hashPassword();
+		return LeafAccount.class;
+	}
 
-        LeafAccount fetchedAccount = this.accountRepository.findAccountByEmail(account.getEmail());
-        if (fetchedAccount == null || !fetchedAccount.getPassword().equals(account.getPassword())) {
-            throw new UnauthorizedException();
-        }
-        return this.createSession(fetchedAccount);
-    }
+	public String login(LeafAccount account) {
+		account.hashPassword();
 
-    private String createSession(LeafAccount account) {
-        String token = tokenService.createSessionJWT(account.getId());
-        this.response.addCookie(new Cookie("Authorization", token));
-        return token;
-    }
+		LeafAccount fetchedAccount = this.accountRepository.findAccountByEmail(account.getEmail());
+		if (fetchedAccount == null || !fetchedAccount.getPassword().equals(account.getPassword())) {
+			throw new UnauthorizedException();
+		}
 
-    public LeafAccount changePassword(PasswordChanger passwordChanger) {
-        if (Strings.isBlank(passwordChanger.getOldPassword()) || Strings.isBlank(passwordChanger.getNewPassword())) {
-            throw new BadRequestException();
-        }
+		String sessionToken = this.createSession(fetchedAccount);
+		this.accountRepository.save(fetchedAccount);
+		return sessionToken;
+	}
 
-        String hashedOldPassword = StringHasher.hashString(passwordChanger.getOldPassword());
+	private String createSession(LeafAccount account) {
+		String token = tokenService.createSessionJWT(account.getId());
+		account.getHashedSessionTokens().add(StringHasher.hashString(token));
+		
+		this.response.addCookie(new Cookie("Authorization", token));
+		return token;
+	}
 
-        LeafAccount me = this.coreContext.getAccount();
-        if (!me.getPassword().equals(hashedOldPassword)) {
-            throw new UnauthorizedException();
-        }
+	public LeafAccount changePassword(PasswordChanger passwordChanger) {
+		if (Strings.isBlank(passwordChanger.getOldPassword()) || Strings.isBlank(passwordChanger.getNewPassword())) {
+			throw new BadRequestException();
+		}
 
-        me.setPassword(passwordChanger.getNewPassword());
-        me.hashPassword();
+		String hashedOldPassword = StringHasher.hashString(passwordChanger.getOldPassword());
 
-        return this.accountRepository.save(me);
-    }
+		LeafAccount me = this.coreContext.getAccount();
+		if (!me.getPassword().equals(hashedOldPassword)) {
+			throw new UnauthorizedException();
+		}
 
-    public void sendResetPasswordKey(String email) {
-        LeafAccount fetchedAccount = this.accountRepository.findAccountByEmail(email);
-        if (fetchedAccount == null) {
-            throw new UnauthorizedException();
-        }
+		me.setPassword(passwordChanger.getNewPassword());
+		me.hashPassword();
 
-        fetchedAccount.generateResetPasswordKey();
+		return this.accountRepository.save(me);
+	}
 
-        this.accountRepository.save(fetchedAccount);
+	public void sendResetPasswordKey(String email) {
+		LeafAccount fetchedAccount = this.accountRepository.findAccountByEmail(email);
+		if (fetchedAccount == null) {
+			throw new UnauthorizedException();
+		}
 
-        Context context = new Context();
-        context.setVariable("resetPasswordKey", fetchedAccount.getResetPasswordKey());
-        String html = templateEngine.process("emailSendPasswordResetKey", context);
+		fetchedAccount.generateResetPasswordKey();
 
-        this.emailService.sendEmail(fetchedAccount.getEmail(),
-                "Votre clé de re-initialisation de mot de passe.",
-                "Clé de re-initialisation : " + fetchedAccount.getResetPasswordKey(),
-                html);
-    }
+		this.accountRepository.save(fetchedAccount);
 
-    public void resetPassword(PasswordResetter passwordResetter) {
-        LeafAccount fetchedAccount = this.accountRepository.findAccountByResetPasswordKey(passwordResetter.getKey());
+		Context context = new Context();
+		context.setVariable("resetPasswordKey", fetchedAccount.getResetPasswordKey());
+		String html = templateEngine.process("emailSendPasswordResetKey", context);
 
-        if (fetchedAccount == null) {
-            throw new UnauthorizedException();
-        }
+		this.emailService.sendEmail(fetchedAccount.getEmail(), "Votre clé de re-initialisation de mot de passe.",
+				"Clé de re-initialisation : " + fetchedAccount.getResetPasswordKey(), html);
+	}
 
-        fetchedAccount.setPassword(passwordResetter.getPassword());
-        fetchedAccount.setResetPasswordKey(null);
-        fetchedAccount.hashPassword();
+	public void resetPassword(PasswordResetter passwordResetter) {
+		LeafAccount fetchedAccount = this.accountRepository.findAccountByResetPasswordKey(passwordResetter.getKey());
 
-        this.accountRepository.save(fetchedAccount);
-    }
+		if (fetchedAccount == null) {
+			throw new UnauthorizedException();
+		}
 
-    public LeafAccount changeName(String newName) {
-        if (Strings.isBlank(newName)) {
-            throw new BadRequestException();
-        }
+		fetchedAccount.setPassword(passwordResetter.getPassword());
+		fetchedAccount.setResetPasswordKey(null);
+		fetchedAccount.hashPassword();
 
-        LeafAccount me = this.coreContext.getAccount();
-        me.setUsername(newName);
+		this.accountRepository.save(fetchedAccount);
+	}
 
-        return this.accountRepository.save(me);
-    }
+	public LeafAccount changeName(String newName) {
+		if (Strings.isBlank(newName)) {
+			throw new BadRequestException();
+		}
 
-    public LeafAccount changeAvatarUrl(String newAvatarUrl) {
-        if (Strings.isBlank(newAvatarUrl)) {
-            throw new BadRequestException();
-        }
+		LeafAccount me = this.coreContext.getAccount();
+		me.setUsername(newName);
 
-        LeafAccount me = this.coreContext.getAccount();
-        me.setAvatarUrl(newAvatarUrl);
+		return this.accountRepository.save(me);
+	}
 
-        return this.accountRepository.save(me);
-    }
+	public LeafAccount changeAvatarUrl(String newAvatarUrl) {
+		if (Strings.isBlank(newAvatarUrl)) {
+			throw new BadRequestException();
+		}
 
-    public JWT addPrivateToken(PrivateToken privateToken) {
-        LeafAccount me = this.coreContext.getAccount();
+		LeafAccount me = this.coreContext.getAccount();
+		me.setAvatarUrl(newAvatarUrl);
 
-        String secretKey = System.currentTimeMillis() + me.getEmail();
-        privateToken.setAccountId(me.getId());
-        privateToken.setSecretKey(secretKey);
-        privateToken.setCreated(LocalDate.now());
+		return this.accountRepository.save(me);
+	}
 
-        String jwt = this.tokenService.createPrivateTokenJWT(privateToken);
+	public JWT addPrivateToken(PrivateToken privateToken) {
+		LeafAccount me = this.coreContext.getAccount();
 
-        privateToken.setSecretKey(StringHasher.hashString(privateToken.getSecretKey()));
+		String secretKey = StringHasher.hashString(System.currentTimeMillis() + me.getEmail());
+		privateToken.setAccountId(me.getId());
+		privateToken.setSecretKey(secretKey);
+		privateToken.setCreated(LocalDate.now());
 
-        me.getPrivateTokens().add(privateToken);
+		String jwt = this.tokenService.createPrivateTokenJWT(privateToken);
 
-        this.accountRepository.save(me);
+		privateToken.setSecretKey(StringHasher.hashString(privateToken.getSecretKey()));
 
-        return new JWT(jwt);
-    }
+		me.getPrivateTokens().add(privateToken);
 
-    public LeafAccount revokePrivateToken(String name) {
-        LeafAccount me = this.coreContext.getAccount();
-        PrivateToken tokenToRevoke = null;
-        for(PrivateToken token : me.getPrivateTokens()) {
-            if(name.equals(token.getName())) {
-                tokenToRevoke = token;
-                break;
-            }
-        }
-        me.getPrivateTokens().remove(tokenToRevoke);
-        this.accountRepository.save(me);
-        return me;
-    }
+		this.accountRepository.save(me);
+
+		return new JWT(jwt);
+	}
+
+	public LeafAccount revokePrivateToken(String name) {
+		LeafAccount me = this.coreContext.getAccount();
+		PrivateToken tokenToRevoke = null;
+		for (PrivateToken token : me.getPrivateTokens()) {
+			if (name.equals(token.getName())) {
+				tokenToRevoke = token;
+				break;
+			}
+		}
+		me.getPrivateTokens().remove(tokenToRevoke);
+		this.accountRepository.save(me);
+		return me;
+	}
 }

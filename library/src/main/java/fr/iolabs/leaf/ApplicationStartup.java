@@ -37,6 +37,7 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
             if (existingFirstUser == null) {
                 LeafAccount firstUser = new LeafAccount();
                 firstUser.setEmail(this.firstUserEmail);
+                firstUser.setUsername(this.firstUserEmail);
                 firstUser.setPassword(this.firstUserPassword);
                 firstUser.setAdmin(true);
 

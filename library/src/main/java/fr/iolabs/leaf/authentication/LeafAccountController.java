@@ -24,7 +24,7 @@ public class LeafAccountController {
     @PermitAll
     @RequestMapping(method = RequestMethod.POST)
     public JWT regiterUser(@RequestBody LeafAccount account) {
-        return new JWT(this.accountService.register(account));
+        return new JWT(this.accountService.registerAndLogin(account));
     }
 
     @CrossOrigin

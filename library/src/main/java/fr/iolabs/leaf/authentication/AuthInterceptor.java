@@ -22,83 +22,92 @@ import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
 public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAdapter {
 
-    @Resource(name = "coreContext")
-    private LeafContext coreContext;
+	@Resource(name = "coreContext")
+	private LeafContext coreContext;
 
-    @Autowired
-    private TokenService tokenService;
+	@Autowired
+	private TokenService tokenService;
 
-    @Autowired
-    private LeafAccountRepository<T> accountRepository;
+	@Autowired
+	private LeafAccountRepository<T> accountRepository;
 
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        this.findConnectedAccount(request);
+	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+		this.findConnectedAccount(request);
 
-        if (handler instanceof HandlerMethod) {
-            HandlerMethod method = (HandlerMethod) handler;
+		if (handler instanceof HandlerMethod) {
+			HandlerMethod method = (HandlerMethod) handler;
 
-            boolean permitAll = method.hasMethodAnnotation(PermitAll.class);
-            boolean adminOnly = method.hasMethodAnnotation(AdminOnly.class);
+			boolean permitAll = method.hasMethodAnnotation(PermitAll.class);
+			boolean adminOnly = method.hasMethodAnnotation(AdminOnly.class);
 
-            if (!permitAll) {
-                boolean connected = this.coreContext.getAccount() != null;
-                if (!connected) {
-                    throw new UnauthorizedException();
-                }
+			if (!permitAll) {
+				boolean connected = this.coreContext.getAccount() != null;
+				if (!connected) {
+					throw new UnauthorizedException();
+				}
 
-                boolean isAdmin = this.coreContext.getAccount().isAdmin();
-                if (adminOnly && !isAdmin) {
-                    throw new UnauthorizedException();
-                }
-            }
-        }
-        return true;
-    }
+				boolean isAdmin = this.coreContext.getAccount().isAdmin();
+				if (adminOnly && !isAdmin) {
+					throw new UnauthorizedException();
+				}
+			}
+		}
+		return true;
+	}
 
-    private void findConnectedAccount(HttpServletRequest request) {
-        String token = findToken(request);
+	private void findConnectedAccount(HttpServletRequest request) {
+		String token = findToken(request);
 
-        if (token != null && !token.isEmpty()) {
-            String accountId = tokenService.getAccountIdFromJWT(token);
-            if (accountId == null) {
-                throw new UnauthorizedException();
-            }
-            Optional<T> account = this.accountRepository.findById(accountId);
-            if (!account.isPresent()) {
-                throw new UnauthorizedException();
-            }
+		if (token != null && !token.isEmpty()) {
+			String accountId = tokenService.getAccountIdFromJWT(token);
+			if (accountId == null) {
+				throw new UnauthorizedException();
+			}
+			Optional<T> account = this.accountRepository.findById(accountId);
+			if (!account.isPresent()) {
+				throw new UnauthorizedException();
+			}
 
-            if(tokenService.isPrivateTokenJWT(token)) {
-                PrivateToken privateToken = tokenService.getPrivateTokenFromPrivateTokenJWT(token);
-                String hashSecretKey = StringHasher.hashString(privateToken.getSecretKey());
-                boolean oneAccountTokenIsMatching = account.get().getPrivateTokens().stream().anyMatch(aToken -> hashSecretKey.equals(aToken.getSecretKey()));
+			if (tokenService.isSessionJWT(token)) {
+				String hashedToken = StringHasher.hashString(token);
+				boolean oneSessionTokenIsMatching = account.get().getHashedSessionTokens().stream()
+						.anyMatch(aToken -> hashedToken.equals(aToken));
 
-                if (!oneAccountTokenIsMatching) {
-                    throw new UnauthorizedException();
-                }
-            }
+				if (!oneSessionTokenIsMatching) {
+					throw new UnauthorizedException();
+				}
+			} else if (tokenService.isPrivateTokenJWT(token)) {
+				PrivateToken privateToken = tokenService.getPrivateTokenFromPrivateTokenJWT(token);
+				String hashSecretKey = StringHasher.hashString(privateToken.getSecretKey());
+				boolean oneAccountTokenIsMatching = account.get().getPrivateTokens().stream()
+						.anyMatch(aToken -> hashSecretKey.equals(aToken.getSecretKey()));
 
-            coreContext.setAccount(account.get());
-        }
-    }
+				if (!oneAccountTokenIsMatching) {
+					throw new UnauthorizedException();
+				}
+			}
 
-    private String findToken(HttpServletRequest request) {
-        String token = request.getParameter("Authorization");
+			coreContext.setAccount(account.get());
+		}
+	}
 
-        if (token == null) {
-            token = request.getHeader("Authorization");
-        }
+	private String findToken(HttpServletRequest request) {
+		String token = request.getParameter("Authorization");
 
-        if (token == null) {
-            Cookie[] cookies = request.getCookies();
-            if (cookies != null) {
-                for (Cookie cookie : cookies) {
-                    if ("Authorization".equals(cookie.getName())) {
-                        token = cookie.getValue();
-                    }
-                }
-            }
-        }
-        return token;
-    }
+		if (token == null) {
+			token = request.getHeader("Authorization");
+		}
+
+		if (token == null) {
+			Cookie[] cookies = request.getCookies();
+			if (cookies != null) {
+				for (Cookie cookie : cookies) {
+					if ("Authorization".equals(cookie.getName())) {
+						token = cookie.getValue();
+					}
+				}
+			}
+		}
+		return token;
+	}
 }
