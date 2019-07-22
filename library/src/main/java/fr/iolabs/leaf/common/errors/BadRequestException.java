@@ -8,6 +8,6 @@ public class BadRequestException extends WebException {
     }
 
     public BadRequestException(String message) {
-        super(400, "Bad request" + message != null ? " - " + message : "");
+        super(400, "Bad request" + (message != null ? " - " + message : ""));
     }
 }

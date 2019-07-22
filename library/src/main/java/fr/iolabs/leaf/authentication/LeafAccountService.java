@@ -1,6 +1,5 @@
 package fr.iolabs.leaf.authentication;
 
-import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -13,6 +12,8 @@ import fr.iolabs.leaf.common.utils.StringHasher;
 import fr.iolabs.leaf.common.TokenService;
 import org.apache.logging.log4j.util.Strings;
 import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -24,10 +25,13 @@ import fr.iolabs.leaf.admin.whitelisting.WhitelistingService;
 import fr.iolabs.leaf.common.LeafEmailService;
 import fr.iolabs.leaf.common.annotations.UseAccount;
 import fr.iolabs.leaf.common.errors.BadRequestException;
+import fr.iolabs.leaf.common.errors.InternalServerErrorException;
 import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
 @Service
 public class LeafAccountService {
+	
+	private static Logger logger = LoggerFactory.getLogger(LeafAccountService.class);
 
 	@Value("${leaf.myapp.package}")
 	private String appPackage;
@@ -94,18 +98,9 @@ public class LeafAccountService {
 		LeafAccount account = null;
 		try {
 			account = accountClass.getConstructor().newInstance();
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			e.printStackTrace();
+		} catch (ReflectiveOperationException | SecurityException e) {
+			logger.error(e.getMessage());
+			throw new InternalServerErrorException();
 		}
 		return account;
 	}
@@ -141,7 +136,10 @@ public class LeafAccountService {
 		String token = tokenService.createSessionJWT(account.getId());
 		account.getHashedSessionTokens().add(StringHasher.hashString(token));
 		
-		this.response.addCookie(new Cookie("Authorization", token));
+		Cookie cookie = new Cookie("Authorization", token);
+		cookie.setHttpOnly(true);
+		cookie.setSecure(true);
+		this.response.addCookie(cookie);
 		return token;
 	}
 

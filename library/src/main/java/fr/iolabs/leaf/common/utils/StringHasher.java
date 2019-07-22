@@ -3,9 +3,19 @@ package fr.iolabs.leaf.common.utils;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class StringHasher {
-    private static final String SALT = "EUtebITLAE2vGdqE7ZRaamPBpWj1tANt";
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+public class StringHasher {
+	
+	private static Logger logger = LoggerFactory.getLogger(StringHasher.class);
+	
+    private static final String SALT = "EUtebITLAE2vGdqE7ZRaamPBpWj1tANt";
+    
+    private StringHasher() {
+    	throw new IllegalStateException("Utility class");
+    }
+    
     public static String hashString(String input) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-512");
@@ -17,7 +27,7 @@ public class StringHasher {
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+			logger.error(e.getMessage());
         }
         return null;
     }

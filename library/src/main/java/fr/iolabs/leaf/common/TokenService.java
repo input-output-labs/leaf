@@ -9,7 +9,11 @@ import java.util.Map;
 
 import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.interfaces.Claim;
+
 import fr.iolabs.leaf.authentication.model.PrivateToken;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.auth0.jwt.JWT;
@@ -21,6 +25,24 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 
 @Service
 public class TokenService {
+	
+	private static final String SESSION = "session";
+
+	private static final String PRIVATETOKEN2 = "privatetoken";
+
+	private static final String SECRET = "secret";
+
+	private static final String EXPIRATION = "expiration";
+
+	private static final String NAME = "name";
+
+	private static final String TYPE = "type";
+
+	private static final String CREATED_AT = "createdAt";
+
+	private static final String ACCOUNT_ID = "accountId";
+
+	private static Logger logger = LoggerFactory.getLogger(TokenService.class);
 
 	private static final String TOKEN_SECRET = "s4T2zOIWHMM1sxq";
 
@@ -28,35 +50,35 @@ public class TokenService {
 
 	public String createSessionJWT(String userId) {
 		Map<String, String> claims = new HashMap<>();
-		claims.put("accountId", userId);
-		claims.put("createdAt", new Date().toString());
-		claims.put("type", "session");
+		claims.put(ACCOUNT_ID, userId);
+		claims.put(CREATED_AT, new Date().toString());
+		claims.put(TYPE, SESSION);
 		return this.createJWTFromClaims(claims);
 	}
 
 	public boolean isSessionJWT(String token) {
-		return "session".equals(this.getTypeFromJWT(token));
+		return SESSION.equals(this.getTypeFromJWT(token));
 	}
 
 	public String createPrivateTokenJWT(PrivateToken privateToken) {
 		Map<String, String> claims = new HashMap<>();
-		claims.put("name", privateToken.getName());
-		claims.put("accountId", privateToken.getAccountId());
-		claims.put("expiration", privateToken.getExpiration() != null ? privateToken.getExpiration().format(DateTimeFormatter.ofPattern(JWT_DATE_FORMAT)) : null);
-		claims.put("secret", privateToken.getSecretKey());
-		claims.put("type", "privatetoken");
+		claims.put(NAME, privateToken.getName());
+		claims.put(ACCOUNT_ID, privateToken.getAccountId());
+		claims.put(EXPIRATION, privateToken.getExpiration() != null ? privateToken.getExpiration().format(DateTimeFormatter.ofPattern(JWT_DATE_FORMAT)) : null);
+		claims.put(SECRET, privateToken.getSecretKey());
+		claims.put(TYPE, PRIVATETOKEN2);
 		return this.createJWTFromClaims(claims);
 	}
 
 	public boolean isPrivateTokenJWT(String token) {
-		return "privatetoken".equals(this.getTypeFromJWT(token));
+		return PRIVATETOKEN2.equals(this.getTypeFromJWT(token));
 	}
 
 	public PrivateToken getPrivateTokenFromPrivateTokenJWT(String token) {
-		String name = this.getClaimsFromJWT(token).get("name");
-		String account = this.getClaimsFromJWT(token).get("accountId");
-		String expirationAsString = this.getClaimsFromJWT(token).get("expiration");
-		String secret = this.getClaimsFromJWT(token).get("secret");
+		String name = this.getClaimsFromJWT(token).get(NAME);
+		String account = this.getClaimsFromJWT(token).get(ACCOUNT_ID);
+		String expirationAsString = this.getClaimsFromJWT(token).get(EXPIRATION);
+		String secret = this.getClaimsFromJWT(token).get(SECRET);
 
 		LocalDate expiration = expirationAsString != null ? LocalDate.parse(expirationAsString, DateTimeFormatter.ofPattern(JWT_DATE_FORMAT)) : null;
 
@@ -74,12 +96,8 @@ public class TokenService {
 				token.withClaim(claim.getKey(), claim.getValue());
 			}
 			return token.sign(algorithm);
-		} catch (UnsupportedEncodingException exception) {
-			exception.printStackTrace();
-			// log WRONG Encoding message
-		} catch (JWTCreationException exception) {
-			exception.printStackTrace();
-			// log Token Signing Failed
+		} catch (UnsupportedEncodingException | JWTCreationException exception) {
+			logger.error(exception.getMessage());
 		}
 		return null;
 	}
@@ -93,19 +111,17 @@ public class TokenService {
 			for(Map.Entry<String, Claim> claim: jwt.getClaims().entrySet()) {
 				claims.put(claim.getKey(), claim.getValue().asString());
 			}
-		} catch (UnsupportedEncodingException exception) {
-			exception.printStackTrace();
-		} catch (JWTVerificationException exception) {
-			exception.printStackTrace();
+		} catch (UnsupportedEncodingException | JWTVerificationException exception) {
+			logger.error(exception.getMessage());
 		}
 		return claims;
 	}
 
 	public String getTypeFromJWT(String token) {
-		return this.getClaimsFromJWT(token).get("type");
+		return this.getClaimsFromJWT(token).get(TYPE);
 	}
 
 	public String getAccountIdFromJWT(String token) {
-		return this.getClaimsFromJWT(token).get("accountId");
+		return this.getClaimsFromJWT(token).get(ACCOUNT_ID);
 	}
 }

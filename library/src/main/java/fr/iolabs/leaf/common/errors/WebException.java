@@ -3,8 +3,8 @@ package fr.iolabs.leaf.common.errors;
 public class WebException extends RuntimeException {
 	private static final long serialVersionUID = 6295151762267787645L;
 
-	private int code;
-	private String name;
+	private final int code;
+	private final String name;
 	
 	protected WebException(int code, String name) {
 		this.code = code;

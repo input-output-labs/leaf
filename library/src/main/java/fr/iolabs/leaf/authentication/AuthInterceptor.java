@@ -22,6 +22,8 @@ import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
 public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAdapter {
 
+	private static final String AUTHORIZATION = "Authorization";
+
 	@Resource(name = "coreContext")
 	private LeafContext coreContext;
 
@@ -31,6 +33,7 @@ public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAd
 	@Autowired
 	private LeafAccountRepository<T> accountRepository;
 
+	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
 		this.findConnectedAccount(request);
 
@@ -71,7 +74,7 @@ public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAd
 			if (tokenService.isSessionJWT(token)) {
 				String hashedToken = StringHasher.hashString(token);
 				boolean oneSessionTokenIsMatching = account.get().getHashedSessionTokens().stream()
-						.anyMatch(aToken -> hashedToken.equals(aToken));
+						.anyMatch(hashedToken::equals);
 
 				if (!oneSessionTokenIsMatching) {
 					throw new UnauthorizedException();
@@ -92,17 +95,17 @@ public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAd
 	}
 
 	private String findToken(HttpServletRequest request) {
-		String token = request.getParameter("Authorization");
+		String token = request.getParameter(AUTHORIZATION);
 
 		if (token == null) {
-			token = request.getHeader("Authorization");
+			token = request.getHeader(AUTHORIZATION);
 		}
 
 		if (token == null) {
 			Cookie[] cookies = request.getCookies();
 			if (cookies != null) {
 				for (Cookie cookie : cookies) {
-					if ("Authorization".equals(cookie.getName())) {
+					if (AUTHORIZATION.equals(cookie.getName())) {
 						token = cookie.getValue();
 					}
 				}

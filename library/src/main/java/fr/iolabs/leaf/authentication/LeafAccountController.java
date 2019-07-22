@@ -6,7 +6,14 @@ import javax.annotation.security.PermitAll;
 import fr.iolabs.leaf.authentication.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import fr.iolabs.leaf.LeafContext;
 
@@ -22,58 +29,58 @@ public class LeafAccountController {
 
     @CrossOrigin
     @PermitAll
-    @RequestMapping(method = RequestMethod.POST)
+    @PostMapping
     public JWT regiterUser(@RequestBody LeafAccount account) {
         return new JWT(this.accountService.registerAndLogin(account));
     }
 
     @CrossOrigin
     @PermitAll
-    @RequestMapping(method = RequestMethod.POST, path = "/login")
+    @PostMapping("/login")
     public JWT login(@RequestBody LeafAccount account) {
         return new JWT(this.accountService.login(account));
     }
 
     @CrossOrigin
-    @RequestMapping(method = RequestMethod.GET, path = "/me")
+    @GetMapping("/me")
     public LeafAccount getUser() {
         LeafAccount me = this.coreContext.getAccount();
         return me.obstrufy();
     }
 
     @CrossOrigin
-    @RequestMapping(method = RequestMethod.POST, path = "/me/password")
+    @PostMapping("/me/password")
     public LeafAccount changePassword(@RequestBody PasswordChanger passwordChanger) {
         return this.accountService.changePassword(passwordChanger).obstrufy();
     }
 
     @CrossOrigin
-    @RequestMapping(method = RequestMethod.POST, path = "/me/privatetokens")
+    @PostMapping("/me/privatetokens")
     public JWT addPrivateToken(@RequestBody PrivateToken privateToken) {
         return this.accountService.addPrivateToken(privateToken);
     }
 
     @CrossOrigin
-    @RequestMapping(method = RequestMethod.DELETE, path = "/me/privatetokens/{name}")
+    @DeleteMapping("/me/privatetokens/{name}")
     public LeafAccount revokePrivateToken(@PathVariable String name) {
         return this.accountService.revokePrivateToken(name).obstrufy();
     }
 
     @CrossOrigin
-    @RequestMapping(method = RequestMethod.POST, path = "/me/username")
+    @PostMapping("/me/username")
     public LeafAccount changeName(@RequestBody String newName) {
         return this.accountService.changeName(newName).obstrufy();
     }
 
     @CrossOrigin
-    @RequestMapping(method = RequestMethod.POST, path = "/me/avatar")
+    @PostMapping("/me/avatar")
     public LeafAccount changeAvatarUrl(@RequestBody String newAvatarUrl) {
         return this.accountService.changeAvatarUrl(newAvatarUrl).obstrufy();
     }
 
     @CrossOrigin
     @PermitAll
-    @RequestMapping(method = RequestMethod.POST, path = "/sendresetpasswordkey")
+    @PostMapping("/sendresetpasswordkey")
     public ResponseEntity<Void> sendResetPasswordKey(@RequestBody String email) {
         this.accountService.sendResetPasswordKey(email);
         return ResponseEntity.noContent().build();
@@ -81,7 +88,7 @@ public class LeafAccountController {
 
     @CrossOrigin
     @PermitAll
-    @RequestMapping(method = RequestMethod.POST, path = "/resetPassword")
+    @PostMapping("/resetPassword")
     public ResponseEntity<Void> resetPassword(@RequestBody PasswordResetter passwordResetter) {
         this.accountService.resetPassword(passwordResetter);
         return ResponseEntity.noContent().build();

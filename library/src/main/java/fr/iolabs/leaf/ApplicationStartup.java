@@ -44,6 +44,5 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
                 this.accountService.register(firstUser);
             }
         }
-        return;
     }
 }
