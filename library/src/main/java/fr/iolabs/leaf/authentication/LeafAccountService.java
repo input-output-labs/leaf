@@ -137,6 +137,7 @@ public class LeafAccountService {
 		account.getHashedSessionTokens().add(StringHasher.hashString(token));
 		
 		Cookie cookie = new Cookie("Authorization", token);
+		cookie.setPath("/");
 		cookie.setHttpOnly(true);
 		cookie.setSecure(true);
 		this.response.addCookie(cookie);

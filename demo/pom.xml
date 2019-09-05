@@ -12,7 +12,7 @@
 
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf-demo</artifactId>
-	<version>0.0.12-SNAPSHOT</version>
+	<version>0.0.13-SNAPSHOT</version>
 	<name>Leaf - demo</name>
 
 	<properties>
