@@ -33,7 +33,7 @@ public class LeafFileController {
     @PermitAll
     @CrossOrigin
     @GetMapping("/{id}")
-    public ResponseEntity<byte[]> findTeam(@PathVariable String id) {
+    public ResponseEntity<byte[]> findFile(@PathVariable String id) {
         LeafFileModel file = this.fileService.getById(id);
         return ResponseEntity.ok().header("Content-Type", file.getContentType()).body(file.getFile());
     }

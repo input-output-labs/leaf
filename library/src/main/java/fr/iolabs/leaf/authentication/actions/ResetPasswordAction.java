@@ -1,6 +1,6 @@
-package fr.iolabs.leaf.authentication.model;
+package fr.iolabs.leaf.authentication.actions;
 
-public class PasswordResetter {
+public class ResetPasswordAction {
     private String key;
     private String password;
     

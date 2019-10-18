@@ -1,6 +1,6 @@
-package fr.iolabs.leaf.authentication.model;
+package fr.iolabs.leaf.authentication.actions;
 
-public class PasswordChanger {
+public class ChangePasswordAction {
     private String oldPassword;
     private String newPassword;
 

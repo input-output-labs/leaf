@@ -1,7 +1,5 @@
 package fr.iolabs.leaf.authentication.model;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -11,8 +9,6 @@ public class PrivateToken {
     private LocalDate created;
     private LocalDate expiration;
     private String accountId;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String secretKey;
 
     public PrivateToken(String name, String accountId, LocalDate expiration, String secretKey) {

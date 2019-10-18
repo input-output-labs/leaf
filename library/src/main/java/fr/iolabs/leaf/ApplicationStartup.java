@@ -6,8 +6,10 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
+import fr.iolabs.leaf.admin.LeafAdminService;
 import fr.iolabs.leaf.authentication.LeafAccountRepository;
 import fr.iolabs.leaf.authentication.LeafAccountService;
+import fr.iolabs.leaf.authentication.actions.RegistrationAction;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
 
 @Component
@@ -27,6 +29,9 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
 
     @Autowired
     private LeafAccountService accountService;
+    
+    @Autowired
+    private LeafAdminService<LeafAccount> adminService;
 
     @Autowired
     private LeafAccountRepository<LeafAccount> accountRepository;
@@ -35,13 +40,13 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
         if (this.firstUserFeatureEnabled) {
             LeafAccount existingFirstUser = this.accountRepository.findAccountByEmail(this.firstUserEmail);
             if (existingFirstUser == null) {
-                LeafAccount firstUser = new LeafAccount();
-                firstUser.setEmail(this.firstUserEmail);
-                firstUser.setUsername(this.firstUserEmail);
-                firstUser.setPassword(this.firstUserPassword);
-                firstUser.setAdmin(true);
+            	RegistrationAction registrationAction = new RegistrationAction();
+                registrationAction.setEmail(this.firstUserEmail);
+                registrationAction.setUsername(this.firstUserEmail);
+                registrationAction.setPassword(this.firstUserPassword);
 
-                this.accountService.register(firstUser);
+                this.accountService.register(registrationAction);
+                this.adminService.addAdmin(this.firstUserEmail);
             }
         }
     }

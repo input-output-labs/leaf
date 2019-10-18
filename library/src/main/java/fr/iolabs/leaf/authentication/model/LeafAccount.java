@@ -1,6 +1,5 @@
 package fr.iolabs.leaf.authentication.model;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -15,13 +14,11 @@ public class LeafAccount {
     protected String id;
     protected String email;
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     protected String password;
     protected String username;
     protected String avatarUrl;
     protected String resetPasswordKey;
     protected Set<PrivateToken> privateTokens;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     protected Set<String> hashedSessionTokens;
 
 	protected boolean admin;
@@ -128,12 +125,5 @@ public class LeafAccount {
             this.avatarUrl = account.avatarUrl;
         }
         this.admin = account.admin;
-    }
-
-    public LeafAccount obstrufy() {
-       this.password = null;
-       this.privateTokens.forEach(token -> token.setSecretKey(null));
-       this.hashedSessionTokens = null;
-       return this;
     }
 }

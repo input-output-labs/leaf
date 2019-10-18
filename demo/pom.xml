@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -44,18 +45,30 @@
 			<artifactId>spring-boot-devtools</artifactId>
 			<optional>true</optional>
 		</dependency>
-		
+
 		<!-- Leaf dependencies -->
 		<dependency>
 			<groupId>fr.io-labs</groupId>
 			<artifactId>leaf</artifactId>
-			<version>0.0.12-SNAPSHOT</version>
+			<version>0.0.13-SNAPSHOT</version>
 		</dependency>
-		
+
 		<!-- Jackson Date Serializer dependency -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
+		</dependency>
+
+		<!-- Swagger dependency -->
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger2</artifactId>
+			<version>2.9.2</version>
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger-ui</artifactId>
+			<version>2.9.2</version>
 		</dependency>
 	</dependencies>
 
@@ -73,10 +86,10 @@
 			<id>spring-releases</id>
 			<url>https://repo.spring.io/libs-release</url>
 		</repository>
-		
+
 		<repository>
-		  <id>io-labs-snapshots</id>
-		  <url>https://nexus.io-labs.fr/repository/maven-snapshots/</url>
+			<id>io-labs-snapshots</id>
+			<url>https://nexus.io-labs.fr/repository/maven-snapshots/</url>
 		</repository>
 	</repositories>
 	<pluginRepositories>

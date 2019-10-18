@@ -8,6 +8,10 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
 import fr.iolabs.leaf.authentication.model.*;
+import fr.iolabs.leaf.authentication.actions.LoginAction;
+import fr.iolabs.leaf.authentication.actions.RegistrationAction;
+import fr.iolabs.leaf.authentication.actions.ResetPasswordAction;
+import fr.iolabs.leaf.authentication.actions.ChangePasswordAction;
 import fr.iolabs.leaf.common.utils.StringHasher;
 import fr.iolabs.leaf.common.TokenService;
 import org.apache.logging.log4j.util.Strings;
@@ -57,8 +61,8 @@ public class LeafAccountService {
 		return this.coreContext.getAccount();
 	}
 
-	public String registerAndLogin(LeafAccount account) {
-		LeafAccount registeredAccount = this.register(account);
+	public String registerAndLogin(RegistrationAction userRegistration) {
+		LeafAccount registeredAccount = this.register(userRegistration);
 
 		String sessionToken = this.createSession(registeredAccount);
 		
@@ -68,22 +72,22 @@ public class LeafAccountService {
 		return sessionToken;
 	}
 
-	public LeafAccount register(LeafAccount account) {
-		if (Strings.isBlank(account.getEmail()) || Strings.isBlank(account.getPassword())) {
+	public LeafAccount register(RegistrationAction userRegistration) {
+		if (Strings.isBlank(userRegistration.getEmail()) || Strings.isBlank(userRegistration.getPassword())) {
 			throw new BadRequestException();
 		}
 
-		LeafAccount existingAccount = this.accountRepository.findAccountByEmail(account.getEmail());
+		LeafAccount existingAccount = this.accountRepository.findAccountByEmail(userRegistration.getEmail());
 		if (existingAccount != null) {
 			throw new BadRequestException();
 		}
 
-		if (this.whitelistingService.enabled() && this.whitelistingService.isEmailAllowed(account.getEmail())) {
+		if (this.whitelistingService.enabled() && this.whitelistingService.isEmailAllowed(userRegistration.getEmail())) {
 			throw new UnauthorizedException();
 		}
 
 		LeafAccount instanciatedAccount = instanciate();
-		instanciatedAccount.merge(account);
+		this.mergeRegistrationActionInLeafAccount(instanciatedAccount, userRegistration);
 		if(Strings.isBlank(instanciatedAccount.getUsername())) {
 			instanciatedAccount.setUsername(instanciatedAccount.getEmail());
 		}
@@ -91,6 +95,18 @@ public class LeafAccountService {
 		instanciatedAccount.hashPassword();
 
 		return accountRepository.save(instanciatedAccount);
+	}
+	
+	private void mergeRegistrationActionInLeafAccount(LeafAccount account, RegistrationAction action) {
+		account.setEmail(action.getEmail());
+		account.setPassword(action.getPassword());
+		
+        if (action.getUsername() != null) {
+    		account.setUsername(action.getUsername());
+        }
+        if(action.getAvatarUrl() != null) {
+        	account.setAvatarUrl(action.getAvatarUrl());
+        }
 	}
 
 	private LeafAccount instanciate() {
@@ -119,11 +135,11 @@ public class LeafAccountService {
 		return LeafAccount.class;
 	}
 
-	public String login(LeafAccount account) {
-		account.hashPassword();
+	public String login(LoginAction accountLogin) {
+		accountLogin.hashPassword();
 
-		LeafAccount fetchedAccount = this.accountRepository.findAccountByEmail(account.getEmail());
-		if (fetchedAccount == null || !fetchedAccount.getPassword().equals(account.getPassword())) {
+		LeafAccount fetchedAccount = this.accountRepository.findAccountByEmail(accountLogin.email);
+		if (fetchedAccount == null || !fetchedAccount.getPassword().equals(accountLogin.password)) {
 			throw new UnauthorizedException();
 		}
 
@@ -144,7 +160,7 @@ public class LeafAccountService {
 		return token;
 	}
 
-	public LeafAccount changePassword(PasswordChanger passwordChanger) {
+	public LeafAccount changePassword(ChangePasswordAction passwordChanger) {
 		if (Strings.isBlank(passwordChanger.getOldPassword()) || Strings.isBlank(passwordChanger.getNewPassword())) {
 			throw new BadRequestException();
 		}
@@ -180,14 +196,14 @@ public class LeafAccountService {
 				"Clé de re-initialisation : " + fetchedAccount.getResetPasswordKey(), html);
 	}
 
-	public void resetPassword(PasswordResetter passwordResetter) {
-		LeafAccount fetchedAccount = this.accountRepository.findAccountByResetPasswordKey(passwordResetter.getKey());
+	public void resetPassword(ResetPasswordAction resetPasswordAction) {
+		LeafAccount fetchedAccount = this.accountRepository.findAccountByResetPasswordKey(resetPasswordAction.getKey());
 
 		if (fetchedAccount == null) {
 			throw new UnauthorizedException();
 		}
 
-		fetchedAccount.setPassword(passwordResetter.getPassword());
+		fetchedAccount.setPassword(resetPasswordAction.getPassword());
 		fetchedAccount.setResetPasswordKey(null);
 		fetchedAccount.hashPassword();
 
