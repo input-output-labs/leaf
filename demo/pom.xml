@@ -52,6 +52,12 @@
 			<artifactId>leaf</artifactId>
 			<version>0.0.13-SNAPSHOT</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>fr.io-labs</groupId>
+			<artifactId>leaf-messenger</artifactId>
+			<version>0.0.13-SNAPSHOT</version>
+		</dependency>
 
 		<!-- Jackson Date Serializer dependency -->
 		<dependency>
