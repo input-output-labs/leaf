@@ -6,7 +6,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import fr.iolabs.leaf.common.utils.StringHasher;
 
 import java.util.Set;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 @Document(collection = "account")
 public class LeafAccount {
@@ -20,6 +22,7 @@ public class LeafAccount {
     protected String resetPasswordKey;
     protected Set<PrivateToken> privateTokens;
     protected Set<String> hashedSessionTokens;
+    protected Map<String, Object> modules;
 
 	protected boolean admin;
 
@@ -27,6 +30,7 @@ public class LeafAccount {
         this.admin = false;
         this.privateTokens = new HashSet<>();
         this.hashedSessionTokens = new HashSet<>();
+        this.modules = new HashMap<>();
     }
 
     public void hashPassword() {
@@ -111,7 +115,15 @@ public class LeafAccount {
 		this.hashedSessionTokens = hashedSessionTokens;
 	}
 
-    public void merge(LeafAccount account) {
+    public Map<String, Object> getModules() {
+		return modules;
+	}
+
+	public void setModules(Map<String, Object> modules) {
+		this.modules = modules;
+	}
+
+	public void merge(LeafAccount account) {
         if (account.email != null) {
             this.email = account.email;
         }

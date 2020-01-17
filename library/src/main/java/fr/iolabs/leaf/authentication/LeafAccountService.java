@@ -1,7 +1,6 @@
 package fr.iolabs.leaf.authentication;
 
 import java.time.LocalDate;
-import java.util.Set;
 
 import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
@@ -15,11 +14,11 @@ import fr.iolabs.leaf.authentication.actions.ChangePasswordAction;
 import fr.iolabs.leaf.common.utils.StringHasher;
 import fr.iolabs.leaf.common.TokenService;
 import org.apache.logging.log4j.util.Strings;
-import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -27,9 +26,7 @@ import org.thymeleaf.context.Context;
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.admin.whitelisting.WhitelistingService;
 import fr.iolabs.leaf.common.LeafEmailService;
-import fr.iolabs.leaf.common.annotations.UseAccount;
 import fr.iolabs.leaf.common.errors.BadRequestException;
-import fr.iolabs.leaf.common.errors.InternalServerErrorException;
 import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
 @Service
@@ -47,7 +44,7 @@ public class LeafAccountService {
 	private WhitelistingService whitelistingService;
 
 	@Autowired
-	private LeafAccountRepository<LeafAccount> accountRepository;
+	private LeafAccountRepository accountRepository;
 	@Autowired
 	private TokenService tokenService;
 	@Autowired
@@ -56,6 +53,8 @@ public class LeafAccountService {
 	private TemplateEngine templateEngine;
 	@Autowired
 	private HttpServletResponse response;
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
 	public LeafAccount me() {
 		return this.coreContext.getAccount();
@@ -63,6 +62,7 @@ public class LeafAccountService {
 
 	public String registerAndLogin(RegistrationAction userRegistration) {
 		LeafAccount registeredAccount = this.register(userRegistration);
+		logger.info("Account created with ID " + registeredAccount.getId());
 
 		String sessionToken = this.createSession(registeredAccount);
 		
@@ -86,11 +86,10 @@ public class LeafAccountService {
 			throw new UnauthorizedException();
 		}
 
-		LeafAccount instanciatedAccount = instanciate();
+		LeafAccount instanciatedAccount = new LeafAccount();
 		this.mergeRegistrationActionInLeafAccount(instanciatedAccount, userRegistration);
-		if(Strings.isBlank(instanciatedAccount.getUsername())) {
-			instanciatedAccount.setUsername(instanciatedAccount.getEmail());
-		}
+		
+		this.applicationEventPublisher.publishEvent(new AccountRegistrationEvent(this, instanciatedAccount));
 
 		instanciatedAccount.hashPassword();
 
@@ -107,32 +106,9 @@ public class LeafAccountService {
         if(action.getAvatarUrl() != null) {
         	account.setAvatarUrl(action.getAvatarUrl());
         }
-	}
-
-	private LeafAccount instanciate() {
-		Class<? extends LeafAccount> accountClass = scanAndFindClass();
-		LeafAccount account = null;
-		try {
-			account = accountClass.getConstructor().newInstance();
-		} catch (ReflectiveOperationException | SecurityException e) {
-			logger.error(e.getMessage());
-			throw new InternalServerErrorException();
+        if(Strings.isBlank(account.getUsername())) {
+        	account.setUsername(account.getEmail());
 		}
-		return account;
-	}
-
-	private Class<? extends LeafAccount> scanAndFindClass() {
-		Reflections reflections = new Reflections(this.appPackage);
-		
-		Set<Class<? extends LeafAccount>> subTypes = reflections.getSubTypesOf(LeafAccount.class);
-
-		for (Class<? extends LeafAccount> subType : subTypes) {
-			if (subType.isAnnotationPresent(UseAccount.class)) {
-				return subType;
-			}
-		}
-
-		return LeafAccount.class;
 	}
 
 	public String login(LoginAction accountLogin) {

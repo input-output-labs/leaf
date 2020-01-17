@@ -1,5 +1,6 @@
 package fr.iolabs.leaf.authentication.read;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -11,6 +12,7 @@ public class LeafAccountDTO {
     private String username;
     private String avatarUrl;
     private Set<PrivateTokenDTO> privateTokens;
+    private Map<String, Object> modules;
     
     public static LeafAccountDTO from(LeafAccount account) {
 		LeafAccountDTO dto = new LeafAccountDTO();
@@ -19,6 +21,7 @@ public class LeafAccountDTO {
 		dto.setUsername(account.getUsername());
 		dto.setAvatarUrl(account.getAvatarUrl());
 		dto.setPrivateTokens(account.getPrivateTokens().stream().map(PrivateTokenDTO::from).collect(Collectors.toSet()));
+		dto.setModules(account.getModules());
 		return dto;
     }
     
@@ -52,5 +55,12 @@ public class LeafAccountDTO {
 	public void setPrivateTokens(Set<PrivateTokenDTO> privateTokens) {
 		this.privateTokens = privateTokens;
 	}
-    
+
+	public Map<String, Object> getModules() {
+		return modules;
+	}
+
+	public void setModules(Map<String, Object> modules) {
+		this.modules = modules;
+	}
 }

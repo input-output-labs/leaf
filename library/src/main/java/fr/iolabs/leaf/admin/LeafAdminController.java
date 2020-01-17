@@ -16,15 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.iolabs.leaf.admin.whitelisting.AuthorizedEmail;
 import fr.iolabs.leaf.admin.whitelisting.WhitelistingService;
-import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
 
 @RestController
 @RequestMapping("/api/admin")
-public class LeafAdminController<T extends LeafAccount> {
+public class LeafAdminController {
 
 	@Autowired
-	private LeafAdminService<T> adminService;
+	private LeafAdminService adminService;
 
 	@Autowired
 	private WhitelistingService whitelistingService;

@@ -8,14 +8,14 @@ import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.common.errors.NotFoundException;
 
 @Service
-public class LeafAdminService<T extends LeafAccount> {
+public class LeafAdminService {
 
     @Autowired
-    private LeafAccountRepository<T> accountRepository;
+    private LeafAccountRepository accountRepository;
 
     public void addAdmin(String email) {
 
-        T newAdminAccount = this.accountRepository.findAccountByEmail(email);
+    	LeafAccount newAdminAccount = this.accountRepository.findAccountByEmail(email);
 
         if (newAdminAccount == null) {
             throw new NotFoundException();
@@ -27,7 +27,7 @@ public class LeafAdminService<T extends LeafAccount> {
     }
 
     public void removeAdmin(String email) {
-        T newAdminAccount = this.accountRepository.findAccountByEmail(email);
+    	LeafAccount newAdminAccount = this.accountRepository.findAccountByEmail(email);
 
         if (newAdminAccount == null) {
             throw new NotFoundException();

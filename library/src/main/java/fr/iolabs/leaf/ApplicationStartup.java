@@ -31,10 +31,10 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
     private LeafAccountService accountService;
     
     @Autowired
-    private LeafAdminService<LeafAccount> adminService;
+    private LeafAdminService adminService;
 
     @Autowired
-    private LeafAccountRepository<LeafAccount> accountRepository;
+    private LeafAccountRepository accountRepository;
 
     public void onApplicationEvent(final ApplicationReadyEvent event) {
         if (this.firstUserFeatureEnabled) {

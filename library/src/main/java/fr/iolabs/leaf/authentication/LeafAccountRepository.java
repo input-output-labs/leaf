@@ -6,8 +6,8 @@ import org.springframework.stereotype.Repository;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
 
 @Repository
-public interface LeafAccountRepository<T extends LeafAccount> extends MongoRepository<T, String> {
-    public T findAccountByEmail(String email);
+public interface LeafAccountRepository extends MongoRepository<LeafAccount, String> {
+    public LeafAccount findAccountByEmail(String email);
 
-    public T findAccountByResetPasswordKey(String resetPasswordKey);
+    public LeafAccount findAccountByResetPasswordKey(String resetPasswordKey);
 }

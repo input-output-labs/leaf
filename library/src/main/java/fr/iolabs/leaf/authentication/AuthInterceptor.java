@@ -20,7 +20,7 @@ import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
 import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
-public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAdapter {
+public class AuthInterceptor extends HandlerInterceptorAdapter {
 
 	private static final String AUTHORIZATION = "Authorization";
 
@@ -31,7 +31,7 @@ public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAd
 	private TokenService tokenService;
 
 	@Autowired
-	private LeafAccountRepository<T> accountRepository;
+	private LeafAccountRepository accountRepository;
 
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
@@ -66,7 +66,7 @@ public class AuthInterceptor<T extends LeafAccount> extends HandlerInterceptorAd
 			if (accountId == null) {
 				throw new UnauthorizedException();
 			}
-			Optional<T> account = this.accountRepository.findById(accountId);
+			Optional<LeafAccount> account = this.accountRepository.findById(accountId);
 			if (!account.isPresent()) {
 				throw new UnauthorizedException();
 			}

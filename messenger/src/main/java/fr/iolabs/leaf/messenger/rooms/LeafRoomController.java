@@ -13,12 +13,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 
 @RestController
 @RequestMapping(path="/api/rooms")
 public class LeafRoomController {
-    private static final Random RANDOM = new Random();
 
     @Resource(name = "coreContext")
     private LeafContext coreContext;
