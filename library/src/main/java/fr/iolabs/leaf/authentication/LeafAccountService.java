@@ -131,7 +131,7 @@ public class LeafAccountService {
 		Cookie cookie = new Cookie("Authorization", token);
 		cookie.setPath("/");
 		cookie.setHttpOnly(true);
-		cookie.setSecure(true);
+		// cookie.setSecure(true);
 		this.response.addCookie(cookie);
 		return token;
 	}
