@@ -61,7 +61,7 @@ public class LeafAdminController {
 
 	@AdminOnly
 	@CrossOrigin
-	@PostMapping("/admin")
+	@PostMapping("/admins")
 	public ResponseEntity<Void> addAdmin(@RequestBody String email) {
 		this.adminService.addAdmin(email);
 		return ResponseEntity.noContent().build();
@@ -69,7 +69,7 @@ public class LeafAdminController {
 
 	@AdminOnly
 	@CrossOrigin
-	@DeleteMapping("/admin/{email:.*}")
+	@DeleteMapping("/admins/{email:.*}")
 	public ResponseEntity<Void> removeAdmin(@PathVariable String email) {
 		this.adminService.removeAdmin(email);
 		return ResponseEntity.noContent().build();

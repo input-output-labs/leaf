@@ -34,9 +34,6 @@ public class LeafAccountService {
 	
 	private static Logger logger = LoggerFactory.getLogger(LeafAccountService.class);
 
-	@Value("${leaf.myapp.package}")
-	private String appPackage;
-
 	@Resource(name = "coreContext")
 	private LeafContext coreContext;
 
@@ -73,6 +70,10 @@ public class LeafAccountService {
 	}
 
 	public LeafAccount register(RegistrationAction userRegistration) {
+		return this.register(userRegistration, false);
+	}
+
+	public LeafAccount register(RegistrationAction userRegistration, boolean force) {
 		if (Strings.isBlank(userRegistration.getEmail()) || Strings.isBlank(userRegistration.getPassword())) {
 			throw new BadRequestException();
 		}
@@ -82,7 +83,7 @@ public class LeafAccountService {
 			throw new BadRequestException();
 		}
 
-		if (this.whitelistingService.enabled() && this.whitelistingService.isEmailAllowed(userRegistration.getEmail())) {
+		if (!force && this.whitelistingService.enabled() && this.whitelistingService.isEmailAllowed(userRegistration.getEmail())) {
 			throw new UnauthorizedException();
 		}
 

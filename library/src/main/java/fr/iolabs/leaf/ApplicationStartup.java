@@ -15,9 +15,6 @@ import fr.iolabs.leaf.authentication.model.LeafAccount;
 @Component
 public class ApplicationStartup implements ApplicationListener<ApplicationReadyEvent> {
 
-    @Value("${leaf.myapp.package}")
-    private String appPackage;
-
     @Value("${leaf.firstuser.enabled}")
     private Boolean firstUserFeatureEnabled;
 
@@ -45,7 +42,7 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
                 registrationAction.setUsername(this.firstUserEmail);
                 registrationAction.setPassword(this.firstUserPassword);
 
-                this.accountService.register(registrationAction);
+                this.accountService.register(registrationAction, true);
                 this.adminService.addAdmin(this.firstUserEmail);
             }
         }
