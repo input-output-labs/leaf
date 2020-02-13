@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,14 @@ public class LeafFileService {
 			logger.error(e.getMessage());
 			throw new InternalServerErrorException();
 		}
+	}
+
+	public LeafFileModel store(byte [] file, String contentType, StringBuilder hostname, String accountId) {
+		LeafFileModel createdFile;
+		createdFile = LeafFileModel.from(file, contentType, accountId);
+		createdFile = this.fileRepository.insert(createdFile);
+		createdFile.setUrl(hostname.append("/api/files/").append(createdFile.getId()).toString());
+		return this.fileRepository.save(createdFile);
 	}
 
 	public LeafFileModel getById(String id) {
