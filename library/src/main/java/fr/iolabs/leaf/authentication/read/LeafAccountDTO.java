@@ -12,6 +12,7 @@ public class LeafAccountDTO {
     private String username;
     private String avatarUrl;
     private Set<PrivateTokenDTO> privateTokens;
+    private boolean admin;
     private Map<String, Object> modules;
     
     public static LeafAccountDTO from(LeafAccount account) {
@@ -22,6 +23,7 @@ public class LeafAccountDTO {
 		dto.setAvatarUrl(account.getAvatarUrl());
 		dto.setPrivateTokens(account.getPrivateTokens().stream().map(PrivateTokenDTO::from).collect(Collectors.toSet()));
 		dto.setModules(account.getModules());
+		dto.setAdmin(account.isAdmin());
 		return dto;
     }
     
@@ -62,5 +64,13 @@ public class LeafAccountDTO {
 
 	public void setModules(Map<String, Object> modules) {
 		this.modules = modules;
+	}
+
+	public boolean isAdmin() {
+		return admin;
+	}
+
+	public void setAdmin(boolean admin) {
+		this.admin = admin;
 	}
 }
