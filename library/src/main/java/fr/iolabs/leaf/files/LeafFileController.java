@@ -1,7 +1,6 @@
 package fr.iolabs.leaf.files;
 
 import javax.annotation.security.PermitAll;
-import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,13 +20,10 @@ public class LeafFileController {
     @Autowired
     private LeafFileService fileService;
 
-    @Autowired
-    private HttpServletRequest request;
-
     @CrossOrigin
     @PostMapping
     public LeafFileModel create(@RequestParam("file") MultipartFile file) {
-        return this.fileService.store(file, new StringBuilder(request.getRequestURL()));
+        return this.fileService.store(file);
     }
 
     @PermitAll

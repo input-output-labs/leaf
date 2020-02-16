@@ -8,6 +8,7 @@ import javax.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,15 +24,18 @@ public class LeafFileService {
 	@Resource(name = "coreContext")
 	private LeafContext coreContext;
 
+    @Value("${leaf.protocol_hostname}")
+    private String hostname;
+
 	@Autowired
 	private LeafFileRepository fileRepository;
 
-	public LeafFileModel store(MultipartFile file, StringBuilder preUrl) {
+	public LeafFileModel store(MultipartFile file) {
 		LeafFileModel createdFile;
 		try {
 			createdFile = LeafFileModel.from(file.getBytes(), file.getContentType(), coreContext.getAccount().getId());
 			createdFile = this.fileRepository.insert(createdFile);
-			createdFile.setUrl(preUrl.append("/").append(createdFile.getId()).toString());
+			createdFile.setUrl(this.hostname + "/api/files/" + createdFile.getId());
 			return this.fileRepository.save(createdFile);
 		} catch (IOException e) {
 			logger.error(e.getMessage());
@@ -39,11 +43,11 @@ public class LeafFileService {
 		}
 	}
 
-	public LeafFileModel store(byte [] file, String contentType, StringBuilder hostname, String accountId) {
+	public LeafFileModel store(byte [] file, String contentType, String accountId) {
 		LeafFileModel createdFile;
 		createdFile = LeafFileModel.from(file, contentType, accountId);
 		createdFile = this.fileRepository.insert(createdFile);
-		createdFile.setUrl(hostname.append("/api/files/").append(createdFile.getId()).toString());
+		createdFile.setUrl(this.hostname + "/api/files/" + createdFile.getId());
 		return this.fileRepository.save(createdFile);
 	}
 
