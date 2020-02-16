@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Optional;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -69,6 +69,6 @@ public class LeafFileModel {
 	}
 
 	public void setUrl(String url) {
-		this.url = url;
+		this.url = url.replace("http://", "https://");
 	}
 }
