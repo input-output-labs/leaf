@@ -61,6 +61,13 @@ public class LeafAdminController {
 
 	@AdminOnly
 	@CrossOrigin
+	@GetMapping("/admins")
+	public List<String> listAllAdminsEmail() {
+		return this.adminService.listAllAdminsEmail();
+	}
+
+	@AdminOnly
+	@CrossOrigin
 	@PostMapping("/admins")
 	public ResponseEntity<Void> addAdmin(@RequestBody String email) {
 		this.adminService.addAdmin(email);

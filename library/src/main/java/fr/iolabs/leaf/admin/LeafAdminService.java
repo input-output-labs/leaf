@@ -1,5 +1,8 @@
 package fr.iolabs.leaf.admin;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,31 +13,36 @@ import fr.iolabs.leaf.common.errors.NotFoundException;
 @Service
 public class LeafAdminService {
 
-    @Autowired
-    private LeafAccountRepository accountRepository;
+	@Autowired
+	private LeafAccountRepository accountRepository;
 
-    public void addAdmin(String email) {
+	public void addAdmin(String email) {
 
-    	LeafAccount newAdminAccount = this.accountRepository.findAccountByEmail(email);
+		LeafAccount newAdminAccount = this.accountRepository.findAccountByEmail(email);
 
-        if (newAdminAccount == null) {
-            throw new NotFoundException();
-        }
+		if (newAdminAccount == null) {
+			throw new NotFoundException();
+		}
 
-        newAdminAccount.setAdmin(true);
+		newAdminAccount.setAdmin(true);
 
-        this.accountRepository.save(newAdminAccount);
-    }
+		this.accountRepository.save(newAdminAccount);
+	}
 
-    public void removeAdmin(String email) {
-    	LeafAccount newAdminAccount = this.accountRepository.findAccountByEmail(email);
+	public void removeAdmin(String email) {
+		LeafAccount newAdminAccount = this.accountRepository.findAccountByEmail(email);
 
-        if (newAdminAccount == null) {
-            throw new NotFoundException();
-        }
+		if (newAdminAccount == null) {
+			throw new NotFoundException();
+		}
 
-        newAdminAccount.setAdmin(false);
+		newAdminAccount.setAdmin(false);
 
-        this.accountRepository.save(newAdminAccount);
-    }
+		this.accountRepository.save(newAdminAccount);
+	}
+
+	public List<String> listAllAdminsEmail() {
+		return this.accountRepository.findByAdminTrue().stream().map((account) -> account.getEmail())
+				.collect(Collectors.toList());
+	}
 }
