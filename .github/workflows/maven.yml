@@ -25,4 +25,7 @@ jobs:
     - name: publish package
       if: ${{ success() }}
       run: |
+        cd library
+        mvn deploy -Dregistry=https://maven.pkg.github.com/input-output-labs -Dtoken=GH_TOKEN
+        cd ../messenger
         mvn deploy -Dregistry=https://maven.pkg.github.com/input-output-labs -Dtoken=GH_TOKEN
