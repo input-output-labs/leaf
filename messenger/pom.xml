@@ -44,35 +44,12 @@
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
-	
+
 	<distributionManagement>
-	   <snapshotRepository>
-		  <id>io-labs-snapshots</id>
-		  <url>https://nexus.io-labs.fr/repository/maven-snapshots/</url>
-	   </snapshotRepository>
-	</distributionManagement>
-	
-	<build>
-		<plugins>
-			<plugin>
-			   <groupId>org.sonatype.plugins</groupId>
-			   <artifactId>nexus-staging-maven-plugin</artifactId>
-			   <version>1.5.1</version>
-			   <executions>
-				  <execution>
-					 <id>default-deploy</id>
-					 <phase>deploy</phase>
-					 <goals>
-						<goal>deploy</goal>
-					 </goals>
-				  </execution>
-			   </executions>
-			   <configuration>
-				  <serverId>io-labs-snapshots</serverId>
-				  <nexusUrl>https://nexus.io-labs.fr/repository/maven-snapshots/</nexusUrl>
-				  <skipStaging>true</skipStaging>
-			   </configuration>
-			</plugin>
-		</plugins>
-	</build>
+          <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/input-output-labs/leaf-messenger</url>
+          </repository>
+        </distributionManagement>
 </project>
