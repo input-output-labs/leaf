@@ -20,10 +20,3 @@ jobs:
         java-version: 1.8
     - name: Build with Maven
       run: mvn -B package --file pom.xml
-    - name: publish package
-      if: ${{ github.ref == 'ref/head/master' && success() }}
-      run: |
-        cd library
-        mvn deploy -Dregistry=https://maven.pkg.github.com/input-output-labs -Dtoken=GH_TOKEN
-        cd ../messenger
-        mvn deploy -Dregistry=https://maven.pkg.github.com/input-output-labs -Dtoken=GH_TOKEN
