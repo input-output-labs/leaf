@@ -75,9 +75,10 @@
 	</dependencies>
 
 	<distributionManagement>
-	   <snapshotRepository>
-		  <id>github-snapshots</id>
-		  <url>https://maven.pkg.github.com/input-output-labs</url>
-	   </snapshotRepository>
-	</distributionManagement>
+          <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/input-output-labs/leaf</url>
+          </repository>
+        </distributionManagement>
 </project>
