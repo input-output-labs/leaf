@@ -73,4 +73,11 @@
 			<version>3.2.0</version>
 		</dependency>
 	</dependencies>
+
+	<distributionManagement>
+	   <snapshotRepository>
+		  <id>github-snapshots</id>
+		  <url>https://maven.pkg.github.com/input-output-labs</url>
+	   </snapshotRepository>
+	</distributionManagement>
 </project>
