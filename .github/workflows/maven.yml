@@ -23,7 +23,7 @@ jobs:
     - name: Build with Maven
       run: mvn -B package --file pom.xml
     - name: publish package
-      if: ${{ success() }}
+      if: ${{ github.ref == 'ref/head/master' && success() }}
       run: |
         cd library
         mvn deploy -Dregistry=https://maven.pkg.github.com/input-output-labs -Dtoken=GH_TOKEN
