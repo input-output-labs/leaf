@@ -6,7 +6,7 @@
   
   <groupId>fr.io-labs</groupId>
   <artifactId>leaf-aggregator</artifactId>
-  <version>1.0.0</version>
+  <version>1.2-SNAPSHOT</version>
   <name>Leaf Aggregator</name>
   <packaging>pom</packaging>
 
