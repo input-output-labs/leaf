@@ -6,11 +6,8 @@ import java.util.stream.Collectors;
 
 import fr.iolabs.leaf.authentication.model.LeafAccount;
 
-public class LeafAccountDTO {
-    private String id;
+public class LeafAccountDTO extends LeafUserDTO {
     private String email;
-    private String username;
-    private String avatarUrl;
     private Set<PrivateTokenDTO> privateTokens;
     private boolean admin;
     private Map<String, Object> modules;
@@ -26,30 +23,11 @@ public class LeafAccountDTO {
 		dto.setAdmin(account.isAdmin());
 		return dto;
     }
-    
-	public String getId() {
-		return id;
-	}
-	public void setId(String id) {
-		this.id = id;
-	}
 	public String getEmail() {
 		return email;
 	}
 	public void setEmail(String email) {
 		this.email = email;
-	}
-	public String getUsername() {
-		return username;
-	}
-	public void setUsername(String username) {
-		this.username = username;
-	}
-	public String getAvatarUrl() {
-		return avatarUrl;
-	}
-	public void setAvatarUrl(String avatarUrl) {
-		this.avatarUrl = avatarUrl;
 	}
 	public Set<PrivateTokenDTO> getPrivateTokens() {
 		return privateTokens;

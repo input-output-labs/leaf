@@ -69,8 +69,8 @@ public class LeafAdminController {
 	@AdminOnly
 	@CrossOrigin
 	@PostMapping("/admins")
-	public ResponseEntity<Void> addAdmin(@RequestBody String email) {
-		this.adminService.addAdmin(email);
+	public ResponseEntity<Void> addAdmin(@RequestBody String newAdminAccountId) {
+		this.adminService.addAdmin(newAdminAccountId);
 		return ResponseEntity.noContent().build();
 	}
 

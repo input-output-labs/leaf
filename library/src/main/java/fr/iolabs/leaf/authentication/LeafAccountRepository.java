@@ -2,6 +2,7 @@ package fr.iolabs.leaf.authentication;
 
 import java.util.List;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +15,6 @@ public interface LeafAccountRepository extends MongoRepository<LeafAccount, Stri
     public LeafAccount findAccountByResetPasswordKey(String resetPasswordKey);
 
 	public List<LeafAccount> findByAdminTrue();
+	
+	public List<LeafAccount> findByUsernameLike(String input, PageRequest pageRequest);
 }

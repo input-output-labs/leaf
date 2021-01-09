@@ -1,6 +1,5 @@
 package fr.iolabs.leaf.authentication.model;
 
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import fr.iolabs.leaf.common.utils.StringHasher;
@@ -11,14 +10,10 @@ import java.util.HashSet;
 import java.util.Map;
 
 @Document(collection = "account")
-public class LeafAccount {
-    @Id
-    protected String id;
+public class LeafAccount extends LeafUser {
     protected String email;
 
     protected String password;
-    protected String username;
-    protected String avatarUrl;
     protected String resetPasswordKey;
     protected Set<PrivateToken> privateTokens;
     protected Set<String> hashedSessionTokens;
@@ -35,14 +30,6 @@ public class LeafAccount {
 
     public void hashPassword() {
         this.password = StringHasher.hashString(this.password);
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getEmail() {
@@ -81,22 +68,6 @@ public class LeafAccount {
 
     public void setResetPasswordKey(String resetPasswordKey) {
         this.resetPasswordKey = resetPasswordKey;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getAvatarUrl() {
-        return avatarUrl;
-    }
-
-    public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
     }
 
     public Set<PrivateToken> getPrivateTokens() {

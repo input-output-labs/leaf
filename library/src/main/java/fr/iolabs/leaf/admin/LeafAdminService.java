@@ -1,6 +1,7 @@
 package fr.iolabs.leaf.admin;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +17,15 @@ public class LeafAdminService {
 	@Autowired
 	private LeafAccountRepository accountRepository;
 
-	public void addAdmin(String email) {
+	public void addAdmin(String newAdminAccountId) {
 
-		LeafAccount newAdminAccount = this.accountRepository.findAccountByEmail(email);
+		Optional<LeafAccount> newAdminAccountOpt = this.accountRepository.findById(newAdminAccountId);
 
-		if (newAdminAccount == null) {
+		if (newAdminAccountOpt.isEmpty()) {
 			throw new NotFoundException();
 		}
+		
+		LeafAccount newAdminAccount = newAdminAccountOpt.get();
 
 		newAdminAccount.setAdmin(true);
 
