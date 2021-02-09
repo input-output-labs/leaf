@@ -42,8 +42,8 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
                 registrationAction.setUsername(this.firstUserEmail);
                 registrationAction.setPassword(this.firstUserPassword);
 
-                this.accountService.register(registrationAction, true);
-                this.adminService.addAdmin(this.firstUserEmail);
+                String accountId = this.accountService.register(registrationAction, true).getId();
+                this.adminService.addAdmin(accountId);
             }
         }
     }
