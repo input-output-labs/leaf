@@ -1,5 +1,6 @@
 package fr.iolabs.leaf.authentication.read;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,6 +24,11 @@ public class LeafAccountDTO extends LeafUserDTO {
 		dto.setAdmin(account.isAdmin());
 		return dto;
     }
+
+    public static List<LeafAccountDTO> from(List<LeafAccount> accounts) {
+    	return accounts.stream().map(LeafAccountDTO::from).collect(Collectors.toList());
+    }
+    
 	public String getEmail() {
 		return email;
 	}

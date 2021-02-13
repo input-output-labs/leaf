@@ -29,6 +29,14 @@ public class LeafAccountReadController {
     private LeafAccountRepository accountRepository;
 
     @CrossOrigin
+    @GetMapping("/all")
+    @AdminOnly
+    public List<LeafAccountDTO> listUsers() {
+    	List<LeafAccount> accounts = this.accountRepository.findAll();
+        return LeafAccountDTO.from(accounts);
+    }
+
+    @CrossOrigin
     @GetMapping("/me")
     public LeafAccountDTO getUser() {
         LeafAccount me = this.coreContext.getAccount();
