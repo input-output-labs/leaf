@@ -76,9 +76,9 @@
 
 	<distributionManagement>
           <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/input-output-labs/leaf</url>
+            <id>iolabs</id>
+            <name>IOLABS Snapshots</name>
+            <url>https://nexus.io-labs.fr/repository/maven-snapshots/</url>
           </repository>
         </distributionManagement>
 </project>
