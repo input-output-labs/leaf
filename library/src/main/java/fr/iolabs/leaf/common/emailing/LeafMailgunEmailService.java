@@ -1,4 +1,4 @@
-package fr.iolabs.leaf.common;
+package fr.iolabs.leaf.common.emailing;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -9,7 +9,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import fr.iolabs.leaf.common.errors.InternalServerErrorException;
 
 @Service
-public class LeafEmailService {
+public class LeafMailgunEmailService {
 
     @Value("${mailgun.api.url}")
     String mailGunAPIUrl;

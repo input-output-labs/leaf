@@ -13,24 +13,23 @@ import fr.iolabs.leaf.authentication.actions.ResetPasswordAction;
 import fr.iolabs.leaf.authentication.actions.ChangePasswordAction;
 import fr.iolabs.leaf.common.utils.StringHasher;
 import fr.iolabs.leaf.common.TokenService;
+import fr.iolabs.leaf.common.emailing.LeafAccountEmailing;
+
 import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
 
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.admin.whitelisting.WhitelistingService;
-import fr.iolabs.leaf.common.LeafEmailService;
 import fr.iolabs.leaf.common.errors.BadRequestException;
 import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
 @Service
 public class LeafAccountService {
-	
+
 	private static Logger logger = LoggerFactory.getLogger(LeafAccountService.class);
 
 	@Resource(name = "coreContext")
@@ -44,13 +43,11 @@ public class LeafAccountService {
 	@Autowired
 	private TokenService tokenService;
 	@Autowired
-	private LeafEmailService emailService;
-	@Autowired
-	private TemplateEngine templateEngine;
+	private LeafAccountEmailing accountEmailing;
 	@Autowired
 	private HttpServletResponse response;
-    @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
+	@Autowired
+	private ApplicationEventPublisher applicationEventPublisher;
 
 	public LeafAccount me() {
 		return this.coreContext.getAccount();
@@ -61,7 +58,7 @@ public class LeafAccountService {
 		logger.info("Account created with ID " + registeredAccount.getId());
 
 		String sessionToken = this.createSession(registeredAccount);
-		
+
 		// Re-save account to register newly created session
 		accountRepository.save(registeredAccount);
 
@@ -82,32 +79,38 @@ public class LeafAccountService {
 			throw new BadRequestException();
 		}
 
-		if (!force && this.whitelistingService.enabled() && this.whitelistingService.isEmailAllowed(userRegistration.getEmail())) {
+		if (!force && this.whitelistingService.enabled()
+				&& this.whitelistingService.isEmailAllowed(userRegistration.getEmail())) {
 			throw new UnauthorizedException();
 		}
 
 		LeafAccount instanciatedAccount = new LeafAccount();
 		this.mergeRegistrationActionInLeafAccount(instanciatedAccount, userRegistration);
-		
+
 		this.applicationEventPublisher.publishEvent(new AccountRegistrationEvent(this, instanciatedAccount));
 
 		instanciatedAccount.hashPassword();
+		
 
-		return accountRepository.save(instanciatedAccount);
+		LeafAccount createdAccount = accountRepository.save(instanciatedAccount);
+
+		this.accountEmailing.sendAccountCreationConfirmation(createdAccount);
+
+		return createdAccount;
 	}
-	
+
 	private void mergeRegistrationActionInLeafAccount(LeafAccount account, RegistrationAction action) {
 		account.setEmail(action.getEmail());
 		account.setPassword(action.getPassword());
-		
-        if (action.getUsername() != null) {
-    		account.setUsername(action.getUsername());
-        }
-        if(action.getAvatarUrl() != null) {
-        	account.setAvatarUrl(action.getAvatarUrl());
-        }
-        if(Strings.isBlank(account.getUsername())) {
-        	account.setUsername(account.getEmail());
+
+		if (action.getUsername() != null) {
+			account.setUsername(action.getUsername());
+		}
+		if (action.getAvatarUrl() != null) {
+			account.setAvatarUrl(action.getAvatarUrl());
+		}
+		if (Strings.isBlank(account.getUsername())) {
+			account.setUsername(account.getEmail());
 		}
 	}
 
@@ -127,7 +130,7 @@ public class LeafAccountService {
 	private String createSession(LeafAccount account) {
 		String token = tokenService.createSessionJWT(account.getId());
 		account.getHashedSessionTokens().add(StringHasher.hashString(token));
-		
+
 		Cookie cookie = new Cookie("Authorization", token);
 		cookie.setPath("/");
 		cookie.setHttpOnly(true);
@@ -164,12 +167,7 @@ public class LeafAccountService {
 
 		this.accountRepository.save(fetchedAccount);
 
-		Context context = new Context();
-		context.setVariable("resetPasswordKey", fetchedAccount.getResetPasswordKey());
-		String html = templateEngine.process("emailSendPasswordResetKey", context);
-
-		this.emailService.sendEmail(fetchedAccount.getEmail(), "Votre clé de re-initialisation de mot de passe.",
-				"Clé de re-initialisation : " + fetchedAccount.getResetPasswordKey(), html);
+		this.accountEmailing.sendResetPasswordKey(fetchedAccount, fetchedAccount.getResetPasswordKey());
 	}
 
 	public void resetPassword(ResetPasswordAction resetPasswordAction) {

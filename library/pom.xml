@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf</artifactId>
-	<version>1.5-SNAPSHOT</version>
+	<version>1.6-SNAPSHOT</version>
 	<name>leaf</name>
 
 	<properties>
@@ -52,6 +52,11 @@
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
 			<version>20190722</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sendgrid</groupId>
+			<artifactId>sendgrid-java</artifactId>
+			<version>4.0.1</version>
 		</dependency>
 
 		<!-- Jackson Date Serializer dependency -->
