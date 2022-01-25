@@ -14,7 +14,7 @@ import com.sendgrid.Response;
 import com.sendgrid.SendGrid;
 
 @Service
-public class LeafSendgrigEmailService {
+public class LeafSendgridEmailService {
 	@Value("${sendgrid.api.key}")
     String sendgridAPIKey;
     
@@ -24,7 +24,7 @@ public class LeafSendgrigEmailService {
     public void sendEmailWithTemplate(String to, String templateId) {
 		Email from = new Email(sendgridEmailFrom);
 		Email toEmail = new Email(to);
-		Content content = new Content("text/plain", "Leaf email content");
+		Content content = new Content("text/html", "<html><body>some text here</body></html>");
 		Mail mail = new Mail(from, "Leaf email subject", toEmail, content);
 		mail.setTemplateId(templateId);
 

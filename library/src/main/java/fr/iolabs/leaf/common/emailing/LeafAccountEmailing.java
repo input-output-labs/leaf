@@ -21,7 +21,7 @@ public class LeafAccountEmailing {
 	@Autowired
 	private LeafMailgunEmailService mailgunEmailService;
 	@Autowired
-	private LeafSendgrigEmailService sendgridEmailService;
+	private LeafSendgridEmailService sendgridEmailService;
 	
 	@Value("${sendgrid.templates.account-creation}")
 	String sendgridAccountCreationTemplateId;
