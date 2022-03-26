@@ -7,6 +7,7 @@ import fr.iolabs.leaf.authentication.LeafAccountService;
 import fr.iolabs.leaf.authentication.model.*;
 import fr.iolabs.leaf.authentication.read.LeafAccountDTO;
 import fr.iolabs.leaf.authentication.read.PrivateTokenDTO;
+import fr.iolabs.leaf.common.annotations.AdminOnly;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +43,13 @@ public class LeafAccountActionController {
 	@PostMapping("/login")
 	public JWT login(@RequestBody LoginAction accountLogin) {
 		return new JWT(this.accountService.login(accountLogin));
+	}
+
+	@CrossOrigin
+	@AdminOnly
+	@DeleteMapping("/{accountId}")
+	public void deleteUser(@PathVariable String accountId) {
+		this.accountService.deleteUser(accountId);
 	}
 
 	@CrossOrigin

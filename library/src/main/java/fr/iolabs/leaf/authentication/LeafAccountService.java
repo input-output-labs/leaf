@@ -1,6 +1,7 @@
 package fr.iolabs.leaf.authentication;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.admin.whitelisting.WhitelistingService;
 import fr.iolabs.leaf.common.errors.BadRequestException;
+import fr.iolabs.leaf.common.errors.NotFoundException;
 import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
 @Service
@@ -69,7 +71,7 @@ public class LeafAccountService {
 		return this.register(userRegistration, false);
 	}
 
-	public LeafAccount register(RegistrationAction userRegistration, boolean force) {
+	public LeafAccount register(RegistrationAction userRegistration, boolean isSystemAction) {
 		if (Strings.isBlank(userRegistration.getEmail()) || Strings.isBlank(userRegistration.getPassword())) {
 			throw new BadRequestException();
 		}
@@ -79,12 +81,13 @@ public class LeafAccountService {
 			throw new BadRequestException();
 		}
 
-		if (!force && this.whitelistingService.enabled()
+		if (!isSystemAction && this.whitelistingService.enabled()
 				&& this.whitelistingService.isEmailAllowed(userRegistration.getEmail())) {
 			throw new UnauthorizedException();
 		}
 
 		LeafAccount instanciatedAccount = new LeafAccount();
+		instanciatedAccount.setMetadata(ResourceMetadata.create());
 		this.mergeRegistrationActionInLeafAccount(instanciatedAccount, userRegistration);
 
 		this.applicationEventPublisher.publishEvent(new AccountRegistrationEvent(this, instanciatedAccount));
@@ -94,9 +97,23 @@ public class LeafAccountService {
 
 		LeafAccount createdAccount = accountRepository.save(instanciatedAccount);
 
-		this.accountEmailing.sendAccountCreationConfirmation(createdAccount);
+		if(!isSystemAction) {
+			this.accountEmailing.sendAccountCreationConfirmation(createdAccount);
+		}
 
 		return createdAccount;
+	}
+
+	public void deleteUser(String deletedAccountId) {
+		Optional<LeafAccount> deletedAccountOpt = this.accountRepository.findById(deletedAccountId);
+
+		if (deletedAccountOpt.isEmpty()) {
+			throw new NotFoundException();
+		}
+
+		this.applicationEventPublisher.publishEvent(new AccountDeletionEvent(this, deletedAccountOpt.get()));
+		
+		this.accountRepository.delete(deletedAccountOpt.get());
 	}
 
 	private void mergeRegistrationActionInLeafAccount(LeafAccount account, RegistrationAction action) {
@@ -150,7 +167,8 @@ public class LeafAccountService {
 		if (!me.getPassword().equals(hashedOldPassword)) {
 			throw new UnauthorizedException();
 		}
-
+		
+		me.getMetadata().updateLastModification();
 		me.setPassword(passwordChanger.getNewPassword());
 		me.hashPassword();
 
@@ -190,6 +208,7 @@ public class LeafAccountService {
 		}
 
 		LeafAccount me = this.coreContext.getAccount();
+		me.getMetadata().updateLastModification();
 		me.setUsername(newName);
 
 		return this.accountRepository.save(me);
@@ -201,6 +220,7 @@ public class LeafAccountService {
 		}
 
 		LeafAccount me = this.coreContext.getAccount();
+		me.getMetadata().updateLastModification();
 		me.setAvatarUrl(newAvatarUrl);
 
 		return this.accountRepository.save(me);
@@ -218,6 +238,7 @@ public class LeafAccountService {
 
 		privateToken.setSecretKey(StringHasher.hashString(privateToken.getSecretKey()));
 
+		me.getMetadata().updateLastModification();
 		me.getPrivateTokens().add(privateToken);
 
 		this.accountRepository.save(me);
@@ -234,6 +255,7 @@ public class LeafAccountService {
 				break;
 			}
 		}
+		me.getMetadata().updateLastModification();
 		me.getPrivateTokens().remove(tokenToRevoke);
 		this.accountRepository.save(me);
 		return me;
