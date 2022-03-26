@@ -6,8 +6,10 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling
 @ComponentScan(basePackages = { "fr.iolabs.leafdemo", "fr.iolabs.leaf" })
 @EnableMongoRepositories(basePackages = { "fr.iolabs.leafdemo", "fr.iolabs.leaf" })
 public class Application extends SpringBootServletInitializer {

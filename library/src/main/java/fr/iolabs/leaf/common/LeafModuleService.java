@@ -24,6 +24,7 @@ public class LeafModuleService {
 		return this.get(clazz, account);
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> T get(Class<T> clazz, LeafAccount account) {
 		Object module = account.getModules().get(this.getModuleKey(clazz));
 		return module != null && clazz.isInstance(module) ? (T) module : this.instanciate(account, clazz);
@@ -41,6 +42,7 @@ public class LeafModuleService {
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	private String getModuleKey(Class clazz) {
 		return clazz.getSimpleName().toLowerCase();
 	}
