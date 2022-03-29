@@ -95,7 +95,10 @@ public class LeafAccount extends LeafUser {
 	}
 
 	public ResourceMetadata getMetadata() {
-		return metadata;
+		if (this.metadata == null) {
+			this.metadata = ResourceMetadata.create();
+		}
+		return this.metadata;
 	}
 
 	public void setMetadata(ResourceMetadata metadata) {
