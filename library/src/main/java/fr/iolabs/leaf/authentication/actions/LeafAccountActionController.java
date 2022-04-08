@@ -8,6 +8,7 @@ import fr.iolabs.leaf.authentication.model.*;
 import fr.iolabs.leaf.authentication.read.LeafAccountDTO;
 import fr.iolabs.leaf.authentication.read.PrivateTokenDTO;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
+import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -86,7 +87,11 @@ public class LeafAccountActionController {
 	@PermitAll
 	@PostMapping("/sendresetpasswordkey")
 	public ResponseEntity<Void> sendResetPasswordKey(@RequestBody String email) {
-		this.accountService.sendResetPasswordKey(email);
+		if(email != null) {
+			this.accountService.sendResetPasswordKey(email.toLowerCase());
+		} else {
+			throw new UnauthorizedException();
+		}
 		return ResponseEntity.noContent().build();
 	}
 

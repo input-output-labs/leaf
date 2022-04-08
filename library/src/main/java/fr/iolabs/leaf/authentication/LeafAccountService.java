@@ -76,13 +76,13 @@ public class LeafAccountService {
 			throw new BadRequestException();
 		}
 
-		LeafAccount existingAccount = this.accountRepository.findAccountByEmail(userRegistration.getEmail());
+		LeafAccount existingAccount = this.accountRepository.findAccountByEmail(userRegistration.getEmail().toLowerCase());
 		if (existingAccount != null) {
 			throw new BadRequestException();
 		}
 
 		if (!isSystemAction && this.whitelistingService.enabled()
-				&& this.whitelistingService.isEmailAllowed(userRegistration.getEmail())) {
+				&& this.whitelistingService.isEmailAllowed(userRegistration.getEmail().toLowerCase())) {
 			throw new UnauthorizedException();
 		}
 
@@ -134,8 +134,8 @@ public class LeafAccountService {
 	public String login(LoginAction accountLogin) {
 		accountLogin.hashPassword();
 
-		LeafAccount fetchedAccount = this.accountRepository.findAccountByEmail(accountLogin.email);
-		if (fetchedAccount == null || !fetchedAccount.getPassword().equals(accountLogin.password)) {
+		LeafAccount fetchedAccount = this.accountRepository.findAccountByEmail(accountLogin.getEmail());
+		if (fetchedAccount == null || !fetchedAccount.getPassword().equals(accountLogin.getPassword())) {
 			throw new UnauthorizedException();
 		}
 

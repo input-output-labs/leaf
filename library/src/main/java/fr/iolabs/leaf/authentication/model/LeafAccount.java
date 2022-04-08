@@ -37,7 +37,7 @@ public class LeafAccount extends LeafUser {
 	}
 
 	public void setEmail(String email) {
-		this.email = email;
+		this.email = email != null ? email.toLowerCase() : null;
 	}
 
 	public String getPassword() {

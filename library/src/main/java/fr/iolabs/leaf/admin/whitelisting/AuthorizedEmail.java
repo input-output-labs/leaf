@@ -16,6 +16,6 @@ public class AuthorizedEmail {
 	}
 
 	public void setEmail(String email) {
-		this.email = email;
+		this.email = email != null ? email.toLowerCase() : null;
 	}
 }
