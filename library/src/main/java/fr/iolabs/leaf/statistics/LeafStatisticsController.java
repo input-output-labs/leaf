@@ -27,9 +27,12 @@ public class LeafStatisticsController {
 	@AdminOnly
 	@GetMapping
 	public List<LeafStatistic> listStatistics() {
-		return this.statisticsRepository.findAll().stream()
+		List<LeafStatistic> statistics = this.statisticsRepository.findAll().stream()
 				.sorted((h1, h2) -> h1.getCreationDateTime().compareTo(h2.getCreationDateTime()))
 				.collect(Collectors.toList());
+		LeafStatistic currentStatistic = this.getCurrentStatistics();
+		statistics.add(currentStatistic);
+		return statistics;
 	}
 
 	public Optional<LeafStatistic> lastStatistic() {
@@ -39,10 +42,15 @@ public class LeafStatisticsController {
 
 	@Scheduled(cron = "0 30 0 * * *")
 	public void reportCurrentTime() {
+		LeafStatistic statistic = this.getCurrentStatistics();
+		this.statisticsRepository.insert(statistic);
+	}
+
+	private LeafStatistic getCurrentStatistics() {
 		LeafStatistic statistic = LeafStatistic.create();
 		Optional<LeafStatistic> lastStatistic = this.lastStatistic();
 		this.applicationEventPublisher.publishEvent(new LeafStatisticGatheringEvent(this, statistic,
 				lastStatistic.isPresent() ? lastStatistic.get().getCreationDateTime() : null));
-		this.statisticsRepository.insert(statistic);
+		return statistic;
 	}
 }
