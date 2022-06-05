@@ -1,0 +1,42 @@
+spring:
+  profiles:
+    active: prod
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+  servlet:
+    multipart:
+      enabled: true
+      file-size-threshold: 200KB
+      max-file-size: 20MB
+      max-request-size: 22MB
+server:
+  servlet:
+    context-path: /
+leaf:
+  whitelisting:
+    enabled: false
+  firstuser:
+    enabled: true
+    email: admin
+    password: admin
+  protocol_hostname: https://blank.io-labs.fr
+  emailing:
+    selected-service: sendgrid
+    mailgun:
+      api:
+        url: https://api.mailgun.net/v3/techno-sophia.com/messages
+        key: "<todo: add properties with global variables>"
+      email:
+        from: No-Reply <postmaster@techno-sophia.com>
+    sendgrid:
+      api:
+        key: "${SENDGRID_API_KEY}"
+      email:
+        from: "<change here>"
+      templates:
+        account-creation: "<change here>"
+        password-change-key-sending: "<change here>"

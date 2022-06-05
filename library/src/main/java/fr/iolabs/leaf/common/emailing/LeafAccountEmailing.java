@@ -17,9 +17,6 @@ public class LeafAccountEmailing {
 	private static final String MAILGUN = "mailgun";
 	private static final String SENDGRID = "sendgrid";
 
-	@Value("${leaf.email-service}")
-	String emailServiceSelection;
-
 	@Autowired
 	private TemplateEngine templateEngine;
 	@Autowired
@@ -27,10 +24,13 @@ public class LeafAccountEmailing {
 	@Autowired
 	private LeafSendgridEmailService sendgridEmailService;
 
-	@Value("${sendgrid.templates.account-creation}")
+	@Value("${leaf.emailing.selected-service}")
+	String emailServiceSelection;
+
+	@Value("${leaf.emailing.sendgrid.templates.account-creation}")
 	String sendgridAccountCreationTemplateId;
 
-	@Value("${sendgrid.templates.password-change-key-sending}")
+	@Value("${leaf.emailing.sendgrid.templates.password-change-key-sending}")
 	String sendgridPasswordChangeKeySendingTemplateId;
 
 	public void sendAccountCreationConfirmation(LeafAccount to) {

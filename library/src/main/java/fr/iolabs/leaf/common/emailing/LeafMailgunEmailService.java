@@ -11,14 +11,14 @@ import fr.iolabs.leaf.common.errors.InternalServerErrorException;
 @Service
 public class LeafMailgunEmailService {
 
-    @Value("${mailgun.api.url}")
+    @Value("${leaf.emailing.mailgun.api.url}")
     String mailGunAPIUrl;
 
-    @Value("${mailgun.api.from}")
-    String mailGunAPIFrom;
-
-    @Value("${mailgun.api.key}")
+    @Value("${leaf.emailing.mailgun.api.key}")
     String mailGunAPIKey;
+
+    @Value("${leaf.emailing.mailgun.email.from}")
+    String mailGunAPIFrom;
 
     public void sendEmail(String to, String subject, String text, String html) {
         try {

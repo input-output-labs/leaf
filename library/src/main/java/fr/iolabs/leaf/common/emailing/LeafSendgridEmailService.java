@@ -20,10 +20,10 @@ import com.sendgrid.SendGrid;
 public class LeafSendgridEmailService {
 	private static Logger logger = LoggerFactory.getLogger(LeafSendgridEmailService.class);
 
-	@Value("${sendgrid.api.key}")
+	@Value("${leaf.emailing.sendgrid.api.key}")
 	String sendgridAPIKey;
 
-	@Value("${sendgrid.email.from}")
+	@Value("${leaf.emailing.sendgrid.email.from}")
 	String sendgridEmailFrom;
 
 	public void sendEmailWithTemplate(String to, String templateId) {

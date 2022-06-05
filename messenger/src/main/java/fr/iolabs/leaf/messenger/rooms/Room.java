@@ -1,16 +1,18 @@
 package fr.iolabs.leaf.messenger.rooms;
 
+import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 import fr.iolabs.leaf.messenger.rooms.messages.Message;
 import org.springframework.data.annotation.Id;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 public class Room implements Ownable {
     @Id
     private String id;
     private String ownerId;
-    private LocalDateTime createdAt;
+    private Set<String> members;
+    private ResourceMetadata metadata;
 
     private String name;
     private List<Message> messages;
@@ -31,13 +33,24 @@ public class Room implements Ownable {
         this.ownerId = ownerId;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    public Set<String> getMembers() {
+		return members;
+	}
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+	public void setMembers(Set<String> members) {
+		this.members = members;
+	}
+
+	public ResourceMetadata getMetadata() {
+		if (this.metadata == null) {
+			this.metadata = ResourceMetadata.create();
+		}
+		return this.metadata;
+	}
+
+	public void setMetadata(ResourceMetadata metadata) {
+		this.metadata = metadata;
+	}
 
     public String getName() {
         return name;
