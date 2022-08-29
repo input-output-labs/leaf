@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import fr.iolabs.leaf.authentication.model.*;
 import fr.iolabs.leaf.authentication.actions.LoginAction;
+import fr.iolabs.leaf.authentication.actions.MailingUnsubscriptionAction;
 import fr.iolabs.leaf.authentication.actions.RegistrationAction;
 import fr.iolabs.leaf.authentication.actions.ResetPasswordAction;
 import fr.iolabs.leaf.authentication.actions.ChangePasswordAction;
@@ -76,7 +77,8 @@ public class LeafAccountService {
 			throw new BadRequestException();
 		}
 
-		LeafAccount existingAccount = this.accountRepository.findAccountByEmail(userRegistration.getEmail().toLowerCase());
+		LeafAccount existingAccount = this.accountRepository
+				.findAccountByEmail(userRegistration.getEmail().toLowerCase());
 		if (existingAccount != null) {
 			throw new BadRequestException();
 		}
@@ -93,11 +95,10 @@ public class LeafAccountService {
 		this.applicationEventPublisher.publishEvent(new AccountRegistrationEvent(this, instanciatedAccount));
 
 		instanciatedAccount.hashPassword();
-		
 
 		LeafAccount createdAccount = accountRepository.save(instanciatedAccount);
 
-		if(!isSystemAction) {
+		if (!isSystemAction) {
 			this.accountEmailing.sendAccountCreationConfirmation(createdAccount);
 		}
 
@@ -112,7 +113,7 @@ public class LeafAccountService {
 		}
 
 		this.applicationEventPublisher.publishEvent(new AccountDeletionEvent(this, deletedAccountOpt.get()));
-		
+
 		this.accountRepository.delete(deletedAccountOpt.get());
 	}
 
@@ -167,7 +168,7 @@ public class LeafAccountService {
 		if (!me.getPassword().equals(hashedOldPassword)) {
 			throw new UnauthorizedException();
 		}
-		
+
 		me.getMetadata().updateLastModification();
 		me.setPassword(passwordChanger.getNewPassword());
 		me.hashPassword();
@@ -259,5 +260,18 @@ public class LeafAccountService {
 		me.getPrivateTokens().remove(tokenToRevoke);
 		this.accountRepository.save(me);
 		return me;
+	}
+
+	public void unsubscribeFromEmail(MailingUnsubscriptionAction mailingUnsubscriptionAction) {
+		LeafAccount fetchedAccount = this.accountRepository.findAccountByEmail(mailingUnsubscriptionAction.getEmail());
+
+		if (fetchedAccount == null) {
+			throw new UnauthorizedException();
+		}
+
+		if (fetchedAccount.getCommunication() != null) {
+			fetchedAccount.getCommunication().unsubscribe(mailingUnsubscriptionAction.getType());
+			this.accountRepository.save(fetchedAccount);
+		}
 	}
 }

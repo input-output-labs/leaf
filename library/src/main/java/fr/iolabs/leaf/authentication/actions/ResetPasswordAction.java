@@ -16,5 +16,4 @@ public class ResetPasswordAction {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-
 }

@@ -102,4 +102,12 @@ public class LeafAccountActionController {
 		this.accountService.resetPassword(resetPasswordAction);
 		return ResponseEntity.noContent().build();
 	}
+
+	@CrossOrigin
+	@PermitAll
+	@PostMapping("/mailings/unsubscription")
+	public ResponseEntity<Void> unsubscribeFromEmail(@RequestBody MailingUnsubscriptionAction resetPasswordAction) {
+		this.accountService.unsubscribeFromEmail(resetPasswordAction);
+		return ResponseEntity.noContent().build();
+	}
 }

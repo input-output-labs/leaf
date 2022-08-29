@@ -17,6 +17,7 @@ public class LeafAccount extends LeafUser {
 	protected Set<PrivateToken> privateTokens;
 	protected Set<String> hashedSessionTokens;
 	protected Map<String, Object> modules;
+	protected CommunicationAgreement communication = new CommunicationAgreement();
 	protected ResourceMetadata metadata;
 
 	protected boolean admin;
@@ -92,6 +93,14 @@ public class LeafAccount extends LeafUser {
 
 	public void setModules(Map<String, Object> modules) {
 		this.modules = modules;
+	}
+
+	public CommunicationAgreement getCommunication() {
+		return communication;
+	}
+
+	public void setCommunication(CommunicationAgreement communication) {
+		this.communication = communication;
 	}
 
 	public ResourceMetadata getMetadata() {
