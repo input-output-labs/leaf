@@ -23,9 +23,10 @@ leaf:
     enabled: true
     email: admin
     password: admin
-  protocol_hostname: https://blank.io-labs.fr
+  protocol_hostname: ${HOST_URL}
   emailing:
     selected-service: sendgrid
+    unsubscribe-url: /mailings/unsubscribe
     mailgun:
       api:
         url: https://api.mailgun.net/v3/techno-sophia.com/messages
@@ -36,7 +37,7 @@ leaf:
       api:
         key: "${SENDGRID_API_KEY}"
       email:
-        from: "<change here>"
+        from: "Recharge+<ne-pas-repondre@rechargeplus.fr>"
       templates:
         account-creation: "<change here>"
         password-change-key-sending: "<change here>"

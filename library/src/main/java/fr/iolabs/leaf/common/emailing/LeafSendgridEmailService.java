@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.sendgrid.helpers.mail.Mail;
 import com.sendgrid.helpers.mail.objects.*;
+import com.mashape.unirest.http.utils.URLParamEncoder;
 import com.sendgrid.Method;
 import com.sendgrid.Request;
 import com.sendgrid.Response;
@@ -26,11 +27,26 @@ public class LeafSendgridEmailService {
 	@Value("${leaf.emailing.sendgrid.email.from}")
 	String sendgridEmailFrom;
 
-	public void sendEmailWithTemplate(String to, String templateId) {
-		this.sendEmailWithTemplate(to, templateId, new HashMap<String, String>());
+	@Value("${leaf.protocol_hostname}")
+	String protocol_hostname;
+
+	@Value("${leaf.emailing.unsubscribe-url}")
+	String emailingUnsubscribeUrl;
+
+	public String sendEmailWithTemplate(String to, String templateId) {
+		return this.sendEmailWithTemplate(to, templateId, new HashMap<String, String>());
 	}
 
-	public void sendEmailWithTemplate(String to, String templateId, Map<String, String> templateData) {
+	public String sendEmailWithTemplate(String to, String templateId, String emailingCategoryName) {
+		return this.sendEmailWithTemplate(to, templateId, new HashMap<String, String>(), emailingCategoryName);
+	}
+
+	public String sendEmailWithTemplate(String to, String templateId, Map<String, String> templateData) {
+		return this.sendEmailWithTemplate(to, templateId, templateData, null);
+	}
+
+	public String sendEmailWithTemplate(String to, String templateId, Map<String, String> templateData,
+			String emailingCategoryName) {
 		Email from = new Email(sendgridEmailFrom);
 		Email toEmail = new Email(to);
 		Content content = new Content("text/html", "<html><body>some text here</body></html>");
@@ -39,6 +55,27 @@ public class LeafSendgridEmailService {
 		if (templateData != null) {
 			for (Map.Entry<String, String> data : templateData.entrySet()) {
 				mail.personalization.get(0).addDynamicTemplateData(data.getKey(), data.getValue());
+			}
+			if (emailingCategoryName != null && this.emailingUnsubscribeUrl != null) {
+				String encodedType = URLParamEncoder.encode(emailingCategoryName);
+				String encodedEmail = URLParamEncoder.encode(to);
+
+				String url = this.protocol_hostname + "/"+ this.emailingUnsubscribeUrl + "?type=" + encodedType
+						+ "&email=" + encodedEmail;
+				String protocol;
+				String hostAndPath;
+				if (url.split("://").length > 1) {
+					protocol = url.split("://")[0];
+					hostAndPath = url.split("://")[1];
+				} else {
+					protocol = "https";
+					hostAndPath = url.split("://")[0];
+				}
+				while(hostAndPath.contains("//")) {
+					hostAndPath = hostAndPath.replace("//", "/");
+				}
+				url = protocol + "://" + hostAndPath;
+				mail.personalization.get(0).addDynamicTemplateData("unsubscribeUrl", url);
 			}
 		}
 
@@ -58,6 +95,8 @@ public class LeafSendgridEmailService {
 			}
 		} catch (IOException ex) {
 			ex.printStackTrace();
+			return ex.getMessage();
 		}
+		return "";
 	}
 }

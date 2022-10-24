@@ -1,37 +1,20 @@
 package fr.iolabs.leaf.authentication.model;
 
-import fr.iolabs.leaf.common.emailing.CommunicationType;
+import java.util.HashSet;
+import java.util.Set;
 
 public class CommunicationAgreement {
-	private boolean commercialAllowed;
-	private boolean notificationsAllowed;
+	private Set<String> unsubscription = new HashSet<>();
 
-	public boolean isCommercialAllowed() {
-		return commercialAllowed;
+	public Set<String> getUnsubscription() {
+		return unsubscription;
 	}
 
-	public void setCommercialAllowed(boolean commercialAllowed) {
-		this.commercialAllowed = commercialAllowed;
+	public void setUnsubscription(Set<String> unsubscription) {
+		this.unsubscription = unsubscription;
 	}
 
-	public boolean isNotificationsAllowed() {
-		return notificationsAllowed;
-	}
-
-	public void setNotificationsAllowed(boolean notificationsAllowed) {
-		this.notificationsAllowed = notificationsAllowed;
-	}
-
-	public void unsubscribe(CommunicationType type) {
-		switch (type) {
-		case COMMERCIAL:
-			this.commercialAllowed = false;
-			break;
-		case NOTIFICATIONS:
-			this.notificationsAllowed = false;
-			break;
-		default:
-			break;
-		}
+	public void unsubscribe(String type) {
+		this.unsubscription.add(type.toLowerCase());
 	}
 }

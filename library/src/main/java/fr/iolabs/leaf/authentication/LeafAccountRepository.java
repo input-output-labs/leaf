@@ -3,7 +3,9 @@ package fr.iolabs.leaf.authentication;
 import java.util.List;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import fr.iolabs.leaf.authentication.model.LeafAccount;
@@ -15,6 +17,16 @@ public interface LeafAccountRepository extends MongoRepository<LeafAccount, Stri
     public LeafAccount findAccountByResetPasswordKey(String resetPasswordKey);
 
 	public List<LeafAccount> findByAdminTrue();
+
+	public List<LeafAccount> findByAdminTrue(Pageable pageable);
+
+	public long countByAdminTrue();
+	
+	@Query(value="{'communication.unsubscription': {$not: {$in: [?0]}}}", count = true)
+	public long countAccountsSubscribedTo(String name);
+	
+	@Query(value="{'communication.unsubscription': {$not: {$in: [?0]}}}", fields="{ 'email': 1}")
+	public List<LeafAccount> listAccountsSubscribedTo(String name, Pageable pageable);
 	
 	public List<LeafAccount> findByUsernameLike(String input, PageRequest pageRequest);
 }

@@ -1,10 +1,8 @@
 package fr.iolabs.leaf.authentication.actions;
 
-import fr.iolabs.leaf.common.emailing.CommunicationType;
-
 public class MailingUnsubscriptionAction {
 	private String email;
-	private CommunicationType type;
+	private String type;
 
 	public String getEmail() {
 		return email;
@@ -14,11 +12,11 @@ public class MailingUnsubscriptionAction {
 		this.email = email;
 	}
 
-	public CommunicationType getType() {
+	public String getType() {
 		return type;
 	}
 
-	public void setType(CommunicationType type) {
+	public void setType(String type) {
 		this.type = type;
 	}
 }
