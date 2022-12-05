@@ -8,6 +8,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
 import fr.iolabs.leaf.authentication.model.*;
+import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
 import fr.iolabs.leaf.authentication.actions.LoginAction;
 import fr.iolabs.leaf.authentication.actions.MailingUnsubscriptionAction;
 import fr.iolabs.leaf.authentication.actions.RegistrationAction;
@@ -94,7 +95,7 @@ public class LeafAccountService {
 
 		this.applicationEventPublisher.publishEvent(new AccountRegistrationEvent(this, instanciatedAccount));
 
-		instanciatedAccount.hashPassword();
+		instanciatedAccount.getAuthentication().hashPassword();
 
 		LeafAccount createdAccount = accountRepository.save(instanciatedAccount);
 
@@ -119,16 +120,16 @@ public class LeafAccountService {
 
 	private void mergeRegistrationActionInLeafAccount(LeafAccount account, RegistrationAction action) {
 		account.setEmail(action.getEmail());
-		account.setPassword(action.getPassword());
+		account.getAuthentication().setPassword(action.getPassword());
 
 		if (action.getUsername() != null) {
-			account.setUsername(action.getUsername());
+			account.getProfile().setUsername(action.getUsername());
 		}
 		if (action.getAvatarUrl() != null) {
-			account.setAvatarUrl(action.getAvatarUrl());
+			account.getProfile().setAvatarUrl(action.getAvatarUrl());
 		}
-		if (Strings.isBlank(account.getUsername())) {
-			account.setUsername(account.getEmail());
+		if (Strings.isBlank(account.getProfile().getUsername())) {
+			account.getProfile().setUsername(action.getEmail());
 		}
 	}
 
@@ -136,7 +137,7 @@ public class LeafAccountService {
 		accountLogin.hashPassword();
 
 		LeafAccount fetchedAccount = this.accountRepository.findAccountByEmail(accountLogin.getEmail());
-		if (fetchedAccount == null || !fetchedAccount.getPassword().equals(accountLogin.getPassword())) {
+		if (fetchedAccount == null || !fetchedAccount.getAuthentication().getPassword().equals(accountLogin.getPassword())) {
 			throw new UnauthorizedException();
 		}
 
@@ -147,7 +148,7 @@ public class LeafAccountService {
 
 	private String createSession(LeafAccount account) {
 		String token = tokenService.createSessionJWT(account.getId());
-		account.getHashedSessionTokens().add(StringHasher.hashString(token));
+		account.getAuthentication().getHashedSessionTokens().add(StringHasher.hashString(token));
 
 		Cookie cookie = new Cookie("Authorization", token);
 		cookie.setPath("/");
@@ -165,13 +166,13 @@ public class LeafAccountService {
 		String hashedOldPassword = StringHasher.hashString(passwordChanger.getOldPassword());
 
 		LeafAccount me = this.coreContext.getAccount();
-		if (!me.getPassword().equals(hashedOldPassword)) {
+		if (!me.getAuthentication().getPassword().equals(hashedOldPassword)) {
 			throw new UnauthorizedException();
 		}
 
 		me.getMetadata().updateLastModification();
-		me.setPassword(passwordChanger.getNewPassword());
-		me.hashPassword();
+		me.getAuthentication().setPassword(passwordChanger.getNewPassword());
+		me.getAuthentication().hashPassword();
 
 		return this.accountRepository.save(me);
 	}
@@ -182,11 +183,11 @@ public class LeafAccountService {
 			throw new UnauthorizedException();
 		}
 
-		fetchedAccount.generateResetPasswordKey();
+		fetchedAccount.getAuthentication().generateResetPasswordKey();
 
 		this.accountRepository.save(fetchedAccount);
 
-		this.accountEmailing.sendResetPasswordKey(fetchedAccount, fetchedAccount.getResetPasswordKey());
+		this.accountEmailing.sendResetPasswordKey(fetchedAccount, fetchedAccount.getAuthentication().getResetPasswordKey());
 	}
 
 	public void resetPassword(ResetPasswordAction resetPasswordAction) {
@@ -196,9 +197,9 @@ public class LeafAccountService {
 			throw new UnauthorizedException();
 		}
 
-		fetchedAccount.setPassword(resetPasswordAction.getPassword());
-		fetchedAccount.setResetPasswordKey(null);
-		fetchedAccount.hashPassword();
+		fetchedAccount.getAuthentication().setPassword(resetPasswordAction.getPassword());
+		fetchedAccount.getAuthentication().setResetPasswordKey(null);
+		fetchedAccount.getAuthentication().hashPassword();
 
 		this.accountRepository.save(fetchedAccount);
 	}
@@ -210,7 +211,7 @@ public class LeafAccountService {
 
 		LeafAccount me = this.coreContext.getAccount();
 		me.getMetadata().updateLastModification();
-		me.setUsername(newName);
+		me.getProfile().setUsername(newName);
 
 		return this.accountRepository.save(me);
 	}
@@ -222,7 +223,7 @@ public class LeafAccountService {
 
 		LeafAccount me = this.coreContext.getAccount();
 		me.getMetadata().updateLastModification();
-		me.setAvatarUrl(newAvatarUrl);
+		me.getProfile().setAvatarUrl(newAvatarUrl);
 
 		return this.accountRepository.save(me);
 	}
@@ -240,7 +241,7 @@ public class LeafAccountService {
 		privateToken.setSecretKey(StringHasher.hashString(privateToken.getSecretKey()));
 
 		me.getMetadata().updateLastModification();
-		me.getPrivateTokens().add(privateToken);
+		me.getAuthentication().getPrivateTokens().add(privateToken);
 
 		this.accountRepository.save(me);
 
@@ -250,14 +251,14 @@ public class LeafAccountService {
 	public LeafAccount revokePrivateToken(String name) {
 		LeafAccount me = this.coreContext.getAccount();
 		PrivateToken tokenToRevoke = null;
-		for (PrivateToken token : me.getPrivateTokens()) {
+		for (PrivateToken token : me.getAuthentication().getPrivateTokens()) {
 			if (name.equals(token.getName())) {
 				tokenToRevoke = token;
 				break;
 			}
 		}
 		me.getMetadata().updateLastModification();
-		me.getPrivateTokens().remove(tokenToRevoke);
+		me.getAuthentication().getPrivateTokens().remove(tokenToRevoke);
 		this.accountRepository.save(me);
 		return me;
 	}

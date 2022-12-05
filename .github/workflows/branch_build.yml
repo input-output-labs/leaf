@@ -33,3 +33,5 @@ jobs:
         mvn deploy --batch-mode -Dregistry=https://nexus.io-labs.fr/repository/maven-snapshots/
         cd ../messenger
         mvn deploy --batch-mode -Dregistry=https://nexus.io-labs.fr/repository/maven-snapshots/
+        cd ../sponsoring
+        mvn deploy --batch-mode -Dregistry=https://nexus.io-labs.fr/repository/maven-snapshots/

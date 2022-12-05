@@ -1,4 +1,4 @@
-package fr.iolabs.leaf.authentication.model;
+package fr.iolabs.leaf.authentication.model.authentication;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -11,6 +11,10 @@ public class PrivateToken {
     private String accountId;
     private String secretKey;
 
+    public PrivateToken() {
+        this(null, null,null,null);
+    }
+
     public PrivateToken(String name, String accountId, LocalDate expiration, String secretKey) {
         this.name = name;
         this.accountId = accountId;
@@ -18,11 +22,15 @@ public class PrivateToken {
         this.secretKey = secretKey;
     }
 
-    public PrivateToken() {
-        this(null, null,null,null);
-    }
+    public PrivateToken(PrivateToken from) {
+        this.name = from.name;
+        this.created = from.created;
+        this.expiration = from.expiration;
+        this.accountId = from.accountId;
+        this.secretKey = from.secretKey;
+	}
 
-    @Override
+	@Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

@@ -10,8 +10,6 @@ import java.util.Map;
 import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.interfaces.Claim;
 
-import fr.iolabs.leaf.authentication.model.PrivateToken;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,6 +20,8 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+
+import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
 
 @Service
 public class TokenService {

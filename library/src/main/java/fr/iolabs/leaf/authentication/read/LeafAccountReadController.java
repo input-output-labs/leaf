@@ -6,6 +6,7 @@ import javax.annotation.Resource;
 
 import fr.iolabs.leaf.authentication.LeafAccountRepository;
 import fr.iolabs.leaf.authentication.model.*;
+import fr.iolabs.leaf.authentication.privacy.LeafPrivacyService;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,31 +23,35 @@ import fr.iolabs.leaf.LeafContext;
 @RequestMapping("/api/account")
 public class LeafAccountReadController {
 
-    @Resource(name = "coreContext")
-    private LeafContext coreContext;
-    
-    @Autowired
-    private LeafAccountRepository accountRepository;
+	@Resource(name = "coreContext")
+	private LeafContext coreContext;
 
-    @CrossOrigin
-    @GetMapping("/all")
-    @AdminOnly
-    public List<LeafAccountDTO> listUsers() {
-    	List<LeafAccount> accounts = this.accountRepository.findAll();
-        return LeafAccountDTO.from(accounts);
-    }
+	@Autowired
+	private LeafAccountRepository accountRepository;
 
-    @CrossOrigin
-    @GetMapping("/me")
-    public LeafAccountDTO getUser() {
-        LeafAccount me = this.coreContext.getAccount();
-        return LeafAccountDTO.from(me);
-    }
+	@Autowired
+	private LeafPrivacyService privacyHelper;
 
-    @CrossOrigin
-    @AdminOnly
-    @GetMapping("/autocomplete")
-    public List<LeafUserDTO> autocomplete(@RequestParam("input") String input) {
-    	return LeafUserDTO.fromAll(this.accountRepository.findByUsernameLike(input, PageRequest.of(0, 10)));
-    }
+	@CrossOrigin
+	@GetMapping("/all")
+	@AdminOnly
+	public List<LeafAccount> listUsers() {
+		List<LeafAccount> accounts = this.accountRepository.findAll();
+		return this.privacyHelper.protectAccounts(accounts);
+	}
+
+	@CrossOrigin
+	@GetMapping("/me")
+	public LeafAccount getUser() {
+		LeafAccount me = this.coreContext.getAccount();
+		return this.privacyHelper.protectAccount(me);
+	}
+
+	@CrossOrigin
+	@AdminOnly
+	@GetMapping("/autocomplete")
+	public List<LeafAccount> autocomplete(@RequestParam("input") String input) {
+		return this.privacyHelper
+				.protectAccounts(this.accountRepository.findByUsernameLike(input, PageRequest.of(0, 10)));
+	}
 }

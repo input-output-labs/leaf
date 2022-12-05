@@ -29,4 +29,6 @@ public interface LeafAccountRepository extends MongoRepository<LeafAccount, Stri
 	public List<LeafAccount> listAccountsSubscribedTo(String name, Pageable pageable);
 	
 	public List<LeafAccount> findByUsernameLike(String input, PageRequest pageRequest);
+
+	public Iterable<LeafAccount> findAllById(Iterable<String> ids);
 }

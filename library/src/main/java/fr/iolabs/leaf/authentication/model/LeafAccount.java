@@ -2,6 +2,9 @@ package fr.iolabs.leaf.authentication.model;
 
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import fr.iolabs.leaf.authentication.model.authentication.LeafAccountAuthentication;
+import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
+import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.common.utils.StringHasher;
 
 import java.util.Set;
@@ -12,25 +15,64 @@ import java.util.Map;
 @Document(collection = "account")
 public class LeafAccount extends LeafUser {
 	protected String email;
+	protected LeafAccountAuthentication authentication;
+	@Deprecated
 	protected String password;
+	@Deprecated
 	protected String resetPasswordKey;
+	@Deprecated
 	protected Set<PrivateToken> privateTokens;
+	@Deprecated
 	protected Set<String> hashedSessionTokens;
-	protected Map<String, Object> modules;
+
+	protected LeafAccountProfile profile;
+
 	protected CommunicationAgreement communication = new CommunicationAgreement();
+	protected Map<String, Object> modules;
 	protected ResourceMetadata metadata;
 
 	protected boolean admin;
 
 	public LeafAccount() {
 		this.admin = false;
+		this.authentication = new LeafAccountAuthentication();
 		this.privateTokens = new HashSet<>();
 		this.hashedSessionTokens = new HashSet<>();
+		this.profile = new LeafAccountProfile();
 		this.modules = new HashMap<>();
 	}
 
+	public LeafAccount(LeafAccount from) {
+		super(from);
+		this.admin = from.admin;
+		this.authentication = from.authentication;
+		this.privateTokens = from.privateTokens;
+		this.hashedSessionTokens = from.hashedSessionTokens;
+		this.profile = from.profile;
+		this.communication = from.communication;
+		this.modules = from.modules;
+		this.metadata = from.metadata;
+	}
+
+	public LeafAccountAuthentication getAuthentication() {
+		return authentication;
+	}
+
+	public void setAuthentication(LeafAccountAuthentication authentication) {
+		this.authentication = authentication;
+	}
+
+	public LeafAccountProfile getProfile() {
+		return profile;
+	}
+
+	public void setProfile(LeafAccountProfile profile) {
+		this.profile = profile;
+	}
+
+	@Deprecated
 	public void hashPassword() {
-		this.password = StringHasher.hashString(this.password);
+		this.setPassword(StringHasher.hashString(this.password));
 	}
 
 	public String getEmail() {
@@ -41,10 +83,12 @@ public class LeafAccount extends LeafUser {
 		this.email = email != null ? email.toLowerCase() : null;
 	}
 
+	@Deprecated
 	public String getPassword() {
 		return password;
 	}
 
+	@Deprecated
 	public void setPassword(String password) {
 		this.password = password;
 	}
@@ -57,32 +101,39 @@ public class LeafAccount extends LeafUser {
 		this.admin = admin;
 	}
 
+	@Deprecated
 	public void generateResetPasswordKey() {
 		String key = System.currentTimeMillis() + this.email;
 		String shortHashKey = StringHasher.hashString(key).substring(0, 8);
 		this.resetPasswordKey = shortHashKey;
 	}
 
+	@Deprecated
 	public String getResetPasswordKey() {
 		return resetPasswordKey;
 	}
 
+	@Deprecated
 	public void setResetPasswordKey(String resetPasswordKey) {
 		this.resetPasswordKey = resetPasswordKey;
 	}
 
+	@Deprecated
 	public Set<PrivateToken> getPrivateTokens() {
 		return privateTokens;
 	}
 
+	@Deprecated
 	public void setPrivateTokens(Set<PrivateToken> privateTokens) {
 		this.privateTokens = privateTokens;
 	}
 
+	@Deprecated
 	public Set<String> getHashedSessionTokens() {
 		return hashedSessionTokens;
 	}
 
+	@Deprecated
 	public void setHashedSessionTokens(Set<String> hashedSessionTokens) {
 		this.hashedSessionTokens = hashedSessionTokens;
 	}
@@ -112,21 +163,5 @@ public class LeafAccount extends LeafUser {
 
 	public void setMetadata(ResourceMetadata metadata) {
 		this.metadata = metadata;
-	}
-
-	public void merge(LeafAccount account) {
-		if (account.email != null) {
-			this.email = account.email;
-		}
-		if (account.username != null) {
-			this.username = account.username;
-		}
-		if (account.password != null) {
-			this.password = account.password;
-		}
-		if (account.avatarUrl != null) {
-			this.avatarUrl = account.avatarUrl;
-		}
-		this.admin = account.admin;
 	}
 }

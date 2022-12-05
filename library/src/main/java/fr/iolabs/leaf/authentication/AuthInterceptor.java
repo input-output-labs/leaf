@@ -8,7 +8,6 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import fr.iolabs.leaf.authentication.model.PrivateToken;
 import fr.iolabs.leaf.common.TokenService;
 import fr.iolabs.leaf.common.utils.StringHasher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +16,7 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
+import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
 import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
@@ -73,7 +73,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 
 			if (tokenService.isSessionJWT(token)) {
 				String hashedToken = StringHasher.hashString(token);
-				boolean oneSessionTokenIsMatching = account.get().getHashedSessionTokens().stream()
+				boolean oneSessionTokenIsMatching = account.get().getAuthentication().getHashedSessionTokens().stream()
 						.anyMatch(hashedToken::equals);
 
 				if (!oneSessionTokenIsMatching) {
@@ -82,7 +82,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 			} else if (tokenService.isPrivateTokenJWT(token)) {
 				PrivateToken privateToken = tokenService.getPrivateTokenFromPrivateTokenJWT(token);
 				String hashSecretKey = StringHasher.hashString(privateToken.getSecretKey());
-				boolean oneAccountTokenIsMatching = account.get().getPrivateTokens().stream()
+				boolean oneAccountTokenIsMatching = account.get().getAuthentication().getPrivateTokens().stream()
 						.anyMatch(aToken -> hashSecretKey.equals(aToken.getSecretKey()));
 
 				if (!oneAccountTokenIsMatching) {

@@ -17,6 +17,7 @@
   <modules>
     <module>library</module>
     <module>messenger</module>
+    <module>sponsoring</module>
     <module>demo</module>
   </modules>
 

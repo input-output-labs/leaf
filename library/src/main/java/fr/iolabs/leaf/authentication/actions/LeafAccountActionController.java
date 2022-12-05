@@ -5,8 +5,8 @@ import javax.annotation.security.PermitAll;
 
 import fr.iolabs.leaf.authentication.LeafAccountService;
 import fr.iolabs.leaf.authentication.model.*;
-import fr.iolabs.leaf.authentication.read.LeafAccountDTO;
-import fr.iolabs.leaf.authentication.read.PrivateTokenDTO;
+import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
+import fr.iolabs.leaf.authentication.privacy.LeafPrivacyService;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
 import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
@@ -32,6 +32,9 @@ public class LeafAccountActionController {
 	@Autowired
 	private LeafAccountService accountService;
 
+	@Autowired
+	private LeafPrivacyService privacyHelper;
+
 	@CrossOrigin
 	@PermitAll
 	@PostMapping
@@ -55,32 +58,32 @@ public class LeafAccountActionController {
 
 	@CrossOrigin
 	@PostMapping("/me/password")
-	public LeafAccountDTO changePassword(@RequestBody ChangePasswordAction passwordChanger) {
-		return LeafAccountDTO.from(this.accountService.changePassword(passwordChanger));
+	public LeafAccount changePassword(@RequestBody ChangePasswordAction passwordChanger) {
+		return this.privacyHelper.protectAccount(this.accountService.changePassword(passwordChanger));
 	}
 
 	@CrossOrigin
 	@PostMapping("/me/privatetokens")
-	public JWT addPrivateToken(@RequestBody PrivateTokenDTO privateToken) {
-		return this.accountService.addPrivateToken(privateToken.toPrivateToken());
+	public JWT addPrivateToken(@RequestBody PrivateToken privateToken) {
+		return this.accountService.addPrivateToken(privateToken);
 	}
 
 	@CrossOrigin
 	@DeleteMapping("/me/privatetokens/{name}")
-	public LeafAccountDTO revokePrivateToken(@PathVariable String name) {
-		return LeafAccountDTO.from(this.accountService.revokePrivateToken(name));
+	public LeafAccount revokePrivateToken(@PathVariable String name) {
+		return this.privacyHelper.protectAccount(this.accountService.revokePrivateToken(name));
 	}
 
 	@CrossOrigin
 	@PostMapping("/me/username")
-	public LeafAccountDTO changeName(@RequestBody String newName) {
-		return LeafAccountDTO.from(this.accountService.changeName(newName));
+	public LeafAccount changeName(@RequestBody String newName) {
+		return this.privacyHelper.protectAccount(this.accountService.changeName(newName));
 	}
 
 	@CrossOrigin
 	@PostMapping("/me/avatar")
-	public LeafAccountDTO changeAvatarUrl(@RequestBody String newAvatarUrl) {
-		return LeafAccountDTO.from(this.accountService.changeAvatarUrl(newAvatarUrl));
+	public LeafAccount changeAvatarUrl(@RequestBody String newAvatarUrl) {
+		return this.privacyHelper.protectAccount(this.accountService.changeAvatarUrl(newAvatarUrl));
 	}
 
 	@CrossOrigin
