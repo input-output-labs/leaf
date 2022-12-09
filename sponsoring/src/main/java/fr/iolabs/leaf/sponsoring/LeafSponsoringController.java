@@ -83,9 +83,10 @@ public class LeafSponsoringController {
 		mySponsoring.getAffiliatedIds().forEach(id -> accountIds.add(id));
 
 		Map<String, LeafAccountProfile> profiles = new HashMap<>();
-		this.accountRepository.findAllById(accountIds).forEach((account) -> profiles.put(account.getId(), account.getProfile()));
-
-		this.privacyService.protectProfiles(profiles.values());
+		this.accountRepository.findAllById(accountIds).forEach((account) -> {
+			this.privacyService.protectAccount(account);
+			profiles.put(account.getId(), account.getProfile());
+		});
 		
 		SponsoringProfiles sponsoringProfiles = new SponsoringProfiles();
 

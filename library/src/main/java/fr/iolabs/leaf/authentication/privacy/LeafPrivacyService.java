@@ -1,6 +1,5 @@
 package fr.iolabs.leaf.authentication.privacy;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,7 +28,7 @@ public class LeafPrivacyService {
 		result.setResetPasswordKey(null);
 		result.setHashedSessionTokens(null);
 		result.setPrivateTokens(result.getPrivateTokens().stream().map(this::protectPrivateToken).collect(Collectors.toSet()));
-		result.setProfile(this.protectProfile(result.getProfile()));
+		result.setProfile(this.protectProfile(account.getId(), result.getProfile()));
 		result.setCommunication(null);
 		
 		return result;
@@ -49,15 +48,11 @@ public class LeafPrivacyService {
 		result.setSecretKey(null);
 		return result;
 	}
-	
-	public List<LeafAccountProfile> protectProfiles(Collection<LeafAccountProfile> profiles) {
-		return profiles.stream().map(this::protectProfile).collect(Collectors.toList());
-	}
 
-	public LeafAccountProfile protectProfile(LeafAccountProfile profile) {
+	public LeafAccountProfile protectProfile(String accountId, LeafAccountProfile profile) {
 		LeafAccountProfile result = new LeafAccountProfile(profile);
 
-		this.applicationEventPublisher.publishEvent(new LeafAccountProfilePrivacyEvent(this, result));
+		this.applicationEventPublisher.publishEvent(new LeafAccountProfilePrivacyEvent(this, accountId, result));
 		
 		return result;
 	}
