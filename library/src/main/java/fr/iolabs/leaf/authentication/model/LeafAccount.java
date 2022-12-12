@@ -44,6 +44,7 @@ public class LeafAccount extends LeafUser {
 
 	public LeafAccount(LeafAccount from) {
 		super(from);
+		this.email = from.email;
 		this.admin = from.admin;
 		this.authentication = from.authentication;
 		this.privateTokens = from.privateTokens;
