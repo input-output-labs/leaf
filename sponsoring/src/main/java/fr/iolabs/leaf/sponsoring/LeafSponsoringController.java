@@ -93,7 +93,9 @@ public class LeafSponsoringController {
 		if (mySponsoring.getSponsorId() != null) {
 			sponsoringProfiles.setSponsor(profiles.get(mySponsoring.getSponsorId()));
 		}
-		mySponsoring.getAffiliatedIds().forEach(id -> sponsoringProfiles.setSponsor(profiles.get(id)));
+		HashSet<LeafAccountProfile> affiliatedProfiles = new HashSet<>();
+		mySponsoring.getAffiliatedIds().forEach(id -> affiliatedProfiles.add(profiles.get(id)));
+		sponsoringProfiles.setAffiliates(affiliatedProfiles);
 		
 		return sponsoringProfiles;
 	}
