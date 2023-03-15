@@ -1,7 +1,11 @@
 package fr.iolabs.leaf.analytics.models;
 
+import java.time.LocalDateTime;
+
 import org.json.JSONObject;
 import org.springframework.data.annotation.Id;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class LeafAnalyticEvent {
 	@Id
@@ -10,6 +14,8 @@ public class LeafAnalyticEvent {
 	private String accountId;
 	private String category;
 	private String name;
+	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss[.SSS][.SS][.S]")
+	private LocalDateTime creationDate;
 	private JSONObject payload;
 
 	public boolean isValid() {
@@ -62,5 +68,14 @@ public class LeafAnalyticEvent {
 
 	public void setPayload(JSONObject payload) {
 		this.payload = payload;
+	}
+
+	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss[.SSS][.SS][.S]")
+	public LocalDateTime getCreationDate() {
+		return creationDate;
+	}
+
+	public void setCreationDate(LocalDateTime creationDate) {
+		this.creationDate = creationDate;
 	}
 }
