@@ -13,6 +13,8 @@ public class LeafEmailingCategory {
 
 	public String description;
 
+	public boolean custom;
+
 	public String getId() {
 		return id;
 	}
@@ -37,4 +39,11 @@ public class LeafEmailingCategory {
 		this.description = description;
 	}
 
+	public boolean getCustom() {
+		return custom;
+	}
+
+	public void setCustom(boolean custom) {
+		this.custom = custom;
+	}
 }

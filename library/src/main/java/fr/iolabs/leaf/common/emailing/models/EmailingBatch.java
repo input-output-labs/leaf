@@ -39,8 +39,8 @@ public class EmailingBatch {
 		return this.input.getTarget().getName();
 	}
 
-	public boolean isAdminCategory() {
-		return "0".equals(this.input.getTarget().getId());
+	public boolean isCustomCategory() {
+		return this.input.getTarget().getCustom();
 	}
 
 	public void checkFinished() {

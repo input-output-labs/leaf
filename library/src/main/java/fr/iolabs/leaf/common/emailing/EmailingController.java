@@ -7,6 +7,7 @@ import java.util.Optional;
 import javax.annotation.Resource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,16 +49,22 @@ public class EmailingController {
 	@Autowired
 	private LeafSendgridEmailService sendgridEmailService;
 
+	@Autowired
+	private ApplicationEventPublisher applicationEventPublisher;
+
 	@CrossOrigin
 	@AdminOnly
 	@GetMapping("/categories")
 	public List<LeafEmailingCategory> findAllCategories() {
 		List<LeafEmailingCategory> categories = new ArrayList<LeafEmailingCategory>();
-		LeafEmailingCategory adminCategory = new LeafEmailingCategory();
-		adminCategory.setId("0");
-		adminCategory.setName("Admins");
-		categories.add(adminCategory);
+
+		// Get app custom categories
+		this.applicationEventPublisher.publishEvent(new LeafEmailingCustomCategorySeekingEvent(this, categories));
+		categories.forEach(category -> category.setCustom(true));
+
+		// List all existing categories
 		categories.addAll(this.emailingCategoryRepository.findAll());
+
 		return categories;
 	}
 
@@ -130,8 +137,8 @@ public class EmailingController {
 		BatchCreationTestingReport report = generateReportObject(batchCreationAction);
 
 		if (report.canTest()) {
-			String result = this.sendgridEmailService.sendEmailWithTemplate(
-					batchCreationAction.getTestingEmailTarget(), batchCreationAction.getSengridId(), report.getInput().getTarget().getName());
+			String result = this.sendgridEmailService.sendEmailWithTemplate(batchCreationAction.getTestingEmailTarget(),
+					batchCreationAction.getSengridId(), report.getInput().getTarget().getName());
 			report.setSendgridIdOk(!result.contains("\"field\":\"template_id\""));
 			if (result.contains("\"field\":\"to.email\"")) {
 				report.setTestingEmailTargetOk(false);
@@ -153,7 +160,17 @@ public class EmailingController {
 		}
 
 		EmailingBatch batch = EmailingBatch.from(batchCreationAction);
-		batch.setMaxPagesCount((int) Math.ceil(report.getTargetAccountsCount() / report.getInput().getEmailsPerHour()));
+
+		long targetedAccountsCount = 0;
+		if (batch.isCustomCategory()) {
+			LeafEmailingCustomCategoryAccountListingEvent event = new LeafEmailingCustomCategoryAccountListingEvent(
+					this, batch.getInput().getTarget(), LeafEmailingCustomCategoryAccountListingEvent.Action.COUNT);
+			this.applicationEventPublisher.publishEvent(event);
+			targetedAccountsCount = event.getCount();
+		} else {
+			targetedAccountsCount = report.getTargetAccountsCount();
+		}
+		batch.setMaxPagesCount((int) Math.ceil(targetedAccountsCount / report.getInput().getEmailsPerHour()));
 
 		return this.batchRepository.insert(batch);
 	}

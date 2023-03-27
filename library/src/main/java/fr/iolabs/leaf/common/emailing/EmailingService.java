@@ -3,6 +3,7 @@ package fr.iolabs.leaf.common.emailing;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,6 +25,9 @@ public class EmailingService {
 	@Autowired
 	private LeafSendgridEmailService sendgridEmailService;
 
+	@Autowired
+	private ApplicationEventPublisher applicationEventPublisher;
+
 	@Scheduled(cron = "0 0 * * * *")
 	public void scheduleFixedRateTask() {
 		List<EmailingBatch> batches = this.batchRepository.findByFinishedFalse();
@@ -43,14 +47,22 @@ public class EmailingService {
 	private void sendBatchEmails(EmailingBatch batch) {
 		System.out.println("Found emailing batch : " + batch.getId());
 		double batchSize = batch.getInput().getEmailsPerHour();
-		boolean isAdminCategory = batch.isAdminCategory();
 		String categoryName = batch.categoryName();
 
 		int pageIndex = batch.getNextPageIndex();
 
 		Pageable page = PageRequest.of(pageIndex, (int) batchSize);
-		List<LeafAccount> accounts = isAdminCategory ? this.accountRepository.findByAdminTrue(page)
-				: this.accountRepository.listAccountsSubscribedTo(categoryName, page);
+
+		List<LeafAccount> accounts;
+		if (batch.isCustomCategory()) {
+			LeafEmailingCustomCategoryAccountListingEvent event = new LeafEmailingCustomCategoryAccountListingEvent(
+					this,
+					batch.getInput().getTarget() ,LeafEmailingCustomCategoryAccountListingEvent.Action.LIST, page);
+			this.applicationEventPublisher.publishEvent(event);
+			accounts = event.accounts();
+		} else {
+			accounts = this.accountRepository.listAccountsSubscribedTo(categoryName, page);
+		}
 
 		for (LeafAccount account : accounts) {
 
