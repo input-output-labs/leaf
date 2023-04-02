@@ -5,6 +5,7 @@ import java.util.Map;
 import javax.annotation.security.PermitAll;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,7 +24,8 @@ import fr.iolabs.leaf.payment.stripe.models.PaymentLinkCreationAction;
 @RequestMapping("/api/payment/stripe")
 public class StripeController {
 
-	private String privateKey = "coucou";
+	@Value("${leaf.payment.stripe.api.key}")
+	private String privateKey;
 
 	@Autowired
 	private StripeService stripeService;
@@ -47,16 +49,13 @@ public class StripeController {
 	@PermitAll
 	@CrossOrigin
 	@PostMapping("/checkout-sessions/webhook")
-	public String checkoutSessionWebhook(@RequestBody Event eventReceived) throws StripeException {
-		// VERIFY CALLS COME FROM STRIPE: https://stripe.com/docs/payments/checkout/fulfill-orders#v%C3%A9rifier-que-les-%C3%A9v%C3%A9nements-proviennent-de-stripe
-		System.out.println(eventReceived);
-		this.stripeService.handlePaymentResult(eventReceived);
-//		try {
-//			Object event = new com.google.gson.Gson();
-//			Event event = ApiResource.GSON.fromJson(eventReceived, Event.class);
-//		} catch (Exception error) {
-//			System.out.println("An error occurred while receiving checkout event, " + error.toString());
-//		}
+	public String checkoutSessionWebhook(@RequestBody String eventReceived) throws StripeException {
+		// VERIFY CALLS COME FROM STRIPE:
+		// https://stripe.com/docs/payments/checkout/fulfill-orders#v%C3%A9rifier-que-les-%C3%A9v%C3%A9nements-proviennent-de-stripe
+		Event event = ApiResource.GSON.fromJson(eventReceived, Event.class);
+		if (event.getType().contains("checkout.session.completed")) {
+			this.stripeService.handlePaymentResult(event);
+		}
 		return "";
 	}
 

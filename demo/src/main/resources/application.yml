@@ -41,3 +41,7 @@ leaf:
       templates:
         account-creation: "<change here>"
         password-change-key-sending: "<change here>"
+  payment:
+    stripe:
+      api:
+        key: "${STRIPE_API_KEY}"

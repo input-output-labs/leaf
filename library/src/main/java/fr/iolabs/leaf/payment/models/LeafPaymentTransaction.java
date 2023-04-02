@@ -2,10 +2,12 @@ package fr.iolabs.leaf.payment.models;
 
 import java.util.Map;
 
+import org.springframework.data.annotation.Id;
+
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 
 public class LeafPaymentTransaction {
-
+	@Id
 	private String id;
 	private String customerId;
 	private String checkoutSessionId;

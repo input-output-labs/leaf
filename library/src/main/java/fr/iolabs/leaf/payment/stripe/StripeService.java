@@ -4,19 +4,30 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
+import com.stripe.model.Event.Data;
+import com.stripe.model.PaymentIntent;
 import com.stripe.model.PaymentLink;
 import com.stripe.model.Price;
 import com.stripe.model.Product;
+import com.stripe.model.StripeObject;
 import com.stripe.model.checkout.Session;
 
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
+import fr.iolabs.leaf.payment.models.LeafPaymentResultEvent;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransaction;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransactionRepository;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransactionStatusEnum;
@@ -73,7 +84,6 @@ public class StripeService {
 		// Create checkout session: doc:
 		// https://stripe.com/docs/api/checkout/sessions/create?lang=java
 		Session session = Session.create(params);
-		System.out.println("session: " + session);
 		//TODO: ADD TAXES AUTO
 		LeafPaymentTransaction paymentTransaction = new LeafPaymentTransaction(session.getCustomer());
 		paymentTransaction.setStatus(LeafPaymentTransactionStatusEnum.inProgress);
@@ -90,16 +100,22 @@ public class StripeService {
 	}
 	
 	public void handlePaymentResult(Event event) {
-		String eventType = event.getType();
-		if(eventType.contains("payment_intent")) {
-			LeafPaymentTransactionStatusEnum status = LeafPaymentTransactionStatusEnum.successful;
-			if(eventType.contains("failure")) {
-				status = LeafPaymentTransactionStatusEnum.failure;
-			} else if(eventType.contains("cancelled")) {
-				status = LeafPaymentTransactionStatusEnum.cancelled;
+		StripeObject eventData =  event.getDataObjectDeserializer().getObject().orElseThrow();
+		String eventString = eventData.toJson();
+		JsonObject jsonObject = JsonParser.parseString(eventString).getAsJsonObject();
+		String checkoutSessionIdWithQuotes = jsonObject.get("id").toString();
+		String checkoutSessionId = checkoutSessionIdWithQuotes.substring(1, checkoutSessionIdWithQuotes.length() - 1);
+
+		// Do we need to retrieve the payment intent to have a better payment management? jsonObject.get("payment_intent")
+		if(checkoutSessionId instanceof String) {
+			// TODO: TO DEBUG why it's not working
+			 Optional<LeafPaymentTransaction> paymentTransaction = this.leafPaymentTransactionRepository.findByCheckoutSessionId(checkoutSessionId.toString());
+			
+			if(paymentTransaction.isPresent()) {
+				this.applicationEventPublisher.publishEvent(new LeafPaymentResultEvent(this, paymentTransaction.get()));
+			} else {
+				// TODO: Handle case where the transaction is not found.
 			}
-		} else {
-			// handle error case.
 		}
 	}
 
