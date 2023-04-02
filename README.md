@@ -26,5 +26,6 @@ After installing and loggin in with stripe cli:
 
 
 - Event API (returned by Stripe's webhook): https://stripe.com/docs/api/events/object && https://stripe.com/docs/cli/trigger#trigger-event
+- Postman collection: https://www.postman.com/stripedev/workspace/stripe-developers/overview
 
 

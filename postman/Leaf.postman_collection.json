@@ -1,0 +1,180 @@
+{
+	"info": {
+		"_postman_id": "67e986fd-17f4-4769-907c-e2b8936b3f02",
+		"name": "Leaf",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "440655"
+	},
+	"item": [
+		{
+			"name": "Redirect url",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhY2NvdW50SWQiOiI2MjEyN2NhYjgxM2U4NjIyNWY5YWZjOWEiLCJjcmVhdGVkQXQiOiJUdWUgTWFyIDE0IDIyOjU3OjM5IENFVCAyMDIzIiwidHlwZSI6InNlc3Npb24ifQ.YhZ6h6QBh_mJV_SAa9wYm0nLNtDPFSwITCguFxgYySA",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/redirect?to=https%3A%2F%2Fla-fabrique-logicielle.fr%2F&id=64131e4fa036cf7a951d9753%3A0",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"redirect"
+					],
+					"query": [
+						{
+							"key": "to",
+							"value": "https%3A%2F%2Fla-fabrique-logicielle.fr%2F"
+						},
+						{
+							"key": "id",
+							"value": "64131e4fa036cf7a951d9753%3A0"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create paymentLink",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhY2NvdW50SWQiOiI2MjEyN2NhYjgxM2U4NjIyNWY5YWZjOWEiLCJjcmVhdGVkQXQiOiJUdWUgTWFyIDE0IDIyOjU3OjM5IENFVCAyMDIzIiwidHlwZSI6InNlc3Npb24ifQ.YhZ6h6QBh_mJV_SAa9wYm0nLNtDPFSwITCguFxgYySA",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"products\": \n    [\n        {\n            \"productName\": \"2D artwork lion\",\n            \"price\": \"2000\",\n            \"currency\": \"eur\",\n            \"quantity\": 1\n        },\n        {\n            \"productName\": \"Ooly book my story\",\n            \"price\": \"3000\",\n            \"currency\": \"eur\",\n            \"quantity\": 1\n        }\n    ],\n    \"redirectUrlAfterPayment\": \"https://neowhiz.agency/\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/payment/stripe/paymentLink",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"payment",
+						"stripe",
+						"paymentLink"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create checkout-session",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhY2NvdW50SWQiOiI2MjEyN2NhYjgxM2U4NjIyNWY5YWZjOWEiLCJjcmVhdGVkQXQiOiJUdWUgTWFyIDE0IDIyOjU3OjM5IENFVCAyMDIzIiwidHlwZSI6InNlc3Npb24ifQ.YhZ6h6QBh_mJV_SAa9wYm0nLNtDPFSwITCguFxgYySA",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"products\": \n    [\n        {\n            \"productName\": \"2D artwork lion\",\n            \"price\": \"2000\",\n            \"currency\": \"eur\",\n            \"quantity\": 1\n        },\n        {\n            \"productName\": \"Ooly book my story\",\n            \"price\": \"3000\",\n            \"currency\": \"eur\",\n            \"quantity\": 1\n        }\n    ],\n    \"successUrl\": \"http://localhost:8080/bookings/123/confirmation\",\n    \"cancelUrl\": \"http://localhost:8080/\",\n    \"metadata\": {\n        \"bookingId\": \"123\"\n    },\n    \"mode\": \"payment\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/payment/stripe/checkout-sessions",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"payment",
+						"stripe",
+						"checkout-sessions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Analytics",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhY2NvdW50SWQiOiI2MjEyN2NhYjgxM2U4NjIyNWY5YWZjOWEiLCJjcmVhdGVkQXQiOiJUdWUgTWFyIDE0IDIyOjU3OjM5IENFVCAyMDIzIiwidHlwZSI6InNlc3Npb24ifQ.YhZ6h6QBh_mJV_SAa9wYm0nLNtDPFSwITCguFxgYySA",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"accountId\": \"6411b5ac7f672f1be3bffb5e:0\",\n        \"category\": \"PageView\",\n        \"name\": \"https://superdomain.fr\",\n        \"creationDate\": \"2023-03-15T15:11:30.499\"\n    }\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/analytics",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"analytics"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Analytics by account id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/analytics?accountId=6411b5ac7f672f1be3bffb5e:0",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"analytics"
+					],
+					"query": [
+						{
+							"key": "accountId",
+							"value": "6411b5ac7f672f1be3bffb5e:0"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
