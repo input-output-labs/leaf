@@ -62,7 +62,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/api/payment/stripe/paymentLink",
+					"raw": "http://localhost:8080/api/payment/stripe/payment-links",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -72,7 +72,7 @@
 						"api",
 						"payment",
 						"stripe",
-						"paymentLink"
+						"payment-links"
 					]
 				}
 			},

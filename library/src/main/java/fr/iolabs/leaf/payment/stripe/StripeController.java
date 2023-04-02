@@ -29,9 +29,10 @@ public class StripeController {
 
 	@Autowired
 	private StripeService stripeService;
-
+	
+	/** To uncomment for testing purposes 
 	@CrossOrigin
-	@PostMapping("/paymentLink")
+	@PostMapping("/payment-links")
 	public Map<String, String> createPaymentLink(@RequestBody PaymentLinkCreationAction paymentLinkCreationAction)
 			throws StripeException {
 		Stripe.apiKey = this.privateKey;
@@ -45,6 +46,7 @@ public class StripeController {
 		Stripe.apiKey = this.privateKey;
 		return this.stripeService.createCheckoutSession(paymentCheckoutCreationAction);
 	}
+	**/
 
 	@PermitAll
 	@CrossOrigin
