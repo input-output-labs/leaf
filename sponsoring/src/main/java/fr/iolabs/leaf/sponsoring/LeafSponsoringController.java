@@ -54,6 +54,10 @@ public class LeafSponsoringController {
 		Sponsoring sponsorSponsoring = this.moduleService.get(Sponsoring.class, sponsorAccount);
 		Sponsoring mySponsoring = this.moduleService.get(Sponsoring.class);
 
+		if (myAccount.getId().equals(sponsorAccount.getId())) {
+			throw new BadRequestException("You cannot be your own sponsor");
+		}
+
 		if (mySponsoring.getSponsorId() != null) {
 			throw new BadRequestException("This account already has a sponsor");
 		}
@@ -87,7 +91,7 @@ public class LeafSponsoringController {
 			this.privacyService.protectAccount(account);
 			profiles.put(account.getId(), account.getProfile());
 		});
-		
+
 		SponsoringProfiles sponsoringProfiles = new SponsoringProfiles();
 
 		if (mySponsoring.getSponsorId() != null) {
@@ -96,7 +100,7 @@ public class LeafSponsoringController {
 		HashSet<LeafAccountProfile> affiliatedProfiles = new HashSet<>();
 		mySponsoring.getAffiliatedIds().forEach(id -> affiliatedProfiles.add(profiles.get(id)));
 		sponsoringProfiles.setAffiliates(affiliatedProfiles);
-		
+
 		return sponsoringProfiles;
 	}
 }
