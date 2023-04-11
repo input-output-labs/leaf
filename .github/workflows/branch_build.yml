@@ -26,12 +26,11 @@ jobs:
     - name: publish package
       if: ${{ success() }}
       env:
-        MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-        MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cd library
-        mvn deploy --batch-mode -Dregistry=https://nexus.io-labs.fr/repository/maven-snapshots/ -Dmaven.wagon.http.ssl.ignore.validity.dates=true
+        mvn --batch-mode deploy
         cd ../messenger
-        mvn deploy --batch-mode -Dregistry=https://nexus.io-labs.fr/repository/maven-snapshots/ -Dmaven.wagon.http.ssl.ignore.validity.dates=true
+        mvn --batch-mode deploy
         cd ../sponsoring
-        mvn deploy --batch-mode -Dregistry=https://nexus.io-labs.fr/repository/maven-snapshots/ -Dmaven.wagon.http.ssl.ignore.validity.dates=true
+        mvn --batch-mode deploy

@@ -122,8 +122,9 @@
 	
 	<repositories>
 		<repository>
-			<id>io-labs-snapshots</id>
-			<url>https://nexus.io-labs.fr/repository/maven-snapshots/</url>
+		  <id>github</id>
+		  <name>GitHub Packages</name>
+		  <url>https://maven.pkg.github.com/octocat/hello-world</url>
 		</repository>
 	</repositories>
 	<pluginRepositories>
