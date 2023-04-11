@@ -109,10 +109,14 @@ public class StripeService {
 		// Do we need to retrieve the payment intent to have a better payment management? jsonObject.get("payment_intent")
 		if(checkoutSessionId instanceof String) {
 			// TODO: TO DEBUG why it's not working
-			 Optional<LeafPaymentTransaction> paymentTransaction = this.leafPaymentTransactionRepository.findByCheckoutSessionId(checkoutSessionId.toString());
+			Optional<LeafPaymentTransaction> paymentTransactionOpt = this.leafPaymentTransactionRepository.findByCheckoutSessionId(checkoutSessionId.toString());
 			
-			if(paymentTransaction.isPresent()) {
-				this.applicationEventPublisher.publishEvent(new LeafPaymentResultEvent(this, paymentTransaction.get()));
+			if(paymentTransactionOpt.isPresent()) {
+				LeafPaymentTransaction paymentTransaction = paymentTransactionOpt.get();
+				paymentTransaction.setStatus(LeafPaymentTransactionStatusEnum.successful);
+				this.leafPaymentTransactionRepository.save(paymentTransaction);
+				System.out.println("Yes status before publish " + paymentTransaction.getStatus());
+				this.applicationEventPublisher.publishEvent(new LeafPaymentResultEvent(this, paymentTransaction));
 			} else {
 				// TODO: Handle case where the transaction is not found.
 			}
