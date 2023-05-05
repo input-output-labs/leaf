@@ -6,16 +6,21 @@ import javax.annotation.security.PermitAll;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.gson.JsonSyntaxException;
 import com.stripe.Stripe;
+import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
 import com.stripe.net.ApiResource;
+import com.stripe.net.Webhook;
 
 import fr.iolabs.leaf.payment.stripe.models.PaymentCheckoutCreationAction;
 import fr.iolabs.leaf.payment.stripe.models.PaymentLinkCreationAction;
@@ -51,14 +56,24 @@ public class StripeController {
 	@PermitAll
 	@CrossOrigin
 	@PostMapping("/checkout-sessions/webhook")
-	public String checkoutSessionWebhook(@RequestBody String eventReceived) throws StripeException {
-		// VERIFY CALLS COME FROM STRIPE:
-		// https://stripe.com/docs/payments/checkout/fulfill-orders#v%C3%A9rifier-que-les-%C3%A9v%C3%A9nements-proviennent-de-stripe
-		Event event = ApiResource.GSON.fromJson(eventReceived, Event.class);
+	public ResponseEntity<Object> checkoutSessionWebhook(@RequestBody String eventReceived, @RequestHeader("Stripe-Signature") String sigHeader) throws StripeException {
+        Event event = null;
+
+        try {
+          event = Webhook.constructEvent(eventReceived, sigHeader, this.privateKey);
+        } catch (JsonSyntaxException e) {
+          // Invalid payload
+          return ResponseEntity.badRequest().build();
+        } catch (SignatureVerificationException e) {
+          // Invalid signature
+          return ResponseEntity.badRequest().build();
+        }
+
+		event = ApiResource.GSON.fromJson(eventReceived, Event.class);
 		if (event.getType().contains("checkout.session.completed")) {
 			this.stripeService.handlePaymentResult(event);
 		}
-		return "";
+		return ResponseEntity.ok().build();
 	}
 
 }
