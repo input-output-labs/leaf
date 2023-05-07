@@ -33,4 +33,11 @@ public class LeafOrganizationActionController {
 	public LeafOrganization getOrganizationById(@PathVariable String organizationId) {
 		return this.organizationService.getById(organizationId).orElseThrow(NotFoundException::new);
 	}
+
+	@CrossOrigin
+	@AdminOnly
+	@PostMapping("/{organizationId}/users")
+	public void addUserToOrganization(@PathVariable String organizationId, @RequestBody AddUserToOrganizationAction action) {
+		this.organizationService.addUserToOrganization(organizationId, action.getAccountId());
+	}
 }
