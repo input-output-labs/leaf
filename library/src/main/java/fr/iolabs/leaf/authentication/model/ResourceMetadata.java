@@ -6,6 +6,9 @@ public class ResourceMetadata {
 	protected LocalDateTime creationDate;
 	protected LocalDateTime lastModification;
 
+	private ResourceMetadata() {
+	}
+
 	public static ResourceMetadata create() {
 		ResourceMetadata newResourceMetadata = new ResourceMetadata();
 		newResourceMetadata.creationDate = LocalDateTime.now();
