@@ -1,6 +1,7 @@
 package fr.iolabs.leaf.organization.model;
 
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.HashMap;
@@ -8,6 +9,9 @@ import java.util.Map;
 
 @Document(collection = "organization")
 public class LeafOrganization {
+	@Id
+	protected String id;
+
 	protected String name;
 
 	protected Map<String, Object> modules;
@@ -20,8 +24,17 @@ public class LeafOrganization {
 
 	public LeafOrganization(LeafOrganization from) {
 		this();
+		this.id = from.id;
 		this.name = from.name;
 		this.metadata = from.metadata;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	public String getName() {
