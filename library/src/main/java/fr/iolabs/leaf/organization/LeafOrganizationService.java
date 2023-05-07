@@ -1,11 +1,14 @@
 package fr.iolabs.leaf.organization;
 
+import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 import fr.iolabs.leaf.organization.actions.CreateOrganizationAction;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
-import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class LeafOrganizationService {
@@ -14,6 +17,15 @@ public class LeafOrganizationService {
 
 	@Autowired
 	private LeafOrganizationRepository organizationRepository;
+
+	public List<LeafOrganization> listAll() {
+		return organizationRepository.findAll();
+	}
+
+	public Optional<LeafOrganization> getById(String id) {
+		return organizationRepository.findById(id);
+	}
+
 
 	public LeafOrganization create(CreateOrganizationAction action) {
 		LeafOrganization organization = new LeafOrganization();
