@@ -20,10 +20,10 @@ public interface LeafAccountRepository extends MongoRepository<LeafAccount, Stri
 
 	public List<LeafAccount> findByAdminTrue(Pageable pageable);
 
-	@Query("{ 'organizationIds' : { $elemMatch: ?0 } }")
+	@Query("{ 'organizationIds' : { $elemMatch: { $eq: ?0 } } }")
 	public List<LeafAccount> findByOrganizationId(String organizationId);
 
-	@Query("{ 'organizationIds' : { $elemMatch: ?0 } }")
+	@Query("{ 'organizationIds' : { $elemMatch: { $eq: ?0 } } }")
 	public List<LeafAccount> findByOrganizationId(String organizationId, Pageable pageable);
 
 	public long countByAdminTrue();

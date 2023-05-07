@@ -55,4 +55,8 @@ public class LeafOrganizationService {
 		account.getOrganizationIds().add(organization.getId());
 		accountRepository.save(account);
 	}
+
+	public List<LeafAccount> listUsers(String organizationId) {
+		return accountRepository.findByOrganizationId(organizationId);
+	}
 }
