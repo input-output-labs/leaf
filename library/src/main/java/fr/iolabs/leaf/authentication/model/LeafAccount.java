@@ -165,4 +165,11 @@ public class LeafAccount extends LeafUser {
 	public void setMetadata(ResourceMetadata metadata) {
 		this.metadata = metadata;
 	}
+	
+	public Map<String, Object> toMap() {
+		Map<String, Object> object = new HashMap<String, Object>();
+		object.put("email", this.email);
+		object.put("profile", this.profile.toMap());
+		return object;
+	}
 }

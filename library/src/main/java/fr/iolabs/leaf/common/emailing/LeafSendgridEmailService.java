@@ -34,18 +34,18 @@ public class LeafSendgridEmailService {
 	String emailingUnsubscribeUrl;
 
 	public String sendEmailWithTemplate(String to, String templateId) {
-		return this.sendEmailWithTemplate(to, templateId, new HashMap<String, String>());
+		return this.sendEmailWithTemplate(to, templateId, new HashMap<String, Object>());
 	}
 
 	public String sendEmailWithTemplate(String to, String templateId, String emailingCategoryName) {
-		return this.sendEmailWithTemplate(to, templateId, new HashMap<String, String>(), emailingCategoryName);
+		return this.sendEmailWithTemplate(to, templateId, new HashMap<String, Object>(), emailingCategoryName);
 	}
 
-	public String sendEmailWithTemplate(String to, String templateId, Map<String, String> templateData) {
+	public String sendEmailWithTemplate(String to, String templateId, Map<String, Object> templateData) {
 		return this.sendEmailWithTemplate(to, templateId, templateData, null);
 	}
 
-	public String sendEmailWithTemplate(String to, String templateId, Map<String, String> templateData,
+	public String sendEmailWithTemplate(String to, String templateId, Map<String, Object> templateData,
 			String emailingCategoryName) {
 		Email from = new Email(sendgridEmailFrom);
 		Email toEmail = new Email(to);
@@ -53,7 +53,7 @@ public class LeafSendgridEmailService {
 		Mail mail = new Mail(from, "Leaf email subject", toEmail, content);
 		mail.setTemplateId(templateId);
 		if (templateData != null) {
-			for (Map.Entry<String, String> data : templateData.entrySet()) {
+			for (Map.Entry<String, Object> data : templateData.entrySet()) {
 				mail.personalization.get(0).addDynamicTemplateData(data.getKey(), data.getValue());
 			}
 			if (emailingCategoryName != null && this.emailingUnsubscribeUrl != null) {

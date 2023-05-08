@@ -15,6 +15,8 @@ import fr.iolabs.leaf.authentication.actions.RegistrationAction;
 import fr.iolabs.leaf.authentication.actions.ResetPasswordAction;
 import fr.iolabs.leaf.authentication.actions.ChangePasswordAction;
 import fr.iolabs.leaf.common.utils.StringHasher;
+import fr.iolabs.leaf.notifications.LeafNotification;
+import fr.iolabs.leaf.notifications.LeafNotificationService;
 import fr.iolabs.leaf.common.TokenService;
 import fr.iolabs.leaf.common.emailing.LeafAccountEmailing;
 
@@ -52,6 +54,8 @@ public class LeafAccountService {
 	private HttpServletResponse response;
 	@Autowired
 	private ApplicationEventPublisher applicationEventPublisher;
+	@Autowired
+	private LeafNotificationService notificationService;
 
 	public LeafAccount me() {
 		return this.coreContext.getAccount();
@@ -100,7 +104,8 @@ public class LeafAccountService {
 		LeafAccount createdAccount = accountRepository.save(instanciatedAccount);
 
 		if (!isSystemAction) {
-			this.accountEmailing.sendAccountCreationConfirmation(createdAccount);
+			this.notificationService.emit(
+					LeafNotification.of("LEAF_ACCOUNT_REGISTRATION", createdAccount.getId(), createdAccount.toMap()));
 		}
 
 		return createdAccount;
@@ -137,7 +142,8 @@ public class LeafAccountService {
 		accountLogin.hashPassword();
 
 		LeafAccount fetchedAccount = this.accountRepository.findAccountByEmail(accountLogin.getEmail());
-		if (fetchedAccount == null || !fetchedAccount.getAuthentication().getPassword().equals(accountLogin.getPassword())) {
+		if (fetchedAccount == null
+				|| !fetchedAccount.getAuthentication().getPassword().equals(accountLogin.getPassword())) {
 			throw new UnauthorizedException();
 		}
 
@@ -187,7 +193,8 @@ public class LeafAccountService {
 
 		this.accountRepository.save(fetchedAccount);
 
-		this.accountEmailing.sendResetPasswordKey(fetchedAccount, fetchedAccount.getAuthentication().getResetPasswordKey());
+		this.accountEmailing.sendResetPasswordKey(fetchedAccount,
+				fetchedAccount.getAuthentication().getResetPasswordKey());
 	}
 
 	public void resetPassword(ResetPasswordAction resetPasswordAction) {

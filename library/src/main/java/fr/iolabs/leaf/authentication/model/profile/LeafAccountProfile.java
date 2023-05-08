@@ -1,5 +1,8 @@
 package fr.iolabs.leaf.authentication.model.profile;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class LeafAccountProfile {
 	private String username;
 	private String avatarUrl;
@@ -53,5 +56,16 @@ public class LeafAccountProfile {
 	}
 	public void setAddress(LeafAddress address) {
 		this.address = address;
+	}
+
+	public Map<String, Object> toMap() {
+		Map<String, Object> object = new HashMap<String, Object>();
+		object.put("username", this.username);
+		object.put("avatarUrl", this.avatarUrl);
+		object.put("firstname", this.firstname);
+		object.put("lastname", this.lastname);
+		object.put("phoneNumber", this.phoneNumber);
+		object.put("address", this.address != null ? this.address.toMap() : null);
+		return object;
 	}
 }

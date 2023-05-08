@@ -1,5 +1,8 @@
 package fr.iolabs.leaf.authentication.model.profile;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class LeafAddress {
 	private String address;
 	private String postalCode;
@@ -29,5 +32,14 @@ public class LeafAddress {
 	}
 	public void setCountry(String country) {
 		this.country = country;
+	}
+	
+	public Map<String, Object> toMap() {
+		Map<String, Object> object = new HashMap<String, Object>();
+		object.put("address", this.address);
+		object.put("postalCode", this.postalCode);
+		object.put("city", this.city);
+		object.put("country", this.country);
+		return object;
 	}
 }
