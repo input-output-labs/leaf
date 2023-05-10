@@ -31,6 +31,9 @@ public class StripeController {
 
 	@Value("${leaf.payment.stripe.api.key}")
 	private String privateKey;
+	
+	@Value("${leaf.payment.stripe.api.webhook-secret}")
+	private String endpointSecret;
 
 	@Autowired
 	private StripeService stripeService;
@@ -58,9 +61,10 @@ public class StripeController {
 	@PostMapping("/checkout-sessions/webhook")
 	public ResponseEntity<Object> checkoutSessionWebhook(@RequestBody String eventReceived, @RequestHeader("Stripe-Signature") String sigHeader) throws StripeException {
         Event event = null;
+		System.out.println("into webhook: "+ sigHeader);
 
         try {
-          event = Webhook.constructEvent(eventReceived, sigHeader, this.privateKey);
+          event = Webhook.constructEvent(eventReceived, sigHeader, this.endpointSecret);
         } catch (JsonSyntaxException e) {
           // Invalid payload
           return ResponseEntity.badRequest().build();
@@ -70,7 +74,9 @@ public class StripeController {
         }
 
 		event = ApiResource.GSON.fromJson(eventReceived, Event.class);
+		System.out.println("all good");
 		if (event.getType().contains("checkout.session.completed")) {
+			System.out.println("checkout completed");
 			this.stripeService.handlePaymentResult(event);
 		}
 		return ResponseEntity.ok().build();
