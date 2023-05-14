@@ -38,10 +38,6 @@ public class EmailingService {
 			batch.checkFinished();
 			this.batchRepository.save(batch);
 		}
-
-		if (batches.isEmpty()) {
-			System.out.println("No pending emailing batch");
-		}
 	}
 
 	private void sendBatchEmails(EmailingBatch batch) {

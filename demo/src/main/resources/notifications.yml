@@ -1,0 +1,8 @@
+notifications:
+  LEAF_ACCOUNT_REGISTRATION:
+    ui: yes
+    email: d-04ab8c5235a74cbdaad7e7e28ecdd7c8
+  LEAF_TEST_NOTIF:
+    ui: yes
+    email: skip
+    ws: true

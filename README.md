@@ -11,6 +11,14 @@ While developping, you can go directly to the demo folder and run each time:
 `cd .. && mvn install && cd ./demo && mvn spring-boot:run`
 
 
+## Bump version script
+
+To bump the leaf packages to the same version, you can use the script bump_version.sh with the version you want to bump:
+
+```
+sh ./bump_version.sh 1.30
+```
+
 ## Stripe
 
 ### Checkout

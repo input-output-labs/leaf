@@ -12,9 +12,10 @@ import fr.iolabs.leaf.authentication.model.LeafAccount;
 
 @Repository
 public interface LeafAccountRepository extends MongoRepository<LeafAccount, String> {
-    public LeafAccount findAccountByEmail(String email);
+	public LeafAccount findAccountByEmail(String email);
 
-    public LeafAccount findAccountByResetPasswordKey(String resetPasswordKey);
+	@Query(value = "{'authentication.resetPasswordKey': {$eq: ?0}}")
+	public LeafAccount findAccountByResetPasswordKey(String resetPasswordKey);
 
 	public List<LeafAccount> findByAdminTrue();
 
@@ -27,13 +28,13 @@ public interface LeafAccountRepository extends MongoRepository<LeafAccount, Stri
 	public List<LeafAccount> findByOrganizationId(String organizationId, Pageable pageable);
 
 	public long countByAdminTrue();
-	
-	@Query(value="{'communication.unsubscription': {$not: {$in: [?0]}}}", count = true)
+
+	@Query(value = "{'communication.unsubscription': {$not: {$in: [?0]}}}", count = true)
 	public long countAccountsSubscribedTo(String name);
-	
-	@Query(value="{'communication.unsubscription': {$not: {$in: [?0]}}}", fields="{ 'email': 1}")
+
+	@Query(value = "{'communication.unsubscription': {$not: {$in: [?0]}}}", fields = "{ 'email': 1}")
 	public List<LeafAccount> listAccountsSubscribedTo(String name, Pageable pageable);
-	
+
 	public List<LeafAccount> findByUsernameLike(String input, PageRequest pageRequest);
 
 	public Iterable<LeafAccount> findAllById(Iterable<String> ids);
