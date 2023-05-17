@@ -29,7 +29,7 @@ Useful links:
 
 Command line:
 After installing and loggin in with stripe cli:
--- Listen to the webhook: `stripe listen --forward-to http://127.0.0.1:8080/api/checkout-sessions/webhook`
+-- Listen to the webhook: `stripe listen --forward-to http://127.0.0.1:8080/api/payment/stripe/checkout-sessions/webhook`
 -- Dispatch an event manually for testing (cf trigger event doc below): `stripe trigger checkout.session.completed`
 
 

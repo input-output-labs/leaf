@@ -46,6 +46,7 @@ public class StripeController {
 		Stripe.apiKey = this.privateKey;
 		return this.stripeService.createPaymentLink(paymentLinkCreationAction);
 	}
+	**/
 
 	@CrossOrigin
 	@PostMapping("/checkout-sessions")
@@ -54,14 +55,12 @@ public class StripeController {
 		Stripe.apiKey = this.privateKey;
 		return this.stripeService.createCheckoutSession(paymentCheckoutCreationAction);
 	}
-	**/
 
 	@PermitAll
 	@CrossOrigin
 	@PostMapping("/checkout-sessions/webhook")
 	public ResponseEntity<Object> checkoutSessionWebhook(@RequestBody String eventReceived, @RequestHeader("Stripe-Signature") String sigHeader) throws StripeException {
         Event event = null;
-		System.out.println("into webhook: "+ sigHeader);
 
         try {
           event = Webhook.constructEvent(eventReceived, sigHeader, this.endpointSecret);
@@ -74,9 +73,7 @@ public class StripeController {
         }
 
 		event = ApiResource.GSON.fromJson(eventReceived, Event.class);
-		System.out.println("all good");
 		if (event.getType().contains("checkout.session.completed")) {
-			System.out.println("checkout completed");
 			this.stripeService.handlePaymentResult(event);
 		}
 		return ResponseEntity.ok().build();
