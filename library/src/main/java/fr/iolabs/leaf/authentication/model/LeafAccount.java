@@ -26,7 +26,7 @@ public class LeafAccount extends LeafUser {
 	protected Set<String> hashedSessionTokens;
 
 	protected LeafAccountProfile profile;
-
+	protected Set<String> organizationIds;
 	protected CommunicationAgreement communication = new CommunicationAgreement();
 	protected Map<String, Object> modules;
 	protected ResourceMetadata metadata;
@@ -40,6 +40,7 @@ public class LeafAccount extends LeafUser {
 		this.hashedSessionTokens = new HashSet<>();
 		this.profile = new LeafAccountProfile();
 		this.modules = new HashMap<>();
+		this.organizationIds = new HashSet<>();
 	}
 
 	public LeafAccount(LeafAccount from) {
@@ -53,6 +54,7 @@ public class LeafAccount extends LeafUser {
 		this.communication = from.communication;
 		this.modules = from.modules;
 		this.metadata = from.metadata;
+		this.organizationIds = from.organizationIds;
 	}
 
 	public LeafAccountAuthentication getAuthentication() {
@@ -164,6 +166,14 @@ public class LeafAccount extends LeafUser {
 
 	public void setMetadata(ResourceMetadata metadata) {
 		this.metadata = metadata;
+	}
+
+	public Set<String> getOrganizationIds() {
+		return organizationIds;
+	}
+
+	public void setOrganizationIds(Set<String> organizationIds) {
+		this.organizationIds = new HashSet<>(organizationIds);
 	}
 	
 	public Map<String, Object> toMap() {

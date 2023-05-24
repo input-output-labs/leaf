@@ -21,6 +21,12 @@ public interface LeafAccountRepository extends MongoRepository<LeafAccount, Stri
 
 	public List<LeafAccount> findByAdminTrue(Pageable pageable);
 
+	@Query("{ 'organizationIds' : { $eq: ?0 } }")
+	public List<LeafAccount> findByOrganizationId(String organizationId);
+
+	@Query("{ 'organizationIds' : { $eq: ?0 } }")
+	public List<LeafAccount> findByOrganizationId(String organizationId, Pageable pageable);
+
 	public long countByAdminTrue();
 
 	@Query(value = "{'communication.unsubscription': {$not: {$in: [?0]}}}", count = true)
