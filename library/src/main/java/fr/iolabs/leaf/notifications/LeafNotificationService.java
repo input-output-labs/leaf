@@ -78,7 +78,6 @@ public class LeafNotificationService {
 	}
 
 	private void emitOnWebsocket(LeafNotification notification, String config, LeafAccount targetAccount) {
-		System.out.println("/notifications/" + notification.getTargetAccountId());
 		simpMessagingTemplate.convertAndSend("/notifications/" + notification.getTargetAccountId(), "REFRESH");
 		notification.getChannelSendingStatus().put(LeafNotificationChannel.WS,
 				LeafNotificationChannelSendingStatus.WS_SENT);

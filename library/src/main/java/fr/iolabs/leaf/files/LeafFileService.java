@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Optional;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,20 +30,12 @@ public class LeafFileService {
 	@Autowired
 	private LeafFileRepository fileRepository;
 
-	@Autowired
-	private HttpServletRequest request;
-
 	public LeafFileModel store(MultipartFile file) {
 		LeafFileModel createdFile;
 		try {
 			createdFile = LeafFileModel.from(file.getBytes(), file.getContentType(), coreContext.getAccount().getId());
 			createdFile = this.fileRepository.insert(createdFile);
-			int serverPort = request.getServerPort();
-			String hostname = request.getScheme() + "://" + request.getServerName();
-			if(serverPort != 80) {
-				hostname += ":" + serverPort;
-			}
-			createdFile.setUrl(hostname + "/api/files/" + createdFile.getId());
+			createdFile.setUrl(this.hostname + "/api/files/" + createdFile.getId());
 			return this.fileRepository.save(createdFile);
 		} catch (IOException e) {
 			logger.error(e.getMessage());
