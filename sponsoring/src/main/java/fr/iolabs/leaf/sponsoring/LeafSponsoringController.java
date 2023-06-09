@@ -9,6 +9,7 @@ import fr.iolabs.leaf.common.LeafModuleService;
 import fr.iolabs.leaf.common.errors.BadRequestException;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -35,6 +36,9 @@ public class LeafSponsoringController {
 
 	@Autowired
 	private LeafPrivacyService privacyService;
+
+	@Autowired
+	private ApplicationEventPublisher applicationEventPublisher;
 
 	@CrossOrigin
 	@PostMapping(path = "/sponsor")
@@ -68,6 +72,7 @@ public class LeafSponsoringController {
 
 		mySponsoring.setSponsorId(sponsorAccount.getId());
 		sponsorSponsoring.getAffiliatedIds().add(myAccount.getId());
+		this.applicationEventPublisher.publishEvent(new SponsoringRegistrationEvent(this, sponsorAccount.getId()));
 
 		accountRepository.save(myAccount);
 		accountRepository.save(sponsorAccount);

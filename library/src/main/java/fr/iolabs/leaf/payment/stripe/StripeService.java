@@ -112,7 +112,6 @@ public class StripeService {
 				LeafPaymentTransaction paymentTransaction = paymentTransactionOpt.get();
 				paymentTransaction.setStatus(LeafPaymentTransactionStatusEnum.successful);
 				this.leafPaymentTransactionRepository.save(paymentTransaction);
-				System.out.println("Yes status before publish " + paymentTransaction.getStatus());
 				this.applicationEventPublisher.publishEvent(new LeafPaymentResultEvent(this, paymentTransaction));
 			} else {
 				// TODO: Handle case where the transaction is not found.

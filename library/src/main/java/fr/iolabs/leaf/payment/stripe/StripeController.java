@@ -46,7 +46,6 @@ public class StripeController {
 		Stripe.apiKey = this.privateKey;
 		return this.stripeService.createPaymentLink(paymentLinkCreationAction);
 	}
-	**/
 
 	@CrossOrigin
 	@PostMapping("/checkout-sessions")
@@ -55,6 +54,7 @@ public class StripeController {
 		Stripe.apiKey = this.privateKey;
 		return this.stripeService.createCheckoutSession(paymentCheckoutCreationAction);
 	}
+	**/
 
 	@PermitAll
 	@CrossOrigin
