@@ -6,20 +6,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
-import com.stripe.model.Event.Data;
-import com.stripe.model.PaymentIntent;
 import com.stripe.model.PaymentLink;
 import com.stripe.model.Price;
 import com.stripe.model.Product;
@@ -80,6 +74,10 @@ public class StripeService {
 		HashMap<String, Object> metadata = new HashMap<>();
 		metadata.put("paymentMetadata", paymentCheckoutCreationAction.getMetadata());
 		params.put("metadata", paymentCheckoutCreationAction.getMetadata());
+		
+		if(paymentCheckoutCreationAction.isAllowPromotionCodes()) {
+			params.put("allow_promotion_codes", true);
+		}
 
 		// Create checkout session: doc:
 		// https://stripe.com/docs/api/checkout/sessions/create?lang=java

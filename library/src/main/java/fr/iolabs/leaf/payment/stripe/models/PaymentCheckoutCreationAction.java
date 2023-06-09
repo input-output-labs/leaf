@@ -10,6 +10,7 @@ public class PaymentCheckoutCreationAction {
 	private String cancelUrl;
 	private StripePaymentModeEnum mode;
 	private String customerId;
+	private boolean allowPromotionCodes;
 	private Map<String, Object> metadata;
 
 	public List<StripeProduct> getProducts() {
@@ -58,5 +59,13 @@ public class PaymentCheckoutCreationAction {
 
 	public void setMetadata(Map<String, Object> metadata) {
 		this.metadata = metadata;
+	}
+
+	public boolean isAllowPromotionCodes() {
+		return allowPromotionCodes;
+	}
+
+	public void setAllowPromotionCodes(boolean allowPromotionCodes) {
+		this.allowPromotionCodes = allowPromotionCodes;
 	}
 }
