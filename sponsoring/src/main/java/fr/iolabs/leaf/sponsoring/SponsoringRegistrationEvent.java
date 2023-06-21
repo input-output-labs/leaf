@@ -10,6 +10,7 @@ public class SponsoringRegistrationEvent extends ApplicationEvent {
 
 	public SponsoringRegistrationEvent(Object source, String sponsorId) {
 		super(source);
+		this.sponsorId = sponsorId;
 	}
 
 	public String getSponsorId() {
