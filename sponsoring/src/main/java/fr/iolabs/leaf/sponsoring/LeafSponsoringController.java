@@ -57,6 +57,7 @@ public class LeafSponsoringController {
 
 		Sponsoring sponsorSponsoring = this.moduleService.get(Sponsoring.class, sponsorAccount);
 		Sponsoring mySponsoring = this.moduleService.get(Sponsoring.class);
+		this.applicationEventPublisher.publishEvent(new SponsoringRegistrationEvent(this, sponsorAccount.getId()));
 
 		if (myAccount.getId().equals(sponsorAccount.getId())) {
 			throw new BadRequestException("You cannot be your own sponsor");
@@ -72,10 +73,11 @@ public class LeafSponsoringController {
 
 		mySponsoring.setSponsorId(sponsorAccount.getId());
 		sponsorSponsoring.getAffiliatedIds().add(myAccount.getId());
-		this.applicationEventPublisher.publishEvent(new SponsoringRegistrationEvent(this, sponsorAccount.getId()));
 
 		accountRepository.save(myAccount);
 		accountRepository.save(sponsorAccount);
+
+		this.applicationEventPublisher.publishEvent(new SponsoringRegistrationEvent(this, sponsorAccount.getId()));
 		return myAccount;
 	}
 
