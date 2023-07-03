@@ -1,6 +1,8 @@
 package fr.iolabs.leaf.authentication.privacy;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +33,8 @@ public class LeafPrivacyService {
 		result.setProfile(this.protectProfile(account.getId(), result.getProfile()));
 		result.setCommunication(null);
 		
+		this.applicationEventPublisher.publishEvent(new LeafAccountPrivacyEvent(this, account));
+		
 		return result;
 	}
 
@@ -51,9 +55,7 @@ public class LeafPrivacyService {
 
 	public LeafAccountProfile protectProfile(String accountId, LeafAccountProfile profile) {
 		LeafAccountProfile result = new LeafAccountProfile(profile);
-
 		this.applicationEventPublisher.publishEvent(new LeafAccountProfilePrivacyEvent(this, accountId, result));
-		
 		return result;
 	}
 }

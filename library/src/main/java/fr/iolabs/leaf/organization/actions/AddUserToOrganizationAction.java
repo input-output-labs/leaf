@@ -1,13 +1,15 @@
 package fr.iolabs.leaf.organization.actions;
 
-public class AddUserToOrganizationAction {
-	private String accountId;
+import java.util.Set;
 
-	public String getAccountId() {
-		return accountId;
+public class AddUserToOrganizationAction {
+	private Set<String> accountIds;
+
+	public Set<String> getAccountIds() {
+		return accountIds;
 	}
 
-	public void setAccountId(String accountId) {
-		this.accountId = accountId;
+	public void setAccountIds(Set<String> accountIds) {
+		this.accountIds = accountIds;
 	}
 }

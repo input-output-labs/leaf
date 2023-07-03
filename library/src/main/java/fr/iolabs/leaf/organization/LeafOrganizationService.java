@@ -1,21 +1,19 @@
 package fr.iolabs.leaf.organization;
 
 import fr.iolabs.leaf.authentication.LeafAccountRepository;
-import fr.iolabs.leaf.authentication.LeafAccountService;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 import fr.iolabs.leaf.common.errors.NotFoundException;
-import fr.iolabs.leaf.organization.actions.AddUserToOrganizationAction;
 import fr.iolabs.leaf.organization.actions.CreateOrganizationAction;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class LeafOrganizationService {
@@ -36,6 +34,12 @@ public class LeafOrganizationService {
 		return organizationRepository.findById(id);
 	}
 
+	public Iterable<LeafOrganization> getByIds(Set<String> organizationIds) {
+		if (organizationIds != null && organizationIds.size() > 0) {
+			return this.organizationRepository.findAllById(organizationIds);
+		}
+		return List.of();
+	}
 
 	public LeafOrganization create(CreateOrganizationAction action) {
 		LeafOrganization organization = new LeafOrganization();
@@ -48,12 +52,14 @@ public class LeafOrganizationService {
 	}
 
 	@Transactional
-	public void addUserToOrganization(String organizationId, String accountId) {
-		LeafAccount account = accountRepository.findById(accountId).orElseThrow(() -> new NotFoundException("User not found"));
-		LeafOrganization organization = organizationRepository.findById(organizationId).orElseThrow(() -> new NotFoundException("Organization not found"));
+	public void addUsersToOrganization(String organizationId, Set<String> accountIds) {
+		Iterable<LeafAccount> accounts = accountRepository.findAllById(accountIds);
+		LeafOrganization organization = organizationRepository.findById(organizationId)
+				.orElseThrow(() -> new NotFoundException("Organization not found"));
 
-		account.getOrganizationIds().add(organization.getId());
-		accountRepository.save(account);
+		accounts.forEach((account) -> account.getOrganizationIds().add(organization.getId()));
+
+		accountRepository.saveAll(accounts);
 	}
 
 	public List<LeafAccount> listUsers(String organizationId) {
