@@ -28,6 +28,7 @@ public class LeafAccount extends LeafUser {
 	protected LeafAccountProfile profile;
 	protected Set<String> organizationIds;
 	protected CommunicationAgreement communication = new CommunicationAgreement();
+	protected AccountVerification accountVerification;
 	protected Map<String, Object> modules;
 	protected ResourceMetadata metadata;
 
@@ -41,6 +42,7 @@ public class LeafAccount extends LeafUser {
 		this.profile = new LeafAccountProfile();
 		this.modules = new HashMap<>();
 		this.organizationIds = new HashSet<>();
+		this.accountVerification = new AccountVerification();
 	}
 
 	public LeafAccount(LeafAccount from) {
@@ -55,6 +57,7 @@ public class LeafAccount extends LeafUser {
 		this.modules = from.modules;
 		this.metadata = from.metadata;
 		this.organizationIds = from.organizationIds;
+		this.accountVerification = from.accountVerification;
 	}
 
 	public LeafAccountAuthentication getAuthentication() {
@@ -176,6 +179,14 @@ public class LeafAccount extends LeafUser {
 		this.organizationIds = new HashSet<>(organizationIds);
 	}
 	
+	public AccountVerification getAccountVerification() {
+		return accountVerification;
+	}
+
+	public void setAccountVerification(AccountVerification accountVerification) {
+		this.accountVerification = accountVerification;
+	}
+
 	public Map<String, Object> toMap() {
 		Map<String, Object> object = new HashMap<String, Object>();
 		object.put("email", this.email);

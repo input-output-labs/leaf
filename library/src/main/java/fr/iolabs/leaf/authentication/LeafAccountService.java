@@ -1,6 +1,8 @@
 package fr.iolabs.leaf.authentication;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Resource;
@@ -13,6 +15,7 @@ import fr.iolabs.leaf.authentication.actions.LoginAction;
 import fr.iolabs.leaf.authentication.actions.MailingUnsubscriptionAction;
 import fr.iolabs.leaf.authentication.actions.RegistrationAction;
 import fr.iolabs.leaf.authentication.actions.ResetPasswordAction;
+import fr.iolabs.leaf.authentication.actions.AccountVerification;
 import fr.iolabs.leaf.authentication.actions.ChangePasswordAction;
 import fr.iolabs.leaf.common.utils.StringHasher;
 import fr.iolabs.leaf.notifications.LeafNotification;
@@ -281,5 +284,23 @@ public class LeafAccountService {
 			fetchedAccount.getCommunication().unsubscribe(mailingUnsubscriptionAction.getType());
 			this.accountRepository.save(fetchedAccount);
 		}
+	}
+
+	public LeafAccount sendEmailVerificationCode() {
+		LeafAccount me = this.coreContext.getAccount();
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("verificationCode", me.getAccountVerification().generateEmailVerificationCode());
+		this.notificationService.emit(LeafNotification.of("LEAF_ACCOUNT_EMAIL_VERIFICATION", me.getId(), payload));
+		return this.accountRepository.save(me);
+	}
+
+	public LeafAccount accountVerification(AccountVerification accountVerification) {
+		LeafAccount me = this.coreContext.getAccount();
+		if ("email".equalsIgnoreCase(accountVerification.getType())) {
+			me.getAccountVerification().validateEmailVerificationCode(accountVerification.getCode());
+		} else if ("mobile".equalsIgnoreCase(accountVerification.getType())) {
+			me.getAccountVerification().validateMobileVerificationCode(accountVerification.getCode());
+		}
+		return this.accountRepository.save(me);
 	}
 }

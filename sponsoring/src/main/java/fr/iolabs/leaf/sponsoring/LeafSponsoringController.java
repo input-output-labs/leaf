@@ -1,12 +1,15 @@
 package fr.iolabs.leaf.sponsoring;
 
 import fr.iolabs.leaf.LeafContext;
-import fr.iolabs.leaf.authentication.LeafAccountRepository;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.authentication.privacy.LeafPrivacyService;
 import fr.iolabs.leaf.common.LeafModuleService;
+import fr.iolabs.leaf.common.annotations.AdminOnly;
 import fr.iolabs.leaf.common.errors.BadRequestException;
+import fr.iolabs.leaf.common.errors.NotFoundException;
+import fr.iolabs.leaf.common.errors.UnauthorizedException;
+
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -21,7 +24,7 @@ import java.util.Set;
 import javax.annotation.Resource;
 
 @RestController
-@RequestMapping(path = "/api/account/me/sponsoring")
+@RequestMapping(path = "/api/account")
 public class LeafSponsoringController {
 	private static final int MAX_AFFILIATED_COUNT = 1000;
 
@@ -32,7 +35,7 @@ public class LeafSponsoringController {
 	private LeafModuleService moduleService;
 
 	@Autowired
-	private LeafAccountRepository accountRepository;
+	private LeafSponsoringAccountRepository sponsoringAccountRepository;
 
 	@Autowired
 	private LeafPrivacyService privacyService;
@@ -41,13 +44,13 @@ public class LeafSponsoringController {
 	private ApplicationEventPublisher applicationEventPublisher;
 
 	@CrossOrigin
-	@PostMapping(path = "/sponsor")
+	@PostMapping(path = "/me/sponsoring/sponsor")
 	public LeafAccount setSponsor(@RequestBody SetSponsorAction setSponsorAction) {
 		if (Strings.isBlank(setSponsorAction.getSponsorId())) {
 			throw new BadRequestException("The sponsorId must not be empty");
 		}
 
-		Optional<LeafAccount> sponsorAccountOpt = this.accountRepository.findById(setSponsorAction.getSponsorId());
+		Optional<LeafAccount> sponsorAccountOpt = this.sponsoringAccountRepository.findAccountBySponsorCode(setSponsorAction.getSponsorId());
 		if (sponsorAccountOpt.isEmpty()) {
 			throw new BadRequestException("The given sponsorId does not exists");
 		}
@@ -74,15 +77,34 @@ public class LeafSponsoringController {
 		mySponsoring.setSponsorId(sponsorAccount.getId());
 		sponsorSponsoring.getAffiliatedIds().add(myAccount.getId());
 
-		accountRepository.save(myAccount);
-		accountRepository.save(sponsorAccount);
+		sponsoringAccountRepository.save(myAccount);
+		sponsoringAccountRepository.save(sponsorAccount);
 
 		this.applicationEventPublisher.publishEvent(new SponsoringRegistrationEvent(this, sponsorAccount.getId()));
 		return myAccount;
 	}
 
 	@CrossOrigin
-	@GetMapping
+	@AdminOnly
+	@PostMapping(path = "/{accountId}/sponsoring/sponsorcode")
+	public LeafAccount updateSponsorCode(@PathVariable String accountId, @RequestBody SetSponsorCodeAction setSponsorCodeAction) {
+		Optional<LeafAccount> existingAccountWithSponsorCode = this.sponsoringAccountRepository.findAccountBySponsorCode(setSponsorCodeAction.getSponsorCode());
+		if (existingAccountWithSponsorCode.isPresent()) {
+			throw new UnauthorizedException("An account with this sponsor code already exists.");
+		}
+		Optional<LeafAccount> optAccount = this.sponsoringAccountRepository.findById(accountId);
+		if (!optAccount.isPresent()) {
+			throw new NotFoundException("No accounts with id: " + accountId);
+		}
+		LeafAccount account = optAccount.get();
+		Sponsoring accountSponsoring = this.moduleService.get(Sponsoring.class, account);
+		accountSponsoring.setSponsorCode(setSponsorCodeAction.getSponsorCode());
+		
+		return this.privacyService.protectAccount(sponsoringAccountRepository.save(account));
+	}
+
+	@CrossOrigin
+	@GetMapping(path = "/me/sponsoring")
 	public SponsoringProfiles getSponsoringProfiles() {
 		Sponsoring mySponsoring = this.moduleService.get(Sponsoring.class);
 
@@ -94,7 +116,7 @@ public class LeafSponsoringController {
 		mySponsoring.getAffiliatedIds().forEach(id -> accountIds.add(id));
 
 		Map<String, LeafAccountProfile> profiles = new HashMap<>();
-		this.accountRepository.findAllById(accountIds).forEach((account) -> {
+		this.sponsoringAccountRepository.findAllById(accountIds).forEach((account) -> {
 			this.privacyService.protectAccount(account);
 			profiles.put(account.getId(), account.getProfile());
 		});

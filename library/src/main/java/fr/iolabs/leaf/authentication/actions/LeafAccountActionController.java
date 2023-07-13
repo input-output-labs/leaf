@@ -87,6 +87,18 @@ public class LeafAccountActionController {
 	}
 
 	@CrossOrigin
+	@PostMapping("/me/verification")
+	public LeafAccount accountVerification(@RequestBody AccountVerification accountVerification) {
+		return this.privacyHelper.protectAccount(this.accountService.accountVerification(accountVerification));
+	}
+
+	@CrossOrigin
+	@PostMapping("/me/verification/email/send")
+	public LeafAccount sendEmailVerificationCode() {
+		return this.privacyHelper.protectAccount(this.accountService.sendEmailVerificationCode());
+	}
+
+	@CrossOrigin
 	@PermitAll
 	@PostMapping("/sendresetpasswordkey")
 	public ResponseEntity<Void> sendResetPasswordKey(@RequestBody String email) {
