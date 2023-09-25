@@ -19,7 +19,6 @@ public class LeafAccountRefactorMigrationImplementation implements ApplicationLi
 
 	public void onApplicationEvent(final ApplicationReadyEvent event) {
 		List<LeafAccount> allAccounts = this.accountRepository.findAll();
-		System.out.println(allAccounts.size() + " accounts found");
 		for (LeafAccount account : allAccounts) {
 			if (this.shoudMigrate(account)) {
 				LeafAccountRefactorMigration.migrate(account);

@@ -1,10 +1,12 @@
 package fr.iolabs.leaf.organization.model;
 
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Document(collection = "organization")
@@ -15,6 +17,10 @@ public class LeafOrganization {
 	protected String name;
 
 	protected Map<String, Object> modules;
+
+	protected List<OrganizationMembership> members;
+
+	protected List<OrganizationInvitation> invitations;
 
 	protected ResourceMetadata metadata;
 
@@ -62,5 +68,21 @@ public class LeafOrganization {
 
 	public void setModules(Map<String, Object> modules) {
 		this.modules = modules;
+	}
+
+	public List<OrganizationInvitation> getInvitations() {
+		return invitations;
+	}
+
+	public void setInvitations(List<OrganizationInvitation> invitations) {
+		this.invitations = invitations;
+	}
+
+	public List<OrganizationMembership> getMembers() {
+		return members;
+	}
+
+	public void setMembers(List<OrganizationMembership> members) {
+		this.members = members;
 	}
 }

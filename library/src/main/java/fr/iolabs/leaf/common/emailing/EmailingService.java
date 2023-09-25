@@ -41,7 +41,6 @@ public class EmailingService {
 	}
 
 	private void sendBatchEmails(EmailingBatch batch) {
-		System.out.println("Found emailing batch : " + batch.getId());
 		double batchSize = batch.getInput().getEmailsPerHour();
 		String categoryName = batch.categoryName();
 

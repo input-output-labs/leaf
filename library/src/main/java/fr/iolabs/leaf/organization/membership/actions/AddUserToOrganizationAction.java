@@ -1,4 +1,4 @@
-package fr.iolabs.leaf.organization.actions;
+package fr.iolabs.leaf.organization.membership.actions;
 
 import java.util.Set;
 

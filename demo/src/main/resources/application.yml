@@ -30,9 +30,10 @@ leaf:
       api:
         key: "${SENDGRID_API_KEY}"
       email:
-        from: "Recharge+<ne-pas-repondre@rechargeplus.fr>"
+        from: "Leaf<ne-pas-repondre@rechargeplus.fr>"
       templates:
-        password-change-key-sending: "<change here>"
+        password-change-key-sending: "d-758e35d957d540b8bb23536610724177"
+        organization-invitation-template: "d-6725411ee4224cf2b542755ddbe024d0"
   payment:
     stripe:
       api:

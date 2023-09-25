@@ -10,3 +10,7 @@ notifications:
     ui: skip
     email: yes
     ws: skip
+  LEAF_ORGANIZATION_INVITATION:
+    ui: yes
+    email: d-6725411ee4224cf2b542755ddbe024d0
+    ws: yes

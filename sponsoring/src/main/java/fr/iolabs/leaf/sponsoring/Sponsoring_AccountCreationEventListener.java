@@ -17,7 +17,8 @@ public class Sponsoring_AccountCreationEventListener implements ApplicationListe
 	@Override
 	public void onApplicationEvent(AccountRegistrationEvent event) {
 		LeafAccount account = event.account();
-		this.moduleService.get(Sponsoring.class, account);
+		Sponsoring sponsoring = this.moduleService.get(Sponsoring.class, account);
+		sponsoring.setSponsorCode(account.getId());
 	}
 
 }

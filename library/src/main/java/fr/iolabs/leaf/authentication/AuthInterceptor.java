@@ -10,6 +10,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import fr.iolabs.leaf.common.TokenService;
 import fr.iolabs.leaf.common.utils.StringHasher;
+import fr.iolabs.leaf.organization.LeafOrganizationRepository;
+import fr.iolabs.leaf.organization.model.LeafOrganization;
+import fr.iolabs.leaf.organization.model.OrganizationMembership;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
@@ -18,11 +22,13 @@ import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
+import fr.iolabs.leaf.common.annotations.MandatoryOrganization;
 import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
 public class AuthInterceptor extends HandlerInterceptorAdapter {
 
 	private static final String AUTHORIZATION = "Authorization";
+	private static final String ORGANIZATION = "Organization";
 
 	@Resource(name = "coreContext")
 	private LeafContext coreContext;
@@ -33,6 +39,9 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 	@Autowired
 	private LeafAccountRepository accountRepository;
 
+	@Autowired
+	private LeafOrganizationRepository organizationRepository;
+
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
 		this.findConnectedAccount(request);
@@ -42,6 +51,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 
 			boolean permitAll = method.hasMethodAnnotation(PermitAll.class);
 			boolean adminOnly = method.hasMethodAnnotation(AdminOnly.class);
+			boolean mandatoryOrganization = method.hasMethodAnnotation(MandatoryOrganization.class);
 
 			if (!permitAll) {
 				boolean connected = this.coreContext.getAccount() != null;
@@ -53,13 +63,31 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 				if (adminOnly && !isAdmin) {
 					throw new UnauthorizedException();
 				}
+				boolean isOrganizationMember = this.isOrganizationMember();
+				if (mandatoryOrganization && !isOrganizationMember) {
+					throw new UnauthorizedException();
+				}
 			}
 		}
 		return true;
 	}
 
+	private boolean isOrganizationMember() {
+		LeafAccount account = this.coreContext.getAccount();
+		LeafOrganization organization = this.coreContext.getOrganization();
+		if (account != null && organization != null) {
+			for(OrganizationMembership member : organization.getMembers()) {
+				if (member.getAccountId().equals(account.getId())) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	private void findConnectedAccount(HttpServletRequest request) {
-		String token = findToken(request);
+		String token = findToken(request, AUTHORIZATION);
+		String organizationId = findToken(request, ORGANIZATION);
 
 		if (token != null && !token.isEmpty()) {
 			String accountId = tokenService.getAccountIdFromJWT(token);
@@ -92,20 +120,26 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 
 			coreContext.setAccount(account.get());
 		}
+		if (organizationId != null && !organizationId.isEmpty()) {
+			Optional<LeafOrganization> organization = this.organizationRepository.findById(organizationId);
+			if (organization.isPresent()) {
+				coreContext.setOrganization(organization.get());
+			}
+		}
 	}
 
-	private String findToken(HttpServletRequest request) {
-		String token = request.getParameter(AUTHORIZATION);
+	private String findToken(HttpServletRequest request, String tokenName) {
+		String token = request.getParameter(tokenName);
 
 		if (token == null) {
-			token = request.getHeader(AUTHORIZATION);
+			token = request.getHeader(tokenName);
 		}
 
 		if (token == null) {
 			Cookie[] cookies = request.getCookies();
 			if (cookies != null) {
 				for (Cookie cookie : cookies) {
-					if (AUTHORIZATION.equals(cookie.getName())) {
+					if (tokenName.equals(cookie.getName())) {
 						token = cookie.getValue();
 					}
 				}
