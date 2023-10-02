@@ -5,6 +5,7 @@ import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,8 @@ public class LeafOrganization {
 
 	public LeafOrganization() {
 		this.modules = new HashMap<>();
+		this.members = new ArrayList<>();
+		this.invitations = new ArrayList<>();
 	}
 
 	public LeafOrganization(LeafOrganization from) {
