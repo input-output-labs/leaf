@@ -3,16 +3,25 @@ package fr.iolabs.leaf.organization.model;
 import java.util.List;
 
 public class OrganizationRole {
-	private boolean isDefault;
+	private boolean creatorDefault;
+	private boolean otherDefault;
 	private String name;
 	private List<OrganizationPolicy> rights;
 
-	public boolean isDefault() {
-		return isDefault;
+	public boolean isCreatorDefault() {
+		return creatorDefault;
 	}
 
-	public void setDefault(boolean isDefault) {
-		this.isDefault = isDefault;
+	public void setCreatorDefault(boolean creatorDefault) {
+		this.creatorDefault = creatorDefault;
+	}
+
+	public boolean isOtherDefault() {
+		return otherDefault;
+	}
+
+	public void setOtherDefault(boolean otherDefault) {
+		this.otherDefault = otherDefault;
 	}
 
 	public String getName() {

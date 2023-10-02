@@ -22,6 +22,8 @@ public class LeafOrganization {
 	protected List<OrganizationMembership> members;
 
 	protected List<OrganizationInvitation> invitations;
+	
+	protected OrganizationPolicies policies;
 
 	protected ResourceMetadata metadata;
 
@@ -29,6 +31,7 @@ public class LeafOrganization {
 		this.modules = new HashMap<>();
 		this.members = new ArrayList<>();
 		this.invitations = new ArrayList<>();
+		this.policies = new OrganizationPolicies();
 	}
 
 	public LeafOrganization(LeafOrganization from) {
@@ -87,5 +90,13 @@ public class LeafOrganization {
 
 	public void setMembers(List<OrganizationMembership> members) {
 		this.members = members;
+	}
+
+	public OrganizationPolicies getPolicies() {
+		return policies;
+	}
+
+	public void setPolicies(OrganizationPolicies policies) {
+		this.policies = policies;
 	}
 }

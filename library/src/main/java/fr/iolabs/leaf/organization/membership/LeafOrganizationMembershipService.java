@@ -15,6 +15,7 @@ import fr.iolabs.leaf.organization.model.OrganizationInvitation;
 import fr.iolabs.leaf.organization.model.OrganizationInvitationStatus;
 import fr.iolabs.leaf.organization.model.OrganizationMembership;
 import fr.iolabs.leaf.organization.model.dto.OrganizationInvitationData;
+import fr.iolabs.leaf.organization.policies.LeafOrganizationPoliciesService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,6 +54,9 @@ public class LeafOrganizationMembershipService {
 	@Resource(name = "coreContext")
 	private LeafContext coreContext;
 
+	@Autowired
+	private LeafOrganizationPoliciesService policiesService;
+
 	@Transactional
 	public void addUsersToOrganization(String organizationId, Set<String> accountIds) {
 		Iterable<LeafAccount> accounts = accountRepository.findAllById(accountIds);
@@ -70,7 +74,7 @@ public class LeafOrganizationMembershipService {
 
 			OrganizationMembership newMember = new OrganizationMembership();
 			newMember.setAccountId(account.getId());
-			newMember.setRole("member");
+			newMember.setRole(this.policiesService.extractOtherDefaultRole(organization.getPolicies()));
 			newMember.getMetadata();
 			organization.getMembers().add(newMember);
 		});
@@ -201,7 +205,7 @@ public class LeafOrganizationMembershipService {
 
 		OrganizationMembership newMember = new OrganizationMembership();
 		newMember.setAccountId(coreContext.getAccount().getId());
-		newMember.setRole("member");
+		newMember.setRole(this.policiesService.extractOtherDefaultRole(organization.getPolicies()));
 		newMember.getMetadata();
 
 		organization.getMembers().add(newMember);

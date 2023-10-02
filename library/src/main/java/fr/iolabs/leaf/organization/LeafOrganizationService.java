@@ -6,6 +6,8 @@ import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 import fr.iolabs.leaf.organization.actions.CreateOrganizationAction;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
 import fr.iolabs.leaf.organization.model.OrganizationMembership;
+import fr.iolabs.leaf.organization.model.OrganizationPolicies;
+import fr.iolabs.leaf.organization.policies.LeafOrganizationPoliciesService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -30,6 +32,9 @@ public class LeafOrganizationService {
 	@Autowired
 	private LeafAccountRepository accountRepository;
 
+	@Autowired
+	private LeafOrganizationPoliciesService policiesService;
+
 	public List<LeafOrganization> listAll() {
 		return organizationRepository.findAll();
 	}
@@ -47,12 +52,14 @@ public class LeafOrganizationService {
 
 	public LeafOrganization create(CreateOrganizationAction action) {
 		LeafOrganization organization = new LeafOrganization();
+		
 		organization.setName(action.getName());
 		organization.setMetadata(ResourceMetadata.create());
+		organization.setPolicies(this.policiesService.createDefaultPolicies());
 
 		OrganizationMembership firstMember = new OrganizationMembership();
 		firstMember.setAccountId(coreContext.getAccount().getId());
-		firstMember.setRole("member");
+		firstMember.setRole(this.policiesService.extractCreatorDefaultRole(organization.getPolicies()));
 		firstMember.getMetadata();
 
 		organization.getMembers().add(firstMember);

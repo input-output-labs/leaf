@@ -1,0 +1,41 @@
+policies:
+  seeOrganization:
+     category: organizations
+     order: 1
+     type: boolean
+  seeMembers:
+     category: organizations
+     order: 2
+     type: boolean
+  manageMembers:
+     category: organizations
+     order: 3
+     type: boolean
+  seePolicies:
+     category: organizations
+     order: 4
+     type: boolean
+  managePolicies:
+     category: organizations
+     order: 5
+     type: boolean
+defaultRoles:
+  admin:
+    creatorDefault: true
+    otherDefault: false
+    policies:
+      seeOrganization: true
+      seeMembers: true
+      manageMembers: true
+      seePolicies: true
+      managePolicies: true
+  member:
+    creationDefault: false
+    default: true
+    policies:
+      seeOrganization: true
+      seeMembers: true
+      manageMembers: false
+      seePolicies: true
+      managePolicies: false
+  

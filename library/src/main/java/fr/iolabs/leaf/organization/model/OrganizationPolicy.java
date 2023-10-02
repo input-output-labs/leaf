@@ -5,6 +5,15 @@ public class OrganizationPolicy {
 	private String name;
 	private String type;
 	private String value;
+	
+	public OrganizationPolicy copy() {
+		OrganizationPolicy copy = new OrganizationPolicy();
+		copy.order = this.order;
+		copy.name = this.name;
+		copy.type = this.type;
+		copy.value = this.value;
+		return copy;
+	}
 
 	public String getOrder() {
 		return order;
