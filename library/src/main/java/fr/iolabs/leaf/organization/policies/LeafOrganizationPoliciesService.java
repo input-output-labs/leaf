@@ -56,8 +56,8 @@ public class LeafOrganizationPoliciesService {
 			LeafDefaultRoleConfig roleConfig) {
 		OrganizationRole role = new OrganizationRole();
 		role.setName(name);
-		role.setCreatorDefault(false);
-		role.setOtherDefault(false);
+		role.setCreatorDefault(roleConfig.isCreatorDefault());
+		role.setOtherDefault(roleConfig.isOtherDefault());
 
 		List<OrganizationPolicy> rights = defaultPolicies.copyPolicies();
 		for (Map.Entry<String, String> policyDefaultValue : roleConfig.getPolicies().entrySet()) {
@@ -111,7 +111,10 @@ public class LeafOrganizationPoliciesService {
 		Map<String, LeafDefaultRoleConfig> configRoles = organizationConfig.getDefaultRoles();
 		for (LeafDefaultRoleConfig configRole : configRoles.values()) {
 			if (configRole.isOtherDefault()) {
-				return this.createRole(defaultPolicies, name, configRole);
+				OrganizationRole newRole = this.createRole(defaultPolicies, name, configRole);
+				newRole.setCreatorDefault(false);
+				newRole.setOtherDefault(false);
+				return newRole;
 			}
 		}
 		throw new InternalServerErrorException("Organization policies configuration does not contains a default role");
@@ -125,9 +128,9 @@ public class LeafOrganizationPoliciesService {
 		OrganizationRole updatedRole = organization.getPolicies().getRoles().stream()
 				.filter(role -> roleName.equals(role.getName())).findFirst()
 				.orElseThrow(() -> new NotFoundException("This role does not exists in this organization"));
-		
+
 		updatedRole.updateWith(roleUpdate);
-		
+
 		return this.organizationRepository.save(organization);
 	}
 

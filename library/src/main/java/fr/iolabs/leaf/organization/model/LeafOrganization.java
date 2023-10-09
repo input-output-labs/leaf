@@ -31,7 +31,6 @@ public class LeafOrganization {
 		this.modules = new HashMap<>();
 		this.members = new ArrayList<>();
 		this.invitations = new ArrayList<>();
-		this.policies = new OrganizationPolicies();
 	}
 
 	public LeafOrganization(LeafOrganization from) {
