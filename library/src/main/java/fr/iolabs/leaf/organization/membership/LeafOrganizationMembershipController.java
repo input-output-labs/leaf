@@ -2,6 +2,7 @@ package fr.iolabs.leaf.organization.membership;
 
 import fr.iolabs.leaf.common.annotations.AdminOnly;
 import fr.iolabs.leaf.common.errors.BadRequestException;
+import fr.iolabs.leaf.organization.actions.SetMemberRoleAction;
 import fr.iolabs.leaf.organization.membership.actions.AddUserToOrganizationAction;
 import fr.iolabs.leaf.organization.membership.actions.InviteUserToOrganizationAction;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
@@ -22,6 +23,26 @@ public class LeafOrganizationMembershipController {
 	public void addUsersToOrganization(@PathVariable String organizationId,
 			@RequestBody AddUserToOrganizationAction action) {
 		this.organizationMembershipService.addUsersToOrganization(organizationId, action.getAccountIds());
+	}
+
+	@CrossOrigin
+	@AdminOnly
+	@DeleteMapping("/members/{accountId}")
+	public LeafOrganization removeUserFromOrganization(@PathVariable String organizationId, @PathVariable String accountId) {
+		if (accountId == null || accountId.isBlank()) {
+			throw new BadRequestException("Account id must not be empty");
+		}
+		return this.organizationMembershipService.removeUserFromOrganization(organizationId, accountId);
+	}
+
+	@CrossOrigin
+	@AdminOnly
+	@PutMapping("/members/{accountId}/role")
+	public LeafOrganization setUserRole(@PathVariable String organizationId, @PathVariable String accountId, @RequestBody SetMemberRoleAction action) {
+		if (accountId == null || accountId.isBlank()) {
+			throw new BadRequestException("Account id must not be empty");
+		}
+		return this.organizationMembershipService.setUserRole(organizationId, accountId, action.getRole());
 	}
 
 	@CrossOrigin

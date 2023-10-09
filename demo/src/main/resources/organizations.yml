@@ -31,7 +31,7 @@ defaultRoles:
       managePolicies: true
   member:
     creationDefault: false
-    default: true
+    otherDefault: true
     policies:
       seeOrganization: true
       seeMembers: true

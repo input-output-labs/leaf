@@ -39,4 +39,19 @@ public class OrganizationRole {
 	public void setRights(List<OrganizationPolicy> rights) {
 		this.rights = rights;
 	}
+
+	public void updateWith(OrganizationRole roleUpdate) {
+		if (roleUpdate.name != null && !roleUpdate.name.isBlank()) {
+			this.name = roleUpdate.name;
+		}
+		if (roleUpdate.rights != null) {
+			for (OrganizationPolicy right : this.rights) {
+				for (OrganizationPolicy rightUpdate : roleUpdate.rights) {
+					if (right.getName().equals(rightUpdate.getName())) {
+						right.setValue(rightUpdate.getValue());
+					}
+				}
+			}
+		}
+	}
 }

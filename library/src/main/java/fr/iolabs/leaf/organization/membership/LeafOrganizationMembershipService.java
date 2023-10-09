@@ -9,7 +9,9 @@ import fr.iolabs.leaf.common.errors.BadRequestException;
 import fr.iolabs.leaf.common.errors.NotFoundException;
 import fr.iolabs.leaf.notifications.LeafNotification;
 import fr.iolabs.leaf.notifications.LeafNotificationService;
+import fr.iolabs.leaf.organization.LeafOrganizationAuthorizationsService;
 import fr.iolabs.leaf.organization.LeafOrganizationRepository;
+import fr.iolabs.leaf.organization.OrganizationHelper;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
 import fr.iolabs.leaf.organization.model.OrganizationInvitation;
 import fr.iolabs.leaf.organization.model.OrganizationInvitationStatus;
@@ -57,6 +59,9 @@ public class LeafOrganizationMembershipService {
 	@Autowired
 	private LeafOrganizationPoliciesService policiesService;
 
+	@Autowired
+	private LeafOrganizationAuthorizationsService organizationAuthorizationsService;
+
 	@Transactional
 	public void addUsersToOrganization(String organizationId, Set<String> accountIds) {
 		Iterable<LeafAccount> accounts = accountRepository.findAllById(accountIds);
@@ -64,11 +69,9 @@ public class LeafOrganizationMembershipService {
 				.orElseThrow(() -> new NotFoundException("Organization not found"));
 
 		accounts.forEach((account) -> {
-			for (OrganizationMembership member : organization.getMembers()) {
-				if (account.getId().equals(member.getAccountId())) {
-					// Already a member of the organization, skipping ...
-					return;
-				}
+			if (OrganizationHelper.isMemberOfOrganization(organization, account.getId())) {
+				// Already a member of the organization, skipping ...
+				return;
 			}
 			account.getOrganizationIds().add(organization.getId());
 
@@ -81,6 +84,45 @@ public class LeafOrganizationMembershipService {
 
 		organizationRepository.save(organization);
 		accountRepository.saveAll(accounts);
+	}
+
+	@Transactional
+	public LeafOrganization removeUserFromOrganization(String organizationId, String accountId) {
+		LeafOrganization organization = organizationRepository.findById(organizationId)
+				.orElseThrow(() -> new NotFoundException("Organization not found"));
+		this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
+		LeafAccount account = accountRepository.findById(accountId)
+				.orElseThrow(() -> new NotFoundException("Account not found"));
+
+		if (!OrganizationHelper.isMemberOfOrganization(organization, accountId)) {
+			throw new NotFoundException("This user is not a member of this organization");
+		}
+
+		organization.setMembers(organization.getMembers().stream()
+				.filter(member -> member.getAccountId().equals(account.getId())).collect(Collectors.toList()));
+		account.getOrganizationIds().remove(organization.getId());
+
+		accountRepository.save(account);
+		return organizationRepository.save(organization);
+	}
+
+	public LeafOrganization setUserRole(String organizationId, String accountId, String role) {
+		LeafOrganization organization = this.organizationRepository.findById(organizationId)
+				.orElseThrow(() -> new NotFoundException("Organization not found"));
+		this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
+		accountRepository.findById(accountId).orElseThrow(() -> new NotFoundException("Account not found"));
+
+		if (!OrganizationHelper.isMemberOfOrganization(organization, accountId)) {
+			throw new NotFoundException("This user is not a member of this organization");
+		}
+
+		organization.getMembers().forEach(member -> {
+			if (member.getAccountId().equals(accountId)) {
+				member.setRole(role);
+			}
+		});
+
+		return organizationRepository.save(organization);
 	}
 
 	public List<LeafAccount> listUsers(String organizationId) {
@@ -100,6 +142,7 @@ public class LeafOrganizationMembershipService {
 		}
 		LeafOrganization organization = this.organizationRepository.findById(organizationId)
 				.orElseThrow(() -> new NotFoundException("Organization not found"));
+		this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
 
 		// Check if already invited
 		for (OrganizationInvitation invitation : organization.getInvitations()) {
@@ -235,6 +278,7 @@ public class LeafOrganizationMembershipService {
 	public void cancelInvitation(String organizationId, String email) {
 		LeafOrganization organization = this.organizationRepository.findById(organizationId)
 				.orElseThrow(() -> new NotFoundException("Organization not found"));
+		this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
 		OrganizationInvitation invitation = this.findInvitation(organization, email);
 		if (invitation.getStatus() != OrganizationInvitationStatus.INVITED) {
 			throw new BadRequestException("This invitation cannot be accepted anymore.");
