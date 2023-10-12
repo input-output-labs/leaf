@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import fr.iolabs.leaf.authentication.model.*;
 import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
+import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.authentication.actions.LoginAction;
 import fr.iolabs.leaf.authentication.actions.MailingUnsubscriptionAction;
 import fr.iolabs.leaf.authentication.actions.RegistrationAction;
@@ -301,6 +302,12 @@ public class LeafAccountService {
 		} else if ("mobile".equalsIgnoreCase(accountVerification.getType())) {
 			me.getAccountVerification().validateMobileVerificationCode(accountVerification.getCode());
 		}
+		return this.accountRepository.save(me);
+	}
+
+	public LeafAccount updateProfile(LeafAccountProfile profile) {
+		LeafAccount me = this.coreContext.getAccount();
+		me.getProfile().updateWith(profile);
 		return this.accountRepository.save(me);
 	}
 }

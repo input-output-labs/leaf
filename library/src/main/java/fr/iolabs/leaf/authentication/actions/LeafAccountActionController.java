@@ -6,6 +6,7 @@ import javax.annotation.security.PermitAll;
 import fr.iolabs.leaf.authentication.LeafAccountService;
 import fr.iolabs.leaf.authentication.model.*;
 import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
+import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.authentication.privacy.LeafPrivacyService;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
 import fr.iolabs.leaf.common.errors.UnauthorizedException;
@@ -78,6 +79,12 @@ public class LeafAccountActionController {
 	@PostMapping("/me/username")
 	public LeafAccount changeName(@RequestBody String newName) {
 		return this.privacyHelper.protectAccount(this.accountService.changeName(newName));
+	}
+
+	@CrossOrigin
+	@PostMapping("/me/profile")
+	public LeafAccount updateProfile(@RequestBody LeafAccountProfile profile) {
+		return this.privacyHelper.protectAccount(this.accountService.updateProfile(profile));
 	}
 
 	@CrossOrigin

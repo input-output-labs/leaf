@@ -68,4 +68,29 @@ public class LeafAccountProfile {
 		object.put("address", this.address != null ? this.address.toMap() : null);
 		return object;
 	}
+
+	public void updateWith(LeafAccountProfile updates) {
+		if (updates.username != null) {
+			this.username = updates.username;
+		}
+		if (updates.avatarUrl != null) {
+			this.avatarUrl = updates.avatarUrl;
+		}
+		if (updates.firstname != null) {
+			this.firstname = updates.firstname;
+		}
+		if (updates.lastname != null) {
+			this.lastname = updates.lastname;
+		}
+		if (updates.phoneNumber != null) {
+			this.phoneNumber = updates.phoneNumber;
+		}
+		if (updates.address != null) {
+			if (this.address != null) {
+				this.address.updateWith(updates.address);
+			} else {
+				this.address = LeafAddress.from(updates.address);
+			}
+		}
+	}
 }
