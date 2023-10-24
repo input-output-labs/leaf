@@ -99,7 +99,7 @@ public class LeafOrganizationMembershipService {
 		}
 
 		organization.setMembers(organization.getMembers().stream()
-				.filter(member -> member.getAccountId().equals(account.getId())).collect(Collectors.toList()));
+				.filter(member -> !member.getAccountId().equals(account.getId())).collect(Collectors.toList()));
 		account.getOrganizationIds().remove(organization.getId());
 
 		accountRepository.save(account);
