@@ -4,9 +4,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.annotation.Resource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.common.errors.BadRequestException;
 import fr.iolabs.leaf.common.errors.InternalServerErrorException;
 import fr.iolabs.leaf.common.errors.NotFoundException;
@@ -29,6 +32,9 @@ public class LeafOrganizationPoliciesService {
 
 	@Autowired
 	private LeafOrganizationRepository organizationRepository;
+
+	@Resource(name = "coreContext")
+	private LeafContext coreContext;
 
 	public OrganizationPolicies createDefaultPolicies() {
 		OrganizationPolicies defaultPolicies = this.extractDefaultPolicies();
@@ -89,9 +95,11 @@ public class LeafOrganizationPoliciesService {
 		return null;
 	}
 
-	public LeafOrganization createNewRole(String organizationId, String name) {
-		LeafOrganization organization = organizationRepository.findById(organizationId)
-				.orElseThrow(() -> new NotFoundException("Organization not found"));
+	public LeafOrganization createNewRole(String name) {
+		LeafOrganization organization = this.coreContext.getOrganization();
+		if (organization == null) {
+			throw new NotFoundException("Organization must be provided in Organization header");
+		}
 		this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
 		OrganizationRole newRole = this.createDefaultRole(name);
 
@@ -120,9 +128,11 @@ public class LeafOrganizationPoliciesService {
 		throw new InternalServerErrorException("Organization policies configuration does not contains a default role");
 	}
 
-	public LeafOrganization updateRole(String organizationId, String roleName, OrganizationRole roleUpdate) {
-		LeafOrganization organization = organizationRepository.findById(organizationId)
-				.orElseThrow(() -> new NotFoundException("Organization not found"));
+	public LeafOrganization updateRole(String roleName, OrganizationRole roleUpdate) {
+		LeafOrganization organization = this.coreContext.getOrganization();
+		if (organization == null) {
+			throw new NotFoundException("Organization must be provided in Organization header");
+		}
 		this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
 
 		OrganizationRole updatedRole = organization.getPolicies().getRoles().stream()
@@ -134,9 +144,11 @@ public class LeafOrganizationPoliciesService {
 		return this.organizationRepository.save(organization);
 	}
 
-	public LeafOrganization deleteRole(String organizationId, String roleName) {
-		LeafOrganization organization = organizationRepository.findById(organizationId)
-				.orElseThrow(() -> new NotFoundException("Organization not found"));
+	public LeafOrganization deleteRole(String roleName) {
+		LeafOrganization organization = this.coreContext.getOrganization();
+		if (organization == null) {
+			throw new NotFoundException("Organization must be provided in Organization header");
+		}
 		this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
 
 		OrganizationRole deletedRole = organization.getPolicies().getRoles().stream()

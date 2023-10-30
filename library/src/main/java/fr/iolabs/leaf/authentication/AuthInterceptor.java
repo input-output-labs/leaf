@@ -10,6 +10,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import fr.iolabs.leaf.common.TokenService;
 import fr.iolabs.leaf.common.utils.StringHasher;
+import fr.iolabs.leaf.eligibilities.LeafEligibilitiesService;
+import fr.iolabs.leaf.eligibilities.LeafEligibility;
 import fr.iolabs.leaf.organization.LeafOrganizationRepository;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
 import fr.iolabs.leaf.organization.model.OrganizationMembership;
@@ -22,6 +24,7 @@ import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
+import fr.iolabs.leaf.common.annotations.LeafEligibilityCheck;
 import fr.iolabs.leaf.common.annotations.MandatoryOrganization;
 import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
@@ -42,6 +45,9 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 	@Autowired
 	private LeafOrganizationRepository organizationRepository;
 
+	@Autowired
+	private LeafEligibilitiesService eligibilitiesService;
+
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
 		this.findConnectedAccount(request);
@@ -52,6 +58,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 			boolean permitAll = method.hasMethodAnnotation(PermitAll.class);
 			boolean adminOnly = method.hasMethodAnnotation(AdminOnly.class);
 			boolean mandatoryOrganization = method.hasMethodAnnotation(MandatoryOrganization.class);
+			boolean leafEligibilityCheck = method.hasMethodAnnotation(LeafEligibilityCheck.class);
 
 			if (!permitAll) {
 				boolean connected = this.coreContext.getAccount() != null;
@@ -66,6 +73,13 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 				boolean isOrganizationMember = this.isOrganizationMember();
 				if (mandatoryOrganization && !isOrganizationMember) {
 					throw new UnauthorizedException();
+				}
+				if (leafEligibilityCheck) {
+					String eligibilityKey = method.getMethodAnnotation(LeafEligibilityCheck.class).value();
+					LeafEligibility eligibility = this.eligibilitiesService.getEligibility(eligibilityKey);
+					if (eligibility == null || !eligibility.eligible) {
+						throw new UnauthorizedException();
+					}
 				}
 			}
 		}

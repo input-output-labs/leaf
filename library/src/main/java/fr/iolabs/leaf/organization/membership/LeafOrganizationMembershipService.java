@@ -87,9 +87,11 @@ public class LeafOrganizationMembershipService {
 	}
 
 	@Transactional
-	public LeafOrganization removeUserFromOrganization(String organizationId, String accountId) {
-		LeafOrganization organization = organizationRepository.findById(organizationId)
-				.orElseThrow(() -> new NotFoundException("Organization not found"));
+	public LeafOrganization removeUserFromOrganization(String accountId) {
+		LeafOrganization organization = this.coreContext.getOrganization();
+		if (organization == null) {
+			throw new NotFoundException("Organization must be provided in Organization header");
+		}
 		this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
 		LeafAccount account = accountRepository.findById(accountId)
 				.orElseThrow(() -> new NotFoundException("Account not found"));
@@ -106,9 +108,11 @@ public class LeafOrganizationMembershipService {
 		return organizationRepository.save(organization);
 	}
 
-	public LeafOrganization setUserRole(String organizationId, String accountId, String role) {
-		LeafOrganization organization = this.organizationRepository.findById(organizationId)
-				.orElseThrow(() -> new NotFoundException("Organization not found"));
+	public LeafOrganization setUserRole(String accountId, String role) {
+		LeafOrganization organization = this.coreContext.getOrganization();
+		if (organization == null) {
+			throw new NotFoundException("Organization must be provided in Organization header");
+		}
 		this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
 		accountRepository.findById(accountId).orElseThrow(() -> new NotFoundException("Account not found"));
 
@@ -136,25 +140,35 @@ public class LeafOrganizationMembershipService {
 	}
 
 	@Transactional
-	public LeafOrganization inviteUserToOrganization(String organizationId, String email) {
+	public LeafOrganization inviteUserToOrganization(String email) {
 		if (email == null || email.isBlank()) {
 			throw new BadRequestException("Email must not be blank");
 		}
-		LeafOrganization organization = this.organizationRepository.findById(organizationId)
-				.orElseThrow(() -> new NotFoundException("Organization not found"));
+		LeafOrganization organization = this.coreContext.getOrganization();
+		if (organization == null) {
+			throw new NotFoundException("Organization must be provided in Organization header");
+		}
 		this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
 
 		// Check if already invited
+		OrganizationInvitation existingInvitation = null;
 		for (OrganizationInvitation invitation : organization.getInvitations()) {
 			if (email.equals(invitation.getEmail())) {
-				throw new BadRequestException("This user has already been invited to the organization");
+				existingInvitation = invitation;
 			}
 		}
 
-		OrganizationInvitation invitation = new OrganizationInvitation();
+		if (existingInvitation != null && existingInvitation.getStatus() == OrganizationInvitationStatus.INVITED) {
+			throw new BadRequestException("This user has already been invited to the organization");
+		}
+
+		OrganizationInvitation invitation = existingInvitation != null ? existingInvitation
+				: new OrganizationInvitation();
+		if (existingInvitation == null) {
+			invitation.setEmail(email);
+		}
 		invitation.setStatus(OrganizationInvitationStatus.INVITED);
-		invitation.setEmail(email);
-		invitation.getMetadata();
+		invitation.getMetadata().updateLastModification();
 
 		LeafAccount existingAccount = this.accountRepository.findAccountByEmail(email);
 		if (existingAccount != null) {
@@ -275,9 +289,11 @@ public class LeafOrganizationMembershipService {
 	}
 
 	@Transactional
-	public void cancelInvitation(String organizationId, String email) {
-		LeafOrganization organization = this.organizationRepository.findById(organizationId)
-				.orElseThrow(() -> new NotFoundException("Organization not found"));
+	public void cancelInvitation(String email) {
+		LeafOrganization organization = this.coreContext.getOrganization();
+		if (organization == null) {
+			throw new NotFoundException("Organization must be provided in Organization header");
+		}
 		this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
 		OrganizationInvitation invitation = this.findInvitation(organization, email);
 		if (invitation.getStatus() != OrganizationInvitationStatus.INVITED) {

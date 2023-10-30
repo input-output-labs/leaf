@@ -1,17 +1,20 @@
 package fr.iolabs.leaf.organization;
 
 import fr.iolabs.leaf.LeafContext;
-import fr.iolabs.leaf.authentication.model.LeafAccount;
-import fr.iolabs.leaf.authentication.privacy.LeafPrivacyService;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
 import fr.iolabs.leaf.common.errors.NotFoundException;
+import fr.iolabs.leaf.eligibilities.LeafEligibility;
+import fr.iolabs.leaf.eligibilities.LeafOrganizationEligibilitiesComposer;
 import fr.iolabs.leaf.organization.actions.CreateOrganizationAction;
-import fr.iolabs.leaf.organization.membership.LeafOrganizationMembershipService;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.Resource;
 
@@ -22,13 +25,10 @@ public class LeafOrganizationController {
 	private LeafContext coreContext;
 
 	@Autowired
-	private LeafPrivacyService leafPrivacyService;
-
-	@Autowired
 	private LeafOrganizationService organizationService;
 
 	@Autowired
-	private LeafOrganizationMembershipService organizationMembershipService;
+	private LeafOrganizationEligibilitiesComposer organizationEligibilitiesService;
 
 	@CrossOrigin
 	@AdminOnly
@@ -44,21 +44,41 @@ public class LeafOrganizationController {
 		return this.organizationService.create(action);
 	}
 
+	public List<LeafOrganization> protectOrganizations(Iterable<LeafOrganization> organizations) {
+		List<LeafOrganization> organizationList = StreamSupport.stream(organizations.spliterator(), false)
+				.collect(Collectors.toList());
+		for (LeafOrganization organization : organizationList) {
+			Map<String, LeafEligibility> eligibilities = new HashMap<>();
+			this.organizationEligibilitiesService.getEligibilities(this.coreContext.getAccount(), organization,
+					eligibilities, List.of("seeOrganization", "seeMembers", "seePolicies"));
+			if (!eligibilities.get("seeOrganization").eligible) {
+				organization.setMetadata(null);
+				organization.setModules(null);
+			}
+			if (!eligibilities.get("seeMembers").eligible) {
+				organization.setMembers(null);
+				organization.setInvitations(null);
+			}
+			if (!eligibilities.get("seePolicies").eligible) {
+				organization.setPolicies(null);
+			}
+		}
+		return organizationList;
+	}
+
 	@CrossOrigin
 	@GetMapping("/mine")
 	public Iterable<LeafOrganization> listMyOrganizations() {
-		return this.organizationService.getByIds(coreContext.getAccount().getOrganizationIds());
+		return this
+				.protectOrganizations(this.organizationService.getByIds(coreContext.getAccount().getOrganizationIds()));
 	}
 
 	@CrossOrigin
 	@GetMapping("/{organizationId}")
 	public LeafOrganization getOrganizationById(@PathVariable String organizationId) {
-		return this.organizationService.getById(organizationId).orElseThrow(NotFoundException::new);
-	}
-
-	@CrossOrigin
-	@GetMapping("/{organizationId}/members")
-	public List<LeafAccount> listOrganizationUsers(@PathVariable String organizationId) {
-		return this.leafPrivacyService.protectAccounts(this.organizationMembershipService.listUsers(organizationId));
+		return this
+				.protectOrganizations(
+						List.of(this.organizationService.getById(organizationId).orElseThrow(NotFoundException::new)))
+				.get(0);
 	}
 }

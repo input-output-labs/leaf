@@ -13,7 +13,7 @@
 
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf-demo</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.42-SNAPSHOT</version>
 	<name>Leaf - demo</name>
 
 	<properties>

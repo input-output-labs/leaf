@@ -8,5 +8,6 @@ import java.lang.annotation.Target;
 
 @Retention(RUNTIME)
 @Target(METHOD)
-public @interface AdminOnly {
+public @interface LeafEligibilityCheck {
+	String value();
 }
