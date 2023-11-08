@@ -1,10 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.io-labs</groupId>
-	<artifactId>leaf-messenger</artifactId>
+	<artifactId>leaf-payment</artifactId>
 	<version>1.43-SNAPSHOT</version>
-	<name>leaf-messenger</name>
+	<name>leaf-payment</name>
 
 	<properties>
 		<java.version>1.8</java.version>
@@ -51,5 +52,5 @@
 		  <name>GitHub Packages</name>
 		  <url>https://maven.pkg.github.com/input-output-labs/leaf</url>
 		</repository>
-        </distributionManagement>
+	</distributionManagement>
 </project>

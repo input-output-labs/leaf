@@ -6,7 +6,6 @@ import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 import fr.iolabs.leaf.organization.actions.CreateOrganizationAction;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
 import fr.iolabs.leaf.organization.model.OrganizationMembership;
-import fr.iolabs.leaf.organization.model.OrganizationPolicies;
 import fr.iolabs.leaf.organization.policies.LeafOrganizationPoliciesService;
 
 import org.springframework.beans.factory.annotation.Autowired;

@@ -7,7 +7,6 @@ import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
 
 import fr.iolabs.leaf.LeafContext;
-import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.common.errors.InternalServerErrorException;
 
 @Service
@@ -17,20 +16,32 @@ public class LeafModuleService {
 	private LeafContext coreContext;
 
 	public <T> T get(Class<T> clazz) {
-		LeafAccount account = this.coreContext.getAccount();
+		return this.getForAccount(clazz);
+	}
+
+	public <T> T getForAccount(Class<T> clazz) {
+		ILeafModular account = this.coreContext.getAccount();
 		if (account == null) {
 			throw new InternalServerErrorException("LeafModuleService - get() cannot be used if no user is logged in");
 		}
 		return this.get(clazz, account);
 	}
 
+	public <T> T getForOrganization(Class<T> clazz) {
+		ILeafModular organization = this.coreContext.getOrganization();
+		if (organization == null) {
+			throw new InternalServerErrorException("LeafModuleService - get() cannot be used if no organization is selected");
+		}
+		return this.get(clazz, organization);
+	}
+
 	@SuppressWarnings("unchecked")
-	public <T> T get(Class<T> clazz, LeafAccount account) {
+	public <T> T get(Class<T> clazz, ILeafModular account) {
 		Object module = account.getModules().get(this.getModuleKey(clazz));
 		return module != null && clazz.isInstance(module) ? (T) module : this.instanciate(account, clazz);
 	}
 
-	private <T> T instanciate(LeafAccount account, Class<T> clazz) {
+	private <T> T instanciate(ILeafModular account, Class<T> clazz) {
 		try {
 			T module = clazz.getDeclaredConstructor().newInstance();
 			account.getModules().put(this.getModuleKey(clazz), module);

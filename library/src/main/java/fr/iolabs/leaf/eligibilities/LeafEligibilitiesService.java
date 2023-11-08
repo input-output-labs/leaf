@@ -8,8 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import fr.iolabs.leaf.organization.model.config.LeafOrganizationConfig;
+
 @Service
 public class LeafEligibilitiesService {
+	@Autowired
+	private LeafOrganizationConfig organizationConfig;
 	@Autowired
 	private ApplicationEventPublisher applicationEventPublisher;
 

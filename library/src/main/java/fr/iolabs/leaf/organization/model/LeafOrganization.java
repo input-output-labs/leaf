@@ -1,18 +1,18 @@
 package fr.iolabs.leaf.organization.model;
 
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
+import fr.iolabs.leaf.common.ILeafModular;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Document(collection = "organization")
-public class LeafOrganization {
+public class LeafOrganization implements ILeafModular {
 	@Id
 	protected String id;
 

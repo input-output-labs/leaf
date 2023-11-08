@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import fr.iolabs.leaf.authentication.model.authentication.LeafAccountAuthentication;
 import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
 import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
+import fr.iolabs.leaf.common.ILeafModular;
 import fr.iolabs.leaf.common.utils.StringHasher;
 
 import java.util.Set;
@@ -13,7 +14,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 @Document(collection = "account")
-public class LeafAccount extends LeafUser {
+public class LeafAccount extends LeafUser implements ILeafModular {
 	protected String email;
 	protected LeafAccountAuthentication authentication;
 	@Deprecated
