@@ -1,7 +1,66 @@
+planAttachment: ORGANIZATION
 plans:
  -
   name: free
+  color: lightgrey
+  defaultPlan: true
+  available: true
+  features:
+    -
+      name: userCount
+      type: number
+      value: 1
+    -
+      name: cardCount
+      type: number
+      value: 1
+    -
+      name: reporting
+      type: boolean
+      value: false
+  pricing:
+    free: true
  -
   name: basic
+  color: lightblue
+  defaultPlan: false
+  available: true
+  features:
+    -
+      name: userCount
+      type: number
+      value: 5
+    -
+      name: cardCount
+      type: number
+      value: 5
+    -
+      name: reporting
+      type: boolean
+      value: false
+  pricing:
+    free: false
+    price: 4.99
+    period: month
  -
   name: pro
+  color: lightcoral
+  defaultPlan: false
+  available: true
+  features:
+    -
+      name: userCount
+      type: number
+      value: unlimited
+    -
+      name: cardCount
+      type: number
+      value: unlimited
+    -
+      name: reporting
+      type: boolean
+      value: true
+  pricing:
+    free: false
+    price: 69.99
+    period: year

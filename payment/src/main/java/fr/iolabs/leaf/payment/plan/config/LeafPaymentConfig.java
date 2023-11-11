@@ -15,7 +15,16 @@ import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
 @ConfigurationProperties
 @PropertySource(value = "classpath:payment.yml", factory = YamlPropertySourceFactory.class)
 public class LeafPaymentConfig {
+	private PlanAttachment planAttachment;
 	private List<LeafPaymentPlan> plans;
+
+	public PlanAttachment getPlanAttachment() {
+		return planAttachment;
+	}
+
+	public void setPlanAttachment(PlanAttachment planAttachment) {
+		this.planAttachment = planAttachment;
+	}
 
 	public List<LeafPaymentPlan> getPlans() {
 		return plans;
@@ -23,5 +32,14 @@ public class LeafPaymentConfig {
 
 	public void setPlans(List<LeafPaymentPlan> plans) {
 		this.plans = plans;
+	}
+
+	public LeafPaymentPlan getDefaultPlan() {
+		for (LeafPaymentPlan plan : this.plans) {
+			if (plan.isDefaultPlan()) {
+				return plan;
+			}
+		}
+		return null;
 	}
 }

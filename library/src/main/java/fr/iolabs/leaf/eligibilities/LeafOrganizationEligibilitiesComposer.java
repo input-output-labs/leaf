@@ -2,9 +2,9 @@ package fr.iolabs.leaf.eligibilities;
 
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
+import fr.iolabs.leaf.common.LeafPolicy;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
 import fr.iolabs.leaf.organization.model.OrganizationMembership;
-import fr.iolabs.leaf.organization.model.OrganizationPolicy;
 import fr.iolabs.leaf.organization.model.OrganizationRole;
 
 import java.util.List;
@@ -39,7 +39,7 @@ public class LeafOrganizationEligibilitiesComposer implements ApplicationListene
 		}
 		for (OrganizationRole role : organization.getPolicies().getRoles()) {
 			if (userRole.equals(role.getName())) {
-				for (OrganizationPolicy policy : role.getRights()) {
+				for (LeafPolicy policy : role.getRights()) {
 					if (eligibilityKeys == null || eligibilityKeys.contains(policy.getName())) {
 						LeafEligibility existingEligibility = eligibilities.get(policy.getName());
 						LeafEligibility eligibility = this.readEligibility(policy);
@@ -58,7 +58,7 @@ public class LeafOrganizationEligibilitiesComposer implements ApplicationListene
 		}
 	}
 
-	private LeafEligibility readEligibility(OrganizationPolicy policy) {
+	private LeafEligibility readEligibility(LeafPolicy policy) {
 		String type = policy.getType();
 		String value = policy.getValue();
 
