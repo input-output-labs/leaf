@@ -32,3 +32,5 @@ jobs:
         mvn --batch-mode deploy
         cd ../sponsoring
         mvn --batch-mode deploy
+        cd ../payment
+        mvn --batch-mode deploy
