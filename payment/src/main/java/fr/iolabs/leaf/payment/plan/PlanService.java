@@ -60,19 +60,36 @@ public class PlanService {
 			throw new BadRequestException("The given plan does not exist or is not available");
 		}
 
-		SelectedPlanModule selectedPlanModule = this.getSelectedPlanModule();
-		if (selectedPlanModule.getSelectedPlan() != null) {
-			// TODO: check that it is possible to select a different plan
-		}
-		selectedPlanModule.setSelectedPlan(availableSelectedPlan);
-		selectedPlanModule.getMetadata().updateLastModification();
-
+		this.attachPaymentPlan(selectedPlan);
 		this.savePlanAttachment();
 
 		// This will update user or organization depending on selected plan
 		this.applicationEventPublisher.publishEvent(new LeafPlanSelectionEvent(PlanService.class, availableSelectedPlan));
 
 		return availableSelectedPlan;
+	}
+	
+	public void attachPaymentPlan(LeafPaymentPlan plan) {
+		PlanAttachment planAttachment = this.paymentConfig.getPlanAttachment();
+		ILeafModular planOwnerTarget = null;
+		switch (planAttachment) {
+		case USER:
+			planOwnerTarget = this.coreContext.getAccount();
+			break;
+		case ORGANIZATION:
+			planOwnerTarget = this.coreContext.getOrganization();
+			break;
+		default:
+			break;
+		}
+		
+		this.attachPaymentPlanTo(plan, planOwnerTarget);
+	}
+	
+	public void attachPaymentPlanTo(LeafPaymentPlan plan, ILeafModular planOwnerTarget) {
+		SelectedPlanModule selectedPlanModule = this.getSelectedPlanModule(planOwnerTarget);
+		selectedPlanModule.setSelectedPlan(plan);
+		selectedPlanModule.getMetadata().updateLastModification();
 	}
 
 	private void savePlanAttachment() {
@@ -101,13 +118,14 @@ public class PlanService {
 		default:
 			break;
 		}
+		
+		return this.getSelectedPlanModule(planOwnerTarget);
+	}
 
+	public SelectedPlanModule getSelectedPlanModule(ILeafModular planOwnerTarget) {
 		if (planOwnerTarget == null) {
-			throw new BadRequestException("No recipiant for plan selection (" + planAttachment + ")");
+			throw new BadRequestException("No recipiant for selected plan module");
 		}
-
 		return this.moduleService.get(SelectedPlanModule.class, planOwnerTarget);
 	}
-	
-	
 }

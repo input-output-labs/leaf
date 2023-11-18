@@ -19,10 +19,6 @@ policies:
      category: organizations
      order: 5
      type: boolean
-  toDelete:
-     category: organizations
-     order: 5
-     type: boolean
 defaultRoles:
   admin:
     creatorDefault: true
@@ -33,7 +29,6 @@ defaultRoles:
       manageMembers: true
       seePolicies: true
       managePolicies: true
-      toDelete: true
   member:
     creationDefault: false
     otherDefault: true
@@ -43,15 +38,3 @@ defaultRoles:
       manageMembers: false
       seePolicies: true
       managePolicies: false
-      toDelete: true
-  trash:
-    creationDefault: false
-    otherDefault: false
-    policies:
-      seeOrganization: false
-      seeMembers: false
-      manageMembers: false
-      seePolicies: false
-      managePolicies: false
-      toDelete: false
-  
