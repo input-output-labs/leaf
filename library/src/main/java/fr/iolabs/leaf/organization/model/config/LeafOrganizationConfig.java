@@ -33,4 +33,22 @@ public class LeafOrganizationConfig {
 	public void setDefaultRoles(Map<String, LeafDefaultRoleConfig> defaultRoles) {
 		this.defaultRoles = defaultRoles;
 	}
+	
+	public String getCreatorDefaultName() {
+		for (Map.Entry<String, LeafDefaultRoleConfig > role: this.defaultRoles.entrySet()) {
+			if (role.getValue().isCreatorDefault()) {
+				return role.getKey();
+			}
+		}
+		return null;
+	}
+	
+	public String getOtherDefaultName() {
+		for (Map.Entry<String, LeafDefaultRoleConfig > role: this.defaultRoles.entrySet()) {
+			if (role.getValue().isOtherDefault()) {
+				return role.getKey();
+			}
+		}
+		return null;
+	}
 }

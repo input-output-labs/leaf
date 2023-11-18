@@ -2,11 +2,15 @@ package fr.iolabs.leaf.organization;
 
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
+import fr.iolabs.leaf.common.errors.BadRequestException;
 import fr.iolabs.leaf.common.errors.NotFoundException;
 import fr.iolabs.leaf.eligibilities.LeafEligibility;
 import fr.iolabs.leaf.eligibilities.LeafOrganizationEligibilitiesComposer;
 import fr.iolabs.leaf.organization.actions.CreateOrganizationAction;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
+import fr.iolabs.leaf.organization.model.config.LeafOrganizationConfig;
+import fr.iolabs.leaf.organization.policies.LeafOrganizationPoliciesService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +30,12 @@ public class LeafOrganizationController {
 
 	@Autowired
 	private LeafOrganizationService organizationService;
+
+	@Autowired
+	private LeafOrganizationPoliciesService organizationPoliciesService;
+
+	@Autowired
+	private LeafOrganizationRepository organizationRepository;
 
 	@Autowired
 	private LeafOrganizationEligibilitiesComposer organizationEligibilitiesService;
@@ -80,5 +90,15 @@ public class LeafOrganizationController {
 				.protectOrganizations(
 						List.of(this.organizationService.getById(organizationId).orElseThrow(NotFoundException::new)))
 				.get(0);
+	}
+
+
+	@CrossOrigin
+	@AdminOnly
+	@PostMapping("/all/policies/refresh")
+	public void refreshAllOrganizationsPolicies() {
+		List<LeafOrganization> all = this.organizationRepository.findAll();
+		all.forEach((organization) -> this.organizationPoliciesService.refreshOrganizationPolicies(organization));
+		this.organizationRepository.saveAll(all);
 	}
 }

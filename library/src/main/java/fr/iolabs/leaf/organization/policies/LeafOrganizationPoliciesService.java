@@ -2,6 +2,7 @@ package fr.iolabs.leaf.organization.policies;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -168,5 +169,84 @@ public class LeafOrganizationPoliciesService {
 		});
 
 		return this.organizationRepository.save(organization);
+	}
+	
+	public void refreshOrganizationPolicies(LeafOrganization organization) {
+		System.out.println("--------------------------------------------------------");
+		System.out.println("Organization: " + organization.getName());
+		OrganizationPolicies defaultPolicies = this.extractDefaultPolicies();
+		
+		System.out.println("");
+		System.out.println("### Policies update");
+
+		for(Entry<String, OrganizationPolicy> entry: this.organizationConfig.getPolicies().entrySet()) {
+			System.out.println("## Policy: " + entry.getKey());
+			boolean shouldAdd = true;
+			for (OrganizationPolicy existingPolicy : organization.getPolicies().getPolicies()) {
+				if (existingPolicy.getName().equals(entry.getKey())) {
+					shouldAdd = false;
+					System.out.println("Not new ! Ignoring...");
+					break;
+				}
+			}
+			if (shouldAdd) {
+				System.out.println("New ! Adding...");
+				OrganizationPolicy policy = entry.getValue();
+				policy.setName(entry.getKey());
+				
+				organization.getPolicies().getPolicies().add(policy);
+				System.out.println("Policy added");
+
+				System.out.println("## Roles updates: " + entry.getKey());
+				for (OrganizationRole role: organization.getPolicies().getRoles()) {
+					System.out.println("# Role: " + role.getName());
+					OrganizationPolicy policyCopy = policy.copy();
+					
+					
+					LeafDefaultRoleConfig defaultRole = this.organizationConfig.getDefaultRoles().get(role.getName());
+					if (defaultRole == null) {
+						String creatorDefaultName = this.organizationConfig.getCreatorDefaultName();
+						if (role.getName().equals(creatorDefaultName)) {
+							defaultRole = this.organizationConfig.getDefaultRoles().get(creatorDefaultName);
+						} else {
+							String otherDefaultName = this.organizationConfig.getOtherDefaultName();
+							defaultRole = this.organizationConfig.getDefaultRoles().get(otherDefaultName);
+						}
+					}
+					if (defaultRole != null) {
+						String value = defaultRole.getPolicies().get(policyCopy.getName());
+						System.out.println("Adding policy default value for role: " + value);
+						policyCopy.setValue(value);
+					}
+					boolean shouldAddRight = true;
+					for (OrganizationPolicy right: role.getRights()) {
+						if (right.getName().equals(policyCopy.getName())) {
+							shouldAddRight = false;
+							break;
+						}
+					}
+					if (shouldAddRight) {
+						role.getRights().add(policyCopy);
+					}
+				}
+			}
+		}
+		System.out.println("");
+		System.out.println("### Roles update");
+		for (Entry<String, LeafDefaultRoleConfig> entry: this.organizationConfig.getDefaultRoles().entrySet()) {
+			boolean shouldAdd = true;
+			for (OrganizationRole existingRole: organization.getPolicies().getRoles()) {
+				if (existingRole.getName().equals(entry.getKey())) {
+					shouldAdd = false;
+					System.out.println("Not new ! Ignoring...");
+					break;
+				}
+			}
+			if (shouldAdd) {
+				System.out.println("New ! Adding...");
+				OrganizationRole newRole = this.createRole(defaultPolicies, entry.getKey(), entry.getValue());
+				organization.getPolicies().getRoles().add(newRole);
+			}
+		}
 	}
 }
