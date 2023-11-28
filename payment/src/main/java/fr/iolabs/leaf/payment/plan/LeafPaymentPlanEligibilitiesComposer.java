@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.common.LeafPolicy;
 import fr.iolabs.leaf.eligibilities.LeafEligibilitiesEvent;
+import fr.iolabs.leaf.eligibilities.LeafEligibilitiesService;
 import fr.iolabs.leaf.eligibilities.LeafEligibility;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
 
@@ -23,6 +24,9 @@ public class LeafPaymentPlanEligibilitiesComposer implements ApplicationListener
 	
 	@Autowired
 	private PlanService planService;
+
+	@Autowired
+	private LeafEligibilitiesService eligibilitiesService;
 
 	@Override
 	public void onApplicationEvent(LeafEligibilitiesEvent event) {
@@ -38,7 +42,7 @@ public class LeafPaymentPlanEligibilitiesComposer implements ApplicationListener
 		for (LeafPolicy policy : plan.getFeatures()) {
 			if (eligibilityKeys == null || eligibilityKeys.contains(policy.getName())) {
 				LeafEligibility existingEligibility = eligibilities.get(policy.getName());
-				LeafEligibility eligibility = this.readEligibility(policy);
+				LeafEligibility eligibility = this.eligibilitiesService.readEligibility(policy, "Blocked by plan policies");
 				if (existingEligibility == null) {
 					eligibilities.put(policy.getName(), eligibility);
 				} else {
@@ -50,27 +54,6 @@ public class LeafPaymentPlanEligibilitiesComposer implements ApplicationListener
 				}
 			}
 		}
-	}
-
-	private LeafEligibility readEligibility(LeafPolicy policy) {
-		String type = policy.getType();
-		String value = policy.getValue();
-
-		boolean eligible;
-		switch (type) {
-		case "boolean":
-			eligible = "true".equals(value);
-			break;
-		default:
-			// TODO: use event publisher to seek a subscriber to analyse the policy and
-			// provide eligibility
-			eligible = false;
-		}
-		LeafEligibility eligibility = new LeafEligibility(eligible);
-		if (!eligible) {
-			eligibility.reasons.add("Blocked by plan policies");
-		}
-		return eligibility;
 	}
 
 }

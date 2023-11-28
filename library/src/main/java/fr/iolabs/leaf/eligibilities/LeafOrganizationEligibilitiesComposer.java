@@ -10,6 +10,8 @@ import fr.iolabs.leaf.organization.model.OrganizationRole;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Resource;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,9 @@ public class LeafOrganizationEligibilitiesComposer implements ApplicationListene
 
 	@Resource(name = "coreContext")
 	private LeafContext coreContext;
+
+	@Autowired
+	private LeafEligibilitiesService eligibilitiesService;
 
 	@Override
 	public void onApplicationEvent(LeafEligibilitiesEvent event) {
@@ -42,7 +47,7 @@ public class LeafOrganizationEligibilitiesComposer implements ApplicationListene
 				for (LeafPolicy policy : role.getRights()) {
 					if (eligibilityKeys == null || eligibilityKeys.contains(policy.getName())) {
 						LeafEligibility existingEligibility = eligibilities.get(policy.getName());
-						LeafEligibility eligibility = this.readEligibility(policy);
+						LeafEligibility eligibility = this.eligibilitiesService.readEligibility(policy, "Blocked by organization policies");
 						if (existingEligibility == null) {
 							eligibilities.put(policy.getName(), eligibility);
 						} else {
@@ -56,26 +61,5 @@ public class LeafOrganizationEligibilitiesComposer implements ApplicationListene
 				}
 			}
 		}
-	}
-
-	private LeafEligibility readEligibility(LeafPolicy policy) {
-		String type = policy.getType();
-		String value = policy.getValue();
-
-		boolean eligible;
-		switch (type) {
-		case "boolean":
-			eligible = "true".equals(value);
-			break;
-		default:
-			// TODO: use event publisher to seek a subscriber to analyse the policy and
-			// provide eligibility
-			eligible = false;
-		}
-		LeafEligibility eligibility = new LeafEligibility(eligible);
-		if (!eligible) {
-			eligibility.reasons.add("Blocked by organization policies");
-		}
-		return eligibility;
 	}
 }

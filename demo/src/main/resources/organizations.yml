@@ -19,6 +19,10 @@ policies:
      category: organizations
      order: 5
      type: boolean
+  personalCardCount:
+     category: organizations
+     order: 6
+     type: number
 defaultRoles:
   admin:
     creatorDefault: true
@@ -29,6 +33,7 @@ defaultRoles:
       manageMembers: true
       seePolicies: true
       managePolicies: true
+      personalCardCount: 2
   member:
     creationDefault: false
     otherDefault: true
@@ -38,3 +43,4 @@ defaultRoles:
       manageMembers: false
       seePolicies: true
       managePolicies: false
+      personalCardCount: 1

@@ -25,6 +25,7 @@ public class PlanService {
 
 	@Resource(name = "coreContext")
 	private LeafContext coreContext;
+	
 	@Autowired
 	private LeafPaymentConfig paymentConfig;
 
