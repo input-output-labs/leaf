@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
+import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlanInfo;
 
 @RestController
 @RequestMapping("/api/payment/plans")
@@ -31,5 +32,11 @@ public class PlanController {
 	@PostMapping("/selected")
 	public LeafPaymentPlan selectPlan(@RequestBody() LeafPaymentPlan selectedPlan) {
 		return this.planService.selectPlan(selectedPlan);
+	}
+
+	@CrossOrigin
+	@GetMapping("/selected")
+	public LeafPaymentPlanInfo getSelectedPlan() {
+		return this.planService.getSelectedPlan();
 	}
 }

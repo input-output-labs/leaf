@@ -15,6 +15,7 @@ public class LeafEligibilityEvent extends ApplicationEvent {
 	public LeafEligibilityEvent(Object source, LeafPolicy policy) {
 		super(source);
 		this.policy = policy;
+		this.eligibility = Optional.empty();
 	}
 
 	public Optional<LeafEligibility> eligibility() {

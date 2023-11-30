@@ -5,6 +5,7 @@ plans:
   color: lightgrey
   defaultPlan: true
   available: true
+  stripePriceId: price_1OHtUwC2crD6qr6LhGCEExqq
   features:
     -
       name: userCount
@@ -25,6 +26,7 @@ plans:
   color: lightblue
   defaultPlan: false
   available: true
+  stripePriceId: price_1OHtXkC2crD6qr6LinwkrpNS
   features:
     -
       name: userCount
@@ -47,6 +49,7 @@ plans:
   color: lightcoral
   defaultPlan: false
   available: true
+  stripePriceId: price_1OHtajC2crD6qr6LKJbSXyek
   features:
     -
       name: userCount

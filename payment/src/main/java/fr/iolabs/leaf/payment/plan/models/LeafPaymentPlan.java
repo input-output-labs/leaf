@@ -5,10 +5,12 @@ import java.util.List;
 public class LeafPaymentPlan {
 	private String name;
 	private String color;
+	private String stripePriceId;
 	private boolean available;
 	private boolean defaultPlan;
 	private List<LeafPaymentPlanFeature> features;
 	private LeafPaymentPlanPricing pricing;
+	private boolean suspended;
 
 	public String getName() {
 		return name;
@@ -24,6 +26,14 @@ public class LeafPaymentPlan {
 
 	public void setColor(String color) {
 		this.color = color;
+	}
+
+	public String getStripePriceId() {
+		return stripePriceId;
+	}
+
+	public void setStripePriceId(String stripePriceId) {
+		this.stripePriceId = stripePriceId;
 	}
 
 	public boolean isAvailable() {
@@ -56,5 +66,13 @@ public class LeafPaymentPlan {
 
 	public void setPricing(LeafPaymentPlanPricing pricing) {
 		this.pricing = pricing;
+	}
+
+	public boolean isSuspended() {
+		return suspended;
+	}
+
+	public void setSuspended(boolean suspended) {
+		this.suspended = suspended;
 	}
 }
