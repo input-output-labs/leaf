@@ -8,10 +8,10 @@ public class PaymentCheckoutCreationAction {
 	private List<StripeProduct> products;
 	private String successUrl;
 	private String cancelUrl;
-	private StripePaymentModeEnum mode;
-	private String customerId;
 	private PaymentIntentData paymentIntentData;
 	private String customText;
+	private StripePaymentModeEnum mode;
+	private String customerId;
 	private boolean allowPromotionCodes;
 	private Map<String, Object> metadata;
 

@@ -1,7 +1,5 @@
 package fr.iolabs.leaf.payment.stripe;
 
-import java.util.Map;
-
 import javax.annotation.security.PermitAll;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,15 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.stripe.Stripe;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
-import com.stripe.net.ApiResource;
 import com.stripe.net.Webhook;
-
-import fr.iolabs.leaf.payment.stripe.models.PaymentCheckoutCreationAction;
-import fr.iolabs.leaf.payment.stripe.models.PaymentLinkCreationAction;
 
 @RestController
 @RequestMapping("/api/payment/stripe")
@@ -32,68 +25,82 @@ public class StripeController {
 
 	@Value("${leaf.payment.stripe.api.key}")
 	private String privateKey;
-	
+
 	@Value("${leaf.payment.stripe.api.webhook-secret}")
 	private String endpointSecret;
 
 	@Autowired
 	private StripeService stripeService;
 
+	@Autowired
+	private StripeHookService stripeHookService;
+
 	private static Gson gson = new Gson();
 
-	/** To uncomment for testing purposes 
-	@CrossOrigin
-	@PostMapping("/payment-links")
-	public Map<String, String> createPaymentLink(@RequestBody PaymentLinkCreationAction paymentLinkCreationAction)
-			throws StripeException {
-		Stripe.apiKey = this.privateKey;
-		return this.stripeService.createPaymentLink(paymentLinkCreationAction);
-	}
-	
-	@CrossOrigin
-	@PostMapping("/payment-intent")
-	public String createPaymentIntent(
-			@RequestBody PaymentIntentCreationAction paymentIntentCreationAction) throws StripeException {
-		Stripe.apiKey = this.privateKey;
-		return gson.toJson(this.stripeService.createPaymentIntent(paymentIntentCreationAction));
-	}
-
-	@CrossOrigin
-	@PostMapping("/payment-intent/capture")
-	public String capturePayment(
-			@RequestBody PaymentIntentCaptureAction paymentIntentCaptureAction) throws StripeException {
-		Stripe.apiKey = this.privateKey;
-		return gson.toJson(this.stripeService.capturePayment(paymentIntentCaptureAction));
-	}
-
-	@CrossOrigin
-	@PostMapping("/checkout-sessions")
-	public Map<String, Object> createCheckoutSession(
-			@RequestBody PaymentCheckoutCreationAction paymentCheckoutCreationAction) throws StripeException {
-		Stripe.apiKey = this.privateKey;
-		return this.stripeService.createCheckoutSession(paymentCheckoutCreationAction);
-	}
-	**/
+	/**
+	 * To uncomment for testing purposes
+	 * 
+	 * @CrossOrigin @PostMapping("/payment-links") public Map<String, String>
+	 *              createPaymentLink(@RequestBody PaymentLinkCreationAction
+	 *              paymentLinkCreationAction) throws StripeException {
+	 *              Stripe.apiKey = this.privateKey; return
+	 *              this.stripeService.createPaymentLink(paymentLinkCreationAction);
+	 *              }
+	 * 
+	 * @CrossOrigin @PostMapping("/payment-intent") public String
+	 *              createPaymentIntent(
+	 * @RequestBody PaymentIntentCreationAction paymentIntentCreationAction) throws
+	 *              StripeException { Stripe.apiKey = this.privateKey; return
+	 *              gson.toJson(this.stripeService.createPaymentIntent(paymentIntentCreationAction));
+	 *              }
+	 * 
+	 * @CrossOrigin @PostMapping("/payment-intent/capture") public String
+	 *              capturePayment(
+	 * @RequestBody PaymentIntentCaptureAction paymentIntentCaptureAction) throws
+	 *              StripeException { Stripe.apiKey = this.privateKey; return
+	 *              gson.toJson(this.stripeService.capturePayment(paymentIntentCaptureAction));
+	 *              }
+	 * 
+	 *              /** To uncomment for testing purposes
+	 * 
+	 * @CrossOrigin @PostMapping("/payment-links") public Map<String, String>
+	 *              createPaymentLink(@RequestBody PaymentLinkCreationAction
+	 *              paymentLinkCreationAction) throws StripeException {
+	 *              Stripe.apiKey = this.privateKey; return
+	 *              this.stripeService.createPaymentLink(paymentLinkCreationAction);
+	 *              }
+	 * 
+	 * @CrossOrigin @PostMapping("/checkout-sessions") public Map<String, Object>
+	 *              createCheckoutSession(
+	 * @RequestBody PaymentCheckoutCreationAction paymentCheckoutCreationAction)
+	 *              throws StripeException { Stripe.apiKey = this.privateKey; return
+	 *              this.stripeService.createCheckoutSession(paymentCheckoutCreationAction);
+	 *              }
+	 **/
 
 	@PermitAll
 	@CrossOrigin
-	@PostMapping("/checkout-sessions/webhook")
-	public ResponseEntity<Object> checkoutSessionWebhook(@RequestBody String eventReceived, @RequestHeader("Stripe-Signature") String sigHeader) throws StripeException {
-        Event event = null;
+	@PostMapping("/webhook")
+	public ResponseEntity<Object> checkoutSessionWebhook(@RequestBody String eventReceived,
+			@RequestHeader("Stripe-Signature") String sigHeader) throws StripeException {
+		Event event = null;
 
-        try {
-          event = Webhook.constructEvent(eventReceived, sigHeader, this.endpointSecret);
-        } catch (JsonSyntaxException e) {
-          // Invalid payload
-          return ResponseEntity.badRequest().build();
-        } catch (SignatureVerificationException e) {
-          // Invalid signature
-          return ResponseEntity.badRequest().build();
-        }
+		try {
+			event = Webhook.constructEvent(eventReceived, sigHeader, this.endpointSecret);
+		} catch (JsonSyntaxException e) {
+			e.printStackTrace();
+			// Invalid payload
+			return ResponseEntity.badRequest().build();
+		} catch (SignatureVerificationException e) {
+			e.printStackTrace();
+			// Invalid signature
+			return ResponseEntity.badRequest().build();
+		}
 
-		event = ApiResource.GSON.fromJson(eventReceived, Event.class);
-		if (event.getType().contains("checkout.session.completed")) {
-			this.stripeService.handlePaymentResult(event);
+		switch (event.getType()) {
+		case "checkout.session.completed":
+			this.stripeHookService.handleCheckoutSessionCompleted(event);
+			break;
 		}
 		return ResponseEntity.ok().build();
 	}

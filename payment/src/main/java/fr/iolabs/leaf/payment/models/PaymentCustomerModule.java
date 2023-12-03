@@ -4,6 +4,7 @@ import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 
 public class PaymentCustomerModule {
 	private String stripeId;
+	private PaymentMethod defaultPaymentMethod;
 	private ResourceMetadata metadata;
 
 	public PaymentCustomerModule() {
@@ -23,5 +24,17 @@ public class PaymentCustomerModule {
 			this.metadata = ResourceMetadata.create();
 		}
 		return metadata;
+	}
+
+	public PaymentMethod getDefaultPaymentMethod() {
+		return defaultPaymentMethod;
+	}
+
+	public void setDefaultPaymentMethod(PaymentMethod defaultPaymentMethod) {
+		this.defaultPaymentMethod = defaultPaymentMethod;
+	}
+
+	public void setMetadata(ResourceMetadata metadata) {
+		this.metadata = metadata;
 	}
 }

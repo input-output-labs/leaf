@@ -1,13 +1,12 @@
 package fr.iolabs.leaf.payment.plan.models;
 
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
-import fr.iolabs.leaf.payment.models.PaymentMethod;
 
 public class LeafPaymentSubscription {
 	private String stripeSubscriptionId;
 	private String associatedPlanId;
 	private boolean trialDone;
-	private PaymentMethod paymentMethod;
+	private boolean active;
 	private ResourceMetadata metadata;
 
 	public LeafPaymentSubscription(String stripeSubscriptionId, String associatedPlanId) {
@@ -51,11 +50,11 @@ public class LeafPaymentSubscription {
 		this.metadata = metadata;
 	}
 
-	public PaymentMethod getPaymentMethod() {
-		return paymentMethod;
+	public boolean isActive() {
+		return active;
 	}
 
-	public void setPaymentMethod(PaymentMethod paymentMethod) {
-		this.paymentMethod = paymentMethod;
+	public void setActive(boolean active) {
+		this.active = active;
 	}
 }

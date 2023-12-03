@@ -1,6 +1,6 @@
 package fr.iolabs.leaf.common;
 
-public class LeafPolicy {
+public class LeafPolicy implements Cloneable {
 	protected String name;
 	protected String type;
 	protected String value;
@@ -15,6 +15,14 @@ public class LeafPolicy {
 		if (that.value != null ) {
 			this.value = that.value;
 		}
+	}
+	
+	public LeafPolicy clone() {
+		LeafPolicy clone = new LeafPolicy();
+		clone.name = this.name;
+		clone.type = this.type;
+		clone.value = this.value;
+		return clone;
 	}
 
 	public String getName() {

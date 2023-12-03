@@ -1,6 +1,7 @@
 package fr.iolabs.leaf.payment.plan;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.security.PermitAll;
 
@@ -38,5 +39,11 @@ public class PlanController {
 	@GetMapping("/selected")
 	public LeafPaymentPlanInfo getSelectedPlan() {
 		return this.planService.getSelectedPlan();
+	}
+
+	@CrossOrigin
+	@PostMapping("/paymentmethod")
+	public Map<String, String> checkoutPaymentMethod() {
+		return this.planService.checkoutPaymentMethod();
 	}
 }

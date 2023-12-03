@@ -34,6 +34,9 @@ public class LeafPaymentPlanEligibilitiesComposer implements ApplicationListener
 		if (plan == null) {
 			return;
 		}
+		if (plan.isSuspended()) {
+			plan = plan.getSuspensionBackupPlan();
+		}
 		this.getEligibilities(plan, event.eligibilities(), event.eligibilityKey());
 	}
 
