@@ -14,11 +14,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
+import com.stripe.model.PaymentIntent;
 import com.stripe.model.PaymentLink;
 import com.stripe.model.Price;
 import com.stripe.model.Product;
 import com.stripe.model.StripeObject;
 import com.stripe.model.checkout.Session;
+import com.stripe.param.PaymentIntentCreateParams;
 
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 import fr.iolabs.leaf.payment.models.LeafPaymentResultEvent;
@@ -26,6 +28,8 @@ import fr.iolabs.leaf.payment.models.LeafPaymentTransaction;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransactionRepository;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransactionStatusEnum;
 import fr.iolabs.leaf.payment.stripe.models.PaymentCheckoutCreationAction;
+import fr.iolabs.leaf.payment.stripe.models.PaymentIntentCaptureAction;
+import fr.iolabs.leaf.payment.stripe.models.PaymentIntentCreationAction;
 import fr.iolabs.leaf.payment.stripe.models.PaymentLinkCreationAction;
 import fr.iolabs.leaf.payment.stripe.models.StripeProduct;
 
@@ -33,10 +37,41 @@ import fr.iolabs.leaf.payment.stripe.models.StripeProduct;
 public class StripeService {
 	@Autowired
 	private ApplicationEventPublisher applicationEventPublisher;
-	
+
 	@Autowired
 	private LeafPaymentTransactionRepository leafPaymentTransactionRepository;
+
+	public PaymentIntent createPaymentIntent(PaymentIntentCreationAction paymentCreationAction) throws StripeException {
+		Map<String, Object> automaticPaymentMethods = new HashMap<>();
+		if(paymentCreationAction.isAutomaticPaymentMethods() == false) {
+			automaticPaymentMethods.put("enabled", false);
+		} else {
+			// default case (automatic payment methods not defined) + true case
+			automaticPaymentMethods.put("enabled", true);
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put("amount", paymentCreationAction.getAmount());
+		params.put("currency", paymentCreationAction.getCurrency());
+		params.put("automatic_payment_methods", automaticPaymentMethods);
+		if(paymentCreationAction.getCaptureMethod() != null) {
+			params.put("capture_method", paymentCreationAction.getCaptureMethod());
+		}
+		// Create a PaymentIntent with the order amount and currency
+		PaymentIntent intent = PaymentIntent.create(params);
+
+		// Send PaymentIntent details to client
+		return intent;
+	}
 	
+	public PaymentIntent capturePayment(PaymentIntentCaptureAction paymentIntentCaptureAction) throws StripeException {
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentCaptureAction.getIntentId());
+		Map<String, Object> params = new HashMap<>();
+		params.put("amount", paymentIntentCaptureAction.getAmount());
+		
+		PaymentIntent capturedPayment = paymentIntent.capture(params);
+		return capturedPayment;
+	}
+
 	public Map<String, String> createPaymentLink(PaymentLinkCreationAction paymentLinkCreationAction)
 			throws StripeException {
 		List<Object> lineItems = this.createSoldItems(paymentLinkCreationAction.getProducts());
@@ -57,58 +92,62 @@ public class StripeService {
 		return paymentLinkURL;
 	}
 
-	public Map<String, Object> createCheckoutSession(PaymentCheckoutCreationAction paymentCheckoutCreationAction) throws StripeException {
+	public Map<String, Object> createCheckoutSession(PaymentCheckoutCreationAction paymentCheckoutCreationAction)
+			throws StripeException {
 		List<Object> lineItems = this.createSoldItems(paymentCheckoutCreationAction.getProducts());
-		
+
 		Map<String, Object> params = new HashMap<>();
 		params.put("line_items", lineItems);
-		
-		if(paymentCheckoutCreationAction.getCustomerId() != null) {
-			//TODO RETRIEVE customer ID?
+
+		if (paymentCheckoutCreationAction.getCustomerId() != null) {
+			// TODO RETRIEVE customer ID?
 			params.put("customer", paymentCheckoutCreationAction.getCustomerId());
 		}
-		
+
 		params.put("success_url", paymentCheckoutCreationAction.getSuccessUrl());
 		params.put("mode", paymentCheckoutCreationAction.getMode());
-		
+
 		HashMap<String, Object> metadata = new HashMap<>();
 		metadata.put("paymentMetadata", paymentCheckoutCreationAction.getMetadata());
 		params.put("metadata", paymentCheckoutCreationAction.getMetadata());
-		
-		if(paymentCheckoutCreationAction.isAllowPromotionCodes()) {
+
+		if (paymentCheckoutCreationAction.isAllowPromotionCodes()) {
 			params.put("allow_promotion_codes", true);
 		}
 
 		// Create checkout session: doc:
 		// https://stripe.com/docs/api/checkout/sessions/create?lang=java
 		Session session = Session.create(params);
-		//TODO: ADD TAXES AUTO
+		// TODO: ADD TAXES AUTO
 		LeafPaymentTransaction paymentTransaction = new LeafPaymentTransaction(session.getCustomer());
 		paymentTransaction.setStatus(LeafPaymentTransactionStatusEnum.inProgress);
 		paymentTransaction.setModules(paymentCheckoutCreationAction.getMetadata());
 		paymentTransaction.setCustomerId(session.getCustomer());
 		paymentTransaction.setCheckoutSessionId(session.getId());
 		paymentTransaction.setMetadata(ResourceMetadata.create());
-		LeafPaymentTransaction paymentTransactionCreated = this.leafPaymentTransactionRepository.save(paymentTransaction);
-		
+		LeafPaymentTransaction paymentTransactionCreated = this.leafPaymentTransactionRepository
+				.save(paymentTransaction);
+
 		Map<String, Object> paymentSession = new HashMap<>();
 		paymentSession.put("url", session.getUrl());
 		paymentSession.put("transactionId", paymentTransactionCreated.getId());
 		return paymentSession;
 	}
-	
+
 	public void handlePaymentResult(Event event) {
-		StripeObject eventData =  event.getDataObjectDeserializer().getObject().orElseThrow();
+		StripeObject eventData = event.getDataObjectDeserializer().getObject().orElseThrow();
 		String eventString = eventData.toJson();
 		JsonObject jsonObject = JsonParser.parseString(eventString).getAsJsonObject();
 		String checkoutSessionIdWithQuotes = jsonObject.get("id").toString();
 		String checkoutSessionId = checkoutSessionIdWithQuotes.substring(1, checkoutSessionIdWithQuotes.length() - 1);
 
-		// Do we need to retrieve the payment intent to have a better payment management? jsonObject.get("payment_intent")
-		if(checkoutSessionId instanceof String) {
-			Optional<LeafPaymentTransaction> paymentTransactionOpt = this.leafPaymentTransactionRepository.findByCheckoutSessionId(checkoutSessionId.toString());
-			
-			if(paymentTransactionOpt.isPresent()) {
+		// Do we need to retrieve the payment intent to have a better payment
+		// management? jsonObject.get("payment_intent")
+		if (checkoutSessionId instanceof String) {
+			Optional<LeafPaymentTransaction> paymentTransactionOpt = this.leafPaymentTransactionRepository
+					.findByCheckoutSessionId(checkoutSessionId.toString());
+
+			if (paymentTransactionOpt.isPresent()) {
 				LeafPaymentTransaction paymentTransaction = paymentTransactionOpt.get();
 				paymentTransaction.setStatus(LeafPaymentTransactionStatusEnum.successful);
 				this.leafPaymentTransactionRepository.save(paymentTransaction);
