@@ -78,6 +78,10 @@ public class StripeService {
 			params.put("payment_intent_data", this.createPaymentIntentData(paymentCheckoutCreationAction.getPaymentIntentData()));
 		}
 		
+		if(paymentCheckoutCreationAction.getCustomText() != null) {
+			params.put("custom_text", paymentCheckoutCreationAction.getCustomText());
+		}
+		
 		params.put("success_url", paymentCheckoutCreationAction.getSuccessUrl());
 		params.put("mode", paymentCheckoutCreationAction.getMode());
 		
@@ -141,7 +145,12 @@ public class StripeService {
 		PaymentIntent capturedPayment = paymentIntent.capture(params);
 		return capturedPayment;
 	}
-	
+
+	public String retrievePaymentIntentFromCheckoutSessionId(String checkoutSessionId) throws StripeException {
+		Session retrievedSession = Session.retrieve(checkoutSessionId);
+		return retrievedSession.getPaymentIntent();
+	}
+
 	public void handlePaymentResult(Event event) {
 		StripeObject eventData =  event.getDataObjectDeserializer().getObject().orElseThrow();
 		String eventString = eventData.toJson();
@@ -186,7 +195,6 @@ public class StripeService {
 			lineItems.add(lineItem);
 		}
 		return lineItems;
-
 	}
 
 	private Map<String, Object> createAfterCompletionParams(String redirectUrlAfterPayment) {

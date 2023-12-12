@@ -11,6 +11,7 @@ public class PaymentCheckoutCreationAction {
 	private StripePaymentModeEnum mode;
 	private String customerId;
 	private PaymentIntentData paymentIntentData;
+	private String customText;
 	private boolean allowPromotionCodes;
 	private Map<String, Object> metadata;
 
@@ -76,5 +77,13 @@ public class PaymentCheckoutCreationAction {
 
 	public void setPaymentIntentData(PaymentIntentData paymentIntentData) {
 		this.paymentIntentData = paymentIntentData;
+	}
+
+	public String getCustomText() {
+		return customText;
+	}
+
+	public void setCustomText(String customText) {
+		this.customText = customText;
 	}
 }
