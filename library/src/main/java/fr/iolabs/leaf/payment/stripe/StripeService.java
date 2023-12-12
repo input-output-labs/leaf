@@ -14,6 +14,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
+import com.stripe.model.PaymentIntent;
 import com.stripe.model.PaymentLink;
 import com.stripe.model.Price;
 import com.stripe.model.Product;
@@ -26,6 +27,9 @@ import fr.iolabs.leaf.payment.models.LeafPaymentTransaction;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransactionRepository;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransactionStatusEnum;
 import fr.iolabs.leaf.payment.stripe.models.PaymentCheckoutCreationAction;
+import fr.iolabs.leaf.payment.stripe.models.PaymentIntentCaptureAction;
+import fr.iolabs.leaf.payment.stripe.models.PaymentIntentCreationAction;
+import fr.iolabs.leaf.payment.stripe.models.PaymentIntentData;
 import fr.iolabs.leaf.payment.stripe.models.PaymentLinkCreationAction;
 import fr.iolabs.leaf.payment.stripe.models.StripeProduct;
 
@@ -58,14 +62,20 @@ public class StripeService {
 	}
 
 	public Map<String, Object> createCheckoutSession(PaymentCheckoutCreationAction paymentCheckoutCreationAction) throws StripeException {
-		List<Object> lineItems = this.createSoldItems(paymentCheckoutCreationAction.getProducts());
-		
 		Map<String, Object> params = new HashMap<>();
-		params.put("line_items", lineItems);
+		
+		if(paymentCheckoutCreationAction.getProducts() != null) {	
+			List<Object> lineItems = this.createSoldItems(paymentCheckoutCreationAction.getProducts());
+			params.put("line_items", lineItems);
+		}
 		
 		if(paymentCheckoutCreationAction.getCustomerId() != null) {
 			//TODO RETRIEVE customer ID?
 			params.put("customer", paymentCheckoutCreationAction.getCustomerId());
+		}
+
+		if(paymentCheckoutCreationAction.getPaymentIntentData() != null) {
+			params.put("payment_intent_data", this.createPaymentIntentData(paymentCheckoutCreationAction.getPaymentIntentData()));
 		}
 		
 		params.put("success_url", paymentCheckoutCreationAction.getSuccessUrl());
@@ -94,7 +104,42 @@ public class StripeService {
 		Map<String, Object> paymentSession = new HashMap<>();
 		paymentSession.put("url", session.getUrl());
 		paymentSession.put("transactionId", paymentTransactionCreated.getId());
+		paymentSession.put("sessionId", session.getId());
+		if(session.getPaymentIntent() != null) {
+			paymentSession.put("paymentIntentId", session.getPaymentIntent());
+		}
 		return paymentSession;
+	}
+	
+	public PaymentIntent createPaymentIntent(PaymentIntentCreationAction paymentCreationAction) throws StripeException {
+		Map<String, Object> automaticPaymentMethods = new HashMap<>();
+		if(paymentCreationAction.isAutomaticPaymentMethods() == false) {
+			automaticPaymentMethods.put("enabled", false);
+		} else {
+			// default case (automatic payment methods not defined) + true case
+			automaticPaymentMethods.put("enabled", true);
+		}
+		Map<String, Object> params = new HashMap<>();
+		params.put("amount", paymentCreationAction.getAmount());
+		params.put("currency", paymentCreationAction.getCurrency());
+		params.put("automatic_payment_methods", automaticPaymentMethods);
+		if(paymentCreationAction.getCaptureMethod() != null) {
+			params.put("capture_method", paymentCreationAction.getCaptureMethod());
+		}
+		// Create a PaymentIntent with the order amount and currency
+		PaymentIntent intent = PaymentIntent.create(params);
+
+		// Send PaymentIntent details to client
+		return intent;
+	}
+
+	public PaymentIntent capturePayment(PaymentIntentCaptureAction paymentIntentCaptureAction) throws StripeException {
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentCaptureAction.getIntentId());
+		Map<String, Object> params = new HashMap<>();
+		params.put("amount", paymentIntentCaptureAction.getAmount());
+
+		PaymentIntent capturedPayment = paymentIntent.capture(params);
+		return capturedPayment;
 	}
 	
 	public void handlePaymentResult(Event event) {
@@ -155,5 +200,11 @@ public class StripeService {
 		redirect.put("url", redirectUrlAfterPayment);
 		afterCompletionParams.put("redirect", redirect);
 		return afterCompletionParams;
+	}
+	
+	private Map<String, Object> createPaymentIntentData(PaymentIntentData paymentIntentData) {
+		Map<String, Object> paymentIntentMap = new HashMap<>();
+		paymentIntentMap.put("capture_method", paymentIntentData.getCaptureMethod());
+		return paymentIntentMap;
 	}
 }

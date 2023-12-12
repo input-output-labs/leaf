@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.stripe.Stripe;
 import com.stripe.exception.SignatureVerificationException;
@@ -23,6 +24,8 @@ import com.stripe.net.ApiResource;
 import com.stripe.net.Webhook;
 
 import fr.iolabs.leaf.payment.stripe.models.PaymentCheckoutCreationAction;
+import fr.iolabs.leaf.payment.stripe.models.PaymentIntentCaptureAction;
+import fr.iolabs.leaf.payment.stripe.models.PaymentIntentCreationAction;
 import fr.iolabs.leaf.payment.stripe.models.PaymentLinkCreationAction;
 
 @RestController
@@ -37,7 +40,9 @@ public class StripeController {
 
 	@Autowired
 	private StripeService stripeService;
-	
+
+	private static Gson gson = new Gson();
+
 	/** To uncomment for testing purposes 
 	@CrossOrigin
 	@PostMapping("/payment-links")
@@ -45,6 +50,22 @@ public class StripeController {
 			throws StripeException {
 		Stripe.apiKey = this.privateKey;
 		return this.stripeService.createPaymentLink(paymentLinkCreationAction);
+	}
+	
+	@CrossOrigin
+	@PostMapping("/payment-intent")
+	public String createPaymentIntent(
+			@RequestBody PaymentIntentCreationAction paymentIntentCreationAction) throws StripeException {
+		Stripe.apiKey = this.privateKey;
+		return gson.toJson(this.stripeService.createPaymentIntent(paymentIntentCreationAction));
+	}
+
+	@CrossOrigin
+	@PostMapping("/payment-intent/capture")
+	public String capturePayment(
+			@RequestBody PaymentIntentCaptureAction paymentIntentCaptureAction) throws StripeException {
+		Stripe.apiKey = this.privateKey;
+		return gson.toJson(this.stripeService.capturePayment(paymentIntentCaptureAction));
 	}
 
 	@CrossOrigin
