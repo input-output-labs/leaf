@@ -1,14 +1,38 @@
 package fr.iolabs.leaf.payment.plan.models;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class LeafPaymentPlan {
+public class LeafPaymentPlan implements Cloneable {
 	private String name;
 	private String color;
+	private String stripePriceId;
 	private boolean available;
 	private boolean defaultPlan;
 	private List<LeafPaymentPlanFeature> features;
 	private LeafPaymentPlanPricing pricing;
+	private boolean suspended;
+	private LeafPaymentPlan suspensionBackupPlan;
+	
+	public LeafPaymentPlan clone() {
+		LeafPaymentPlan clone = new LeafPaymentPlan();
+		clone.name = this.name;
+		clone.color = this.color;
+		clone.stripePriceId = this.stripePriceId;
+		clone.available = this.available;
+		clone.defaultPlan = this.defaultPlan;
+		if (this.features != null) {
+			clone.features = this.features.stream().map(feature -> feature.clone()).collect(Collectors.toList());
+		}
+		if (this.pricing != null) {
+			clone.pricing = this.pricing.clone();
+		}
+		clone.suspended = this.suspended;
+		if (this.suspensionBackupPlan != null) {
+			clone.suspensionBackupPlan = this.suspensionBackupPlan.clone();	
+		}
+		return clone;
+	}
 
 	public String getName() {
 		return name;
@@ -24,6 +48,14 @@ public class LeafPaymentPlan {
 
 	public void setColor(String color) {
 		this.color = color;
+	}
+
+	public String getStripePriceId() {
+		return stripePriceId;
+	}
+
+	public void setStripePriceId(String stripePriceId) {
+		this.stripePriceId = stripePriceId;
 	}
 
 	public boolean isAvailable() {
@@ -56,5 +88,21 @@ public class LeafPaymentPlan {
 
 	public void setPricing(LeafPaymentPlanPricing pricing) {
 		this.pricing = pricing;
+	}
+
+	public boolean isSuspended() {
+		return suspended;
+	}
+
+	public void setSuspended(boolean suspended) {
+		this.suspended = suspended;
+	}
+
+	public LeafPaymentPlan getSuspensionBackupPlan() {
+		return suspensionBackupPlan;
+	}
+
+	public void setSuspensionBackupPlan(LeafPaymentPlan suspensionBackupPlan) {
+		this.suspensionBackupPlan = suspensionBackupPlan;
 	}
 }

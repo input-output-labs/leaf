@@ -1,6 +1,7 @@
 package fr.iolabs.leaf.payment.plan.config;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +28,7 @@ public class LeafPaymentConfig {
 	}
 
 	public List<LeafPaymentPlan> getPlans() {
-		return plans;
+		return plans.stream().map(plan -> plan.clone()).collect(Collectors.toList());
 	}
 
 	public void setPlans(List<LeafPaymentPlan> plans) {
@@ -35,7 +36,7 @@ public class LeafPaymentConfig {
 	}
 
 	public LeafPaymentPlan getDefaultPlan() {
-		for (LeafPaymentPlan plan : this.plans) {
+		for (LeafPaymentPlan plan : this.getPlans()) {
 			if (plan.isDefaultPlan()) {
 				return plan;
 			}

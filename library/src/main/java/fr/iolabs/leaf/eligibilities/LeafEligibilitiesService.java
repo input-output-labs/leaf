@@ -45,7 +45,7 @@ public class LeafEligibilitiesService {
 			LeafEligibilityEvent event = new LeafEligibilityEvent(this, policy);
 			this.applicationEventPublisher.publishEvent(event);
 			Optional<LeafEligibility> eligibility = event.eligibility();
-			if (eligibility.isPresent()) {
+			if (eligibility != null && eligibility.isPresent()) {
 				return eligibility.get();
 			}
 		}
