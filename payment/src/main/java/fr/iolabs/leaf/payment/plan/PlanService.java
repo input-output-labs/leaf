@@ -38,7 +38,7 @@ public class PlanService {
 
 	@Resource(name = "coreContext")
 	private LeafContext coreContext;
-	
+
 	@Autowired
 	private LeafPaymentConfig paymentConfig;
 
@@ -56,7 +56,7 @@ public class PlanService {
 
 	@Autowired
 	private LeafOrganizationRepository organizationRepository;
-	
+
 	public List<LeafPaymentPlan> fetchPlans() {
 		return this.paymentConfig.getPlans();
 	}
@@ -89,13 +89,14 @@ public class PlanService {
 		this.savePlanAttachment();
 
 		// This will update user or organization depending on selected plan
-		this.applicationEventPublisher.publishEvent(new LeafPlanSelectionEvent(PlanService.class, availableSelectedPlan));
+		this.applicationEventPublisher
+				.publishEvent(new LeafPlanSelectionEvent(PlanService.class, availableSelectedPlan));
 
 		return availableSelectedPlan;
 	}
 
 	private LeafPaymentPlan getCurrentPlan() {
-		SelectedPlanModule selectedPlan =  this.getSelectedPlanModule();
+		SelectedPlanModule selectedPlan = this.getSelectedPlanModule();
 		return selectedPlan.getSelectedPlan();
 	}
 
@@ -112,10 +113,10 @@ public class PlanService {
 		default:
 			break;
 		}
-		
+
 		this.attachPaymentPlanTo(plan, planOwnerTarget);
 	}
-	
+
 	public void attachPaymentPlanTo(LeafPaymentPlan plan, ILeafModular planOwnerTarget) {
 		SelectedPlanModule selectedPlanModule = this.getSelectedPlanModule(planOwnerTarget);
 		selectedPlanModule.setSelectedPlan(plan);
@@ -166,7 +167,7 @@ public class PlanService {
 		default:
 			break;
 		}
-		
+
 		return planOwnerTarget;
 	}
 
@@ -189,7 +190,7 @@ public class PlanService {
 		default:
 			break;
 		}
-		
+
 		return planOwnerTarget;
 	}
 
@@ -228,7 +229,7 @@ public class PlanService {
 		}
 		return this.moduleService.get(PaymentCustomerModule.class, planOwnerTarget);
 	}
-	
+
 	private void createPaymentSubscription(LeafPaymentPlan selectedPlan) {
 		PaymentSubscriptionModule subscription = this.getPaymentSubscriptionModule();
 		PaymentCustomerModule customer = this.getPaymentCustomerModule();
@@ -239,7 +240,7 @@ public class PlanService {
 			throw new InternalServerErrorException("Cannot create plan subscription");
 		}
 	}
-	
+
 	private void revokePaymentSubscription(LeafPaymentPlan selectedPlan) {
 		PaymentSubscriptionModule subscription = this.getPaymentSubscriptionModule();
 		PaymentCustomerModule customer = this.getPaymentCustomerModule();
@@ -253,29 +254,29 @@ public class PlanService {
 
 	public LeafPaymentPlanInfo getSelectedPlan() {
 		LeafPaymentPlanInfo paymentPlanInfo = new LeafPaymentPlanInfo();
-		
-		SelectedPlanModule selectedPlan = this.getSelectedPlanModule();
+
+		LeafPaymentPlan selectedPlan = this.getSelectedOrDefaultPlan();
 		PaymentSubscriptionModule paymentSubscription = this.getPaymentSubscriptionModule();
-		PaymentCustomerModule paymentCustomer= this.getPaymentCustomerModule();
-		
-		if (selectedPlan.getSelectedPlan() != null) {
-			paymentPlanInfo.setPlan(selectedPlan.getSelectedPlan());
-			LeafPaymentSubscription subscription = paymentSubscription.findSubscription(selectedPlan.getSelectedPlan().getName());
+		PaymentCustomerModule paymentCustomer = this.getPaymentCustomerModule();
+
+		if (selectedPlan != null) {
+			paymentPlanInfo.setPlan(selectedPlan);
+			LeafPaymentSubscription subscription = paymentSubscription.findSubscription(selectedPlan.getName());
 			if (subscription != null) {
 				paymentPlanInfo.setTrialDone(subscription.isTrialDone());
 			}
 		}
-		
+
 		if (paymentCustomer != null) {
 			paymentPlanInfo.setPaymentMethod(paymentCustomer.getDefaultPaymentMethod());
 		}
-		
+
 		return paymentPlanInfo;
 	}
 
 	public Map<String, String> checkoutPaymentMethod() {
 		ILeafModular iModular = this.getPlanAttachement();
-		
+
 		PaymentCustomerModule customer = this.getPaymentCustomerModule();
 
 		try {
@@ -291,7 +292,15 @@ public class PlanService {
 		PaymentCustomerModule customer = this.getPaymentCustomerModule(planAttachment);
 		customer.setDefaultPaymentMethod(pm);
 		customer.getMetadata().updateLastModification();
-		
+
 		this.savePlanAttachment(planAttachment);
+	}
+
+	public LeafPaymentPlan getSelectedOrDefaultPlan() {
+		LeafPaymentPlan selectedPlan = this.getSelectedPlanModule().getSelectedPlan();
+		if (selectedPlan == null) {
+			selectedPlan = this.paymentConfig.getDefaultPlan();
+		}
+		return selectedPlan;
 	}
 }

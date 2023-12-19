@@ -30,7 +30,7 @@ public class LeafPaymentPlanEligibilitiesComposer implements ApplicationListener
 
 	@Override
 	public void onApplicationEvent(LeafEligibilitiesEvent event) {
-		LeafPaymentPlan plan = this.planService.getSelectedPlanModule().getSelectedPlan();
+		LeafPaymentPlan plan = this.planService.getSelectedOrDefaultPlan();
 		if (plan == null) {
 			return;
 		}
