@@ -67,3 +67,6 @@ plans:
     free: false
     price: 69.99
     period: year
+redirect:
+  checkout_success: "/leaf-labs/payment"
+  checkout_cancel: "/leaf-labs/payment"

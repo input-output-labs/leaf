@@ -1,6 +1,7 @@
 package fr.iolabs.leaf.payment.plan.config;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -18,6 +19,7 @@ import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
 public class LeafPaymentConfig {
 	private PlanAttachment planAttachment;
 	private List<LeafPaymentPlan> plans;
+	private Map<String, String> redirect;
 
 	public PlanAttachment getPlanAttachment() {
 		return planAttachment;
@@ -42,5 +44,13 @@ public class LeafPaymentConfig {
 			}
 		}
 		return null;
+	}
+
+	public Map<String, String> getRedirect() {
+		return redirect;
+	}
+
+	public void setRedirect(Map<String, String> redirect) {
+		this.redirect = redirect;
 	}
 }

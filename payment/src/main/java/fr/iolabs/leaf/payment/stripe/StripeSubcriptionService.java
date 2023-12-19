@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import com.stripe.model.checkout.Session;
 
 import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
 import fr.iolabs.leaf.payment.models.PaymentSubscriptionModule;
+import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentSubscription;
 
@@ -25,6 +27,12 @@ public class StripeSubcriptionService implements InitializingBean {
 
 	@Value("${leaf.payment.stripe.api.key}")
 	private String privateKey;
+
+    @Value("${leaf.protocol_hostname}")
+    String protocol_hostname;
+	
+	@Autowired
+	private LeafPaymentConfig paymentConfig;
 
 	@Override
 	public void afterPropertiesSet() {
@@ -116,7 +124,8 @@ public class StripeSubcriptionService implements InitializingBean {
 		setup_intent_data.put("metadata", metadata);
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("success_url", "http://localhost:4200/leaf-labs/payment");
+		params.put("success_url", this.protocol_hostname + paymentConfig.getRedirect().get("checkout_success"));
+		params.put("cancel_url", this.protocol_hostname + paymentConfig.getRedirect().get("checkout_cancel"));
 		params.put("payment_method_types", List.of("card"));
 
 		params.put("mode", "setup");
