@@ -22,6 +22,7 @@ import fr.iolabs.leaf.common.errors.BadRequestException;
 import fr.iolabs.leaf.common.errors.InternalServerErrorException;
 import fr.iolabs.leaf.organization.LeafOrganizationRepository;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
+import fr.iolabs.leaf.payment.models.LeafInvoice;
 import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
 import fr.iolabs.leaf.payment.models.PaymentMethod;
 import fr.iolabs.leaf.payment.models.PaymentSubscriptionModule;
@@ -31,6 +32,7 @@ import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlanInfo;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentSubscription;
 import fr.iolabs.leaf.payment.plan.models.SelectedPlanModule;
+import fr.iolabs.leaf.payment.stripe.StripeInvoicesService;
 import fr.iolabs.leaf.payment.stripe.StripeSubcriptionService;
 
 @Service
@@ -56,6 +58,9 @@ public class PlanService {
 
 	@Autowired
 	private LeafOrganizationRepository organizationRepository;
+
+	@Autowired
+	private StripeInvoicesService stripeInvoicesService;
 
 	public List<LeafPaymentPlan> fetchPlans() {
 		return this.paymentConfig.getPlans();
@@ -282,7 +287,6 @@ public class PlanService {
 		try {
 			return this.stripeSubcriptionService.checkoutPaymentMethod(customer, iModular.getId());
 		} catch (StripeException e) {
-			e.printStackTrace();
 			throw new InternalServerErrorException("Cannot perform plan checkout");
 		}
 	}
@@ -302,5 +306,14 @@ public class PlanService {
 			selectedPlan = this.paymentConfig.getDefaultPlan();
 		}
 		return selectedPlan;
+	}
+
+	public List<LeafInvoice> fetchInvoices() {
+		PaymentCustomerModule customer = this.getPaymentCustomerModule();
+		try {
+			return this.stripeInvoicesService.getCustomerInvoices(customer);
+		} catch (StripeException e) {
+			throw new InternalServerErrorException("Cannot retrieve plan invoices");
+		}
 	}
 }

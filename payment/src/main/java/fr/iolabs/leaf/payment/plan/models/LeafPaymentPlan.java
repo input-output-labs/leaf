@@ -13,6 +13,7 @@ public class LeafPaymentPlan implements Cloneable {
 	private LeafPaymentPlanPricing pricing;
 	private boolean suspended;
 	private LeafPaymentPlan suspensionBackupPlan;
+	private List<String> descriptions;
 	
 	public LeafPaymentPlan clone() {
 		LeafPaymentPlan clone = new LeafPaymentPlan();
@@ -21,6 +22,7 @@ public class LeafPaymentPlan implements Cloneable {
 		clone.stripePriceId = this.stripePriceId;
 		clone.available = this.available;
 		clone.defaultPlan = this.defaultPlan;
+		clone.descriptions = this.descriptions;
 		if (this.features != null) {
 			clone.features = this.features.stream().map(feature -> feature.clone()).collect(Collectors.toList());
 		}
@@ -104,5 +106,13 @@ public class LeafPaymentPlan implements Cloneable {
 
 	public void setSuspensionBackupPlan(LeafPaymentPlan suspensionBackupPlan) {
 		this.suspensionBackupPlan = suspensionBackupPlan;
+	}
+
+	public List<String> getDescriptions() {
+		return descriptions;
+	}
+
+	public void setDescriptions(List<String> descriptions) {
+		this.descriptions = descriptions;
 	}
 }

@@ -19,6 +19,11 @@ plans:
       name: reporting
       type: boolean
       value: false
+  descriptions:
+    - graphicalCharter
+    - profile
+    - contactDetails
+    - usefulLinks
   pricing:
     free: true
  -
@@ -40,6 +45,12 @@ plans:
       name: reporting
       type: boolean
       value: false
+  descriptions:
+    - allFromFree
+    - description
+    - products
+    - gallery
+    - services
   pricing:
     free: false
     price: 4.99
@@ -63,6 +74,11 @@ plans:
       name: reporting
       type: boolean
       value: true
+  descriptions:
+    - allFromBasic
+    - organization
+    - trafficAnalytics
+    - sponsoring
   pricing:
     free: false
     price: 69.99
