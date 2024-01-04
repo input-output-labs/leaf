@@ -21,6 +21,7 @@ import fr.iolabs.leaf.payment.models.PaymentSubscriptionModule;
 import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentSubscription;
+import fr.iolabs.leaf.payment.plan.models.PaymentAttachment;
 
 @Service
 public class StripeSubcriptionService implements InitializingBean {
@@ -39,7 +40,7 @@ public class StripeSubcriptionService implements InitializingBean {
 		Stripe.apiKey = this.privateKey;
 	}
 
-	public void createSubscription(PaymentCustomerModule customer, PaymentSubscriptionModule subscription,
+	public void createSubscription(PaymentAttachment attachment, PaymentCustomerModule customer, PaymentSubscriptionModule subscription,
 			LeafPaymentPlan plan) throws StripeException {
 
 		this.checkStripeCustomer(customer);
@@ -47,12 +48,12 @@ public class StripeSubcriptionService implements InitializingBean {
 		// Subscription
 		LeafPaymentSubscription paymentSubscription = subscription.findSubscription(plan.getName());
 		if (paymentSubscription != null) {
-			Subscription newStripeSubscription = createSubscription(customer, plan);
+			Subscription newStripeSubscription = createSubscription(attachment, customer, plan);
 			paymentSubscription.setStripeSubscriptionId(newStripeSubscription.getId());
 			paymentSubscription.setActive(true);
 		} else {
 			// Create new subscription
-			Subscription stripeSubscription = createSubscription(customer, plan);
+			Subscription stripeSubscription = createSubscription(attachment, customer, plan);
 			LeafPaymentSubscription leafPaymentSubscription = new LeafPaymentSubscription(stripeSubscription.getId(),
 					plan.getName());
 			leafPaymentSubscription.setActive(true);
@@ -60,8 +61,12 @@ public class StripeSubcriptionService implements InitializingBean {
 		}
 	}
 
-	private Subscription createSubscription(PaymentCustomerModule customer, LeafPaymentPlan plan)
+	private Subscription createSubscription(PaymentAttachment attachment, PaymentCustomerModule customer, LeafPaymentPlan plan)
 			throws StripeException {
+
+		Map<String, Object> metadata = new HashMap<>();
+		metadata.put("innerId", attachment.getId());
+		
 		List<Object> items = new ArrayList<>();
 		Map<String, Object> item1 = new HashMap<>();
 		item1.put("price", plan.getStripePriceId());
@@ -69,6 +74,7 @@ public class StripeSubcriptionService implements InitializingBean {
 		Map<String, Object> params = new HashMap<>();
 		params.put("customer", customer.getStripeId());
 		params.put("items", items);
+		params.put("metadata", metadata);
 
 		Subscription stripeSubscription = Subscription.create(params);
 		return stripeSubscription;
@@ -119,7 +125,6 @@ public class StripeSubcriptionService implements InitializingBean {
 		metadata.put("goal", "setPlanSubscriptionPaymentMethod");
 		metadata.put("innerId", iModularId);
 		metadata.put("customer_id", customer.getStripeId());
-		metadata.put("subscription_id", customer.getStripeId());
 		Map<String, Object> setup_intent_data = new HashMap<>();
 		setup_intent_data.put("metadata", metadata);
 

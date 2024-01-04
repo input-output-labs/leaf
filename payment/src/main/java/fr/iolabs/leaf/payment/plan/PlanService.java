@@ -1,5 +1,6 @@
 package fr.iolabs.leaf.payment.plan;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,7 +31,7 @@ import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.plan.config.PlanAttachment;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlanInfo;
-import fr.iolabs.leaf.payment.plan.models.LeafPaymentSubscription;
+import fr.iolabs.leaf.payment.plan.models.PaymentAttachment;
 import fr.iolabs.leaf.payment.plan.models.SelectedPlanModule;
 import fr.iolabs.leaf.payment.stripe.StripeInvoicesService;
 import fr.iolabs.leaf.payment.stripe.StripeSubcriptionService;
@@ -84,6 +85,12 @@ public class PlanService {
 		availableSelectedPlan.setSuspensionBackupPlan(this.paymentConfig.getDefaultPlan());
 
 		LeafPaymentPlan previousPlan = this.getCurrentPlan();
+		
+		if (previousPlan == null || previousPlan.isInTrial()) {
+			availableSelectedPlan.setInTrial(true);
+		}
+		availableSelectedPlan.setStartedAt(ZonedDateTime.now());
+		
 		this.attachPaymentPlan(availableSelectedPlan);
 		if (!availableSelectedPlan.getPricing().isFree()) {
 			this.createPaymentSubscription(availableSelectedPlan);
@@ -157,6 +164,23 @@ public class PlanService {
 			break;
 		}
 		return null;
+	}
+
+	private PaymentAttachment getPaymentAttachment() {
+		PaymentAttachment attachment = new PaymentAttachment();
+		PlanAttachment planAttachment = this.paymentConfig.getPlanAttachment();
+		attachment.setType(planAttachment);
+		switch (planAttachment) {
+		case USER:
+			attachment.setId(this.coreContext.getAccount().getId());
+			break;
+		case ORGANIZATION:
+			attachment.setId(this.coreContext.getOrganization().getId());
+			break;
+		default:
+			break;
+		}
+		return attachment;
 	}
 
 	public ILeafModular getPlanAttachement() {
@@ -236,10 +260,11 @@ public class PlanService {
 	}
 
 	private void createPaymentSubscription(LeafPaymentPlan selectedPlan) {
+		PaymentAttachment attachment = this.getPaymentAttachment();
 		PaymentSubscriptionModule subscription = this.getPaymentSubscriptionModule();
 		PaymentCustomerModule customer = this.getPaymentCustomerModule();
 		try {
-			this.stripeSubcriptionService.createSubscription(customer, subscription, selectedPlan);
+			this.stripeSubcriptionService.createSubscription(attachment, customer, subscription, selectedPlan);
 		} catch (StripeException e) {
 			e.printStackTrace();
 			throw new InternalServerErrorException("Cannot create plan subscription");
@@ -261,15 +286,10 @@ public class PlanService {
 		LeafPaymentPlanInfo paymentPlanInfo = new LeafPaymentPlanInfo();
 
 		LeafPaymentPlan selectedPlan = this.getSelectedOrDefaultPlan();
-		PaymentSubscriptionModule paymentSubscription = this.getPaymentSubscriptionModule();
 		PaymentCustomerModule paymentCustomer = this.getPaymentCustomerModule();
 
 		if (selectedPlan != null) {
 			paymentPlanInfo.setPlan(selectedPlan);
-			LeafPaymentSubscription subscription = paymentSubscription.findSubscription(selectedPlan.getName());
-			if (subscription != null) {
-				paymentPlanInfo.setTrialDone(subscription.isTrialDone());
-			}
 		}
 
 		if (paymentCustomer != null) {
@@ -315,5 +335,30 @@ public class PlanService {
 		} catch (StripeException e) {
 			throw new InternalServerErrorException("Cannot retrieve plan invoices");
 		}
+	}
+
+	public void endPlanTrialFor(String iModularId) {
+		ILeafModular planAttachment = this.getPlanAttachement(iModularId);
+		SelectedPlanModule selectedPlanModule = this.getSelectedPlanModule(planAttachment);
+		selectedPlanModule.getSelectedPlan().setInTrial(false);
+
+		this.savePlanAttachment(planAttachment);
+	}
+
+	public void stopPlanFor(String iModularId) {
+		ILeafModular planAttachment = this.getPlanAttachement(iModularId);
+		SelectedPlanModule selectedPlanModule = this.getSelectedPlanModule(planAttachment);
+		PaymentSubscriptionModule paymentSubscriptionModule = this.getPaymentSubscriptionModule(planAttachment);
+		
+		paymentSubscriptionModule.setInactiveByPlanId(selectedPlanModule.getSelectedPlan().getName());
+
+		LeafPaymentPlan backup = selectedPlanModule.getSelectedPlan().getSuspensionBackupPlan();
+		if (backup != null) {
+			backup.setInTrial(false);
+			backup.setStartedAt(ZonedDateTime.now());
+		}
+		selectedPlanModule.setSelectedPlan(backup);
+
+		this.savePlanAttachment(planAttachment);
 	}
 }

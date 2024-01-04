@@ -9,21 +9,21 @@ import fr.iolabs.leaf.payment.plan.models.LeafPaymentSubscription;
 public class PaymentSubscriptionModule {
 	private List<LeafPaymentSubscription> subscriptions;
 	private ResourceMetadata metadata;
-	
+
 	public PaymentSubscriptionModule() {
 		this.subscriptions = new ArrayList<>();
 		this.metadata = ResourceMetadata.create();
 	}
-	
+
 	public LeafPaymentSubscription findSubscription(String planId) {
-		for(LeafPaymentSubscription subscription: subscriptions) {
+		for (LeafPaymentSubscription subscription : subscriptions) {
 			if (subscription.getAssociatedPlanId().equals(planId)) {
 				return subscription;
 			}
 		}
 		return null;
 	}
-	
+
 	public List<LeafPaymentSubscription> getSubscriptions() {
 		return subscriptions;
 	}
@@ -45,5 +45,13 @@ public class PaymentSubscriptionModule {
 
 	public void addSubscription(LeafPaymentSubscription leafPaymentSubscription) {
 		this.subscriptions.add(leafPaymentSubscription);
+	}
+
+	public void setInactiveByPlanId(String planId) {
+		for (LeafPaymentSubscription subscription : this.subscriptions) {
+			if (planId.equals(subscription.getAssociatedPlanId())) {
+				subscription.setActive(false);
+			}
+		}
 	}
 }

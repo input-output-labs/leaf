@@ -101,6 +101,14 @@ public class StripeController {
 		case "checkout.session.completed":
 			this.stripeHookService.handleCheckoutSessionCompleted(event);
 			break;
+		case "customer.subscription.updated":
+			// Subscription updated : check if trial is over
+			this.stripeHookService.handleSubscriptionUpdated(event);
+			break;
+		case "customer.subscription.deleted":
+			// Subscription deleted : no payment method at end of trial
+			this.stripeHookService.handleSubscriptionDeleted(event);
+			break;
 		}
 		return ResponseEntity.ok().build();
 	}

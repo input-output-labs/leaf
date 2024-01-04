@@ -1,5 +1,6 @@
 package fr.iolabs.leaf.payment.plan.models;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,6 +15,8 @@ public class LeafPaymentPlan implements Cloneable {
 	private boolean suspended;
 	private LeafPaymentPlan suspensionBackupPlan;
 	private List<String> descriptions;
+	private ZonedDateTime startedAt;
+	private boolean inTrial;
 	
 	public LeafPaymentPlan clone() {
 		LeafPaymentPlan clone = new LeafPaymentPlan();
@@ -114,5 +117,21 @@ public class LeafPaymentPlan implements Cloneable {
 
 	public void setDescriptions(List<String> descriptions) {
 		this.descriptions = descriptions;
+	}
+
+	public ZonedDateTime getStartedAt() {
+		return startedAt;
+	}
+
+	public void setStartedAt(ZonedDateTime startedAt) {
+		this.startedAt = startedAt;
+	}
+
+	public boolean isInTrial() {
+		return inTrial;
+	}
+
+	public void setInTrial(boolean inTrial) {
+		this.inTrial = inTrial;
 	}
 }

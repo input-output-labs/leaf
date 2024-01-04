@@ -22,6 +22,7 @@ import fr.iolabs.leaf.payment.models.LeafPaymentTransactionRepository;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransactionStatusEnum;
 import fr.iolabs.leaf.payment.models.PaymentMethod;
 import fr.iolabs.leaf.payment.plan.PlanService;
+import fr.iolabs.leaf.payment.plan.config.PlanAttachment;
 
 @Service
 public class StripeHookService {
@@ -103,5 +104,35 @@ public class StripeHookService {
 		} else {
 			// TODO: Handle case where the transaction is not found.
 		}
+	}
+
+	public void handleSubscriptionUpdated(Event event) {
+		// Deserialize the nested object inside the event
+		Data eventData = event.getData();
+		// String eventString = stripeObject.toJson();
+		StripeObject subscription = eventData.getObject();
+		JsonObject jsonSubscription = JsonParser.parseString(subscription.toJson()).getAsJsonObject();
+		String status = jsonSubscription.get("status").getAsString();
+		
+		if (!"trialing".equals(status)) {
+			// Not in trial anymore
+			JsonObject metadata = jsonSubscription.get("metadata").getAsJsonObject();
+			String innerId = metadata.get("innerId").getAsString();
+			
+			this.planService.endPlanTrialFor(innerId);
+		}
+	}
+
+	public void handleSubscriptionDeleted(Event event) {
+		// Deserialize the nested object inside the event
+		Data eventData = event.getData();
+		// String eventString = stripeObject.toJson();
+		StripeObject subscription = eventData.getObject();
+		JsonObject jsonSubscription = JsonParser.parseString(subscription.toJson()).getAsJsonObject();
+
+		JsonObject metadata = jsonSubscription.get("metadata").getAsJsonObject();
+		String innerId = metadata.get("innerId").getAsString();
+		
+		this.planService.stopPlanFor(innerId);
 	}
 }

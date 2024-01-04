@@ -5,7 +5,6 @@ import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 public class LeafPaymentSubscription {
 	private String stripeSubscriptionId;
 	private String associatedPlanId;
-	private boolean trialDone;
 	private boolean active;
 	private ResourceMetadata metadata;
 
@@ -29,14 +28,6 @@ public class LeafPaymentSubscription {
 
 	public void setAssociatedPlanId(String associatedPlanId) {
 		this.associatedPlanId = associatedPlanId;
-	}
-
-	public boolean isTrialDone() {
-		return trialDone;
-	}
-
-	public void setTrialDone(boolean trialDone) {
-		this.trialDone = trialDone;
 	}
 
 	public ResourceMetadata getMetadata() {

@@ -4,7 +4,6 @@ import fr.iolabs.leaf.payment.models.PaymentMethod;
 
 public class LeafPaymentPlanInfo {
 	private LeafPaymentPlan plan;
-	private boolean trialDone;
 	private PaymentMethod paymentMethod;
 
 	public LeafPaymentPlan getPlan() {
@@ -13,14 +12,6 @@ public class LeafPaymentPlanInfo {
 
 	public void setPlan(LeafPaymentPlan plan) {
 		this.plan = plan;
-	}
-
-	public boolean isTrialDone() {
-		return trialDone;
-	}
-
-	public void setTrialDone(boolean trialDone) {
-		this.trialDone = trialDone;
 	}
 
 	public PaymentMethod getPaymentMethod() {
