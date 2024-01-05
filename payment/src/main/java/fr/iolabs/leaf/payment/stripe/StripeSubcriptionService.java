@@ -16,12 +16,10 @@ import com.stripe.model.Customer;
 import com.stripe.model.Subscription;
 import com.stripe.model.checkout.Session;
 
+import fr.iolabs.leaf.common.ILeafModular;
 import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
-import fr.iolabs.leaf.payment.models.PaymentSubscriptionModule;
 import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
-import fr.iolabs.leaf.payment.plan.models.LeafPaymentSubscription;
-import fr.iolabs.leaf.payment.plan.models.PaymentAttachment;
 
 @Service
 public class StripeSubcriptionService implements InitializingBean {
@@ -29,9 +27,9 @@ public class StripeSubcriptionService implements InitializingBean {
 	@Value("${leaf.payment.stripe.api.key}")
 	private String privateKey;
 
-    @Value("${leaf.protocol_hostname}")
-    String protocol_hostname;
-	
+	@Value("${leaf.protocol_hostname}")
+	String protocol_hostname;
+
 	@Autowired
 	private LeafPaymentConfig paymentConfig;
 
@@ -40,44 +38,34 @@ public class StripeSubcriptionService implements InitializingBean {
 		Stripe.apiKey = this.privateKey;
 	}
 
-	public void createSubscription(PaymentAttachment attachment, PaymentCustomerModule customer, PaymentSubscriptionModule subscription,
-			LeafPaymentPlan plan) throws StripeException {
+	public void createSubscription(ILeafModular iModular, PaymentCustomerModule customer, LeafPaymentPlan plan)
+			throws StripeException {
 
 		this.checkStripeCustomer(customer);
 
 		// Subscription
-		LeafPaymentSubscription paymentSubscription = subscription.findSubscription(plan.getName());
-		if (paymentSubscription != null) {
-			Subscription newStripeSubscription = createSubscription(attachment, customer, plan);
-			paymentSubscription.setStripeSubscriptionId(newStripeSubscription.getId());
-			paymentSubscription.setActive(true);
-		} else {
-			// Create new subscription
-			Subscription stripeSubscription = createSubscription(attachment, customer, plan);
-			LeafPaymentSubscription leafPaymentSubscription = new LeafPaymentSubscription(stripeSubscription.getId(),
-					plan.getName());
-			leafPaymentSubscription.setActive(true);
-			subscription.addSubscription(leafPaymentSubscription);
-		}
+		Subscription stripeSubscription = createSubscription(iModular.getId(), customer.getStripeId(), plan);
+		plan.setStripeSubscriptionId(stripeSubscription.getId());
+		plan.setSuspended(false);
 	}
 
-	private Subscription createSubscription(PaymentAttachment attachment, PaymentCustomerModule customer, LeafPaymentPlan plan)
+	private Subscription createSubscription(String innerId, String stripeCustomerId, LeafPaymentPlan plan)
 			throws StripeException {
 
 		Map<String, Object> metadata = new HashMap<>();
-		metadata.put("innerId", attachment.getId());
-		
+		metadata.put("innerId", innerId);
+
 		List<Object> items = new ArrayList<>();
 		Map<String, Object> item1 = new HashMap<>();
 		item1.put("price", plan.getStripePriceId());
 		items.add(item1);
 		Map<String, Object> params = new HashMap<>();
-		params.put("customer", customer.getStripeId());
+		params.put("customer", stripeCustomerId);
+		params.put("trial_period_days", plan.getTrialDuration());
 		params.put("items", items);
 		params.put("metadata", metadata);
 
-		Subscription stripeSubscription = Subscription.create(params);
-		return stripeSubscription;
+		return Subscription.create(params);
 	}
 
 	private void checkStripeCustomer(PaymentCustomerModule customer) throws StripeException {
@@ -93,27 +81,24 @@ public class StripeSubcriptionService implements InitializingBean {
 		}
 	}
 
-	public void revokeSubscription(PaymentCustomerModule customer, PaymentSubscriptionModule subscription,
-			LeafPaymentPlan plan) throws StripeException {
-		LeafPaymentSubscription paymentSubscription = subscription.findSubscription(plan.getName());
-		if (paymentSubscription != null) {
-			try {
-				Subscription stripeSubscription = Subscription.retrieve(paymentSubscription.getStripeSubscriptionId());
-				if (stripeSubscription != null && !"canceled".equals(stripeSubscription.getStatus())) {
-					Map<String, Object> params = new HashMap<>();
-					params.put("invoice_now", true);
-					params.put("prorate", true);
+	public void revokeSubscription(LeafPaymentPlan plan) throws StripeException {
+		try {
+			Subscription stripeSubscription = Subscription.retrieve(plan.getStripeSubscriptionId());
+			if (stripeSubscription != null && !"canceled".equals(stripeSubscription.getStatus())) {
+				Map<String, Object> params = new HashMap<>();
+				params.put("invoice_now", true);
+				params.put("prorate", true);
 
-					stripeSubscription.cancel(params);
-					paymentSubscription.setActive(false);
-				}
-			} catch (StripeException e) {
-				e.printStackTrace();
+				stripeSubscription.cancel(params);
+				plan.setSuspended(true);
 			}
+		} catch (StripeException e) {
+			e.printStackTrace();
 		}
 	}
 
-	public Map<String, String> checkoutPaymentMethod(PaymentCustomerModule customer, String iModularId) throws StripeException {
+	public Map<String, String> checkoutPaymentMethod(PaymentCustomerModule customer, String iModularId)
+			throws StripeException {
 		// Verify customer
 		Customer.retrieve(customer.getStripeId());
 

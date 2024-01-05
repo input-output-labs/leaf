@@ -26,12 +26,10 @@ import fr.iolabs.leaf.organization.model.LeafOrganization;
 import fr.iolabs.leaf.payment.models.LeafInvoice;
 import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
 import fr.iolabs.leaf.payment.models.PaymentMethod;
-import fr.iolabs.leaf.payment.models.PaymentSubscriptionModule;
 import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.plan.config.PlanAttachment;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlanInfo;
-import fr.iolabs.leaf.payment.plan.models.PaymentAttachment;
 import fr.iolabs.leaf.payment.plan.models.SelectedPlanModule;
 import fr.iolabs.leaf.payment.stripe.StripeInvoicesService;
 import fr.iolabs.leaf.payment.stripe.StripeSubcriptionService;
@@ -76,28 +74,41 @@ public class PlanService {
 		return null;
 	}
 
-	@Transactional
 	public LeafPaymentPlan selectPlan(LeafPaymentPlan selectedPlan) {
+		ILeafModular iModular = this.getPlanAttachement();
+		return this.selectPlan(selectedPlan, iModular);
+	}
+	
+	public LeafPaymentPlan selectBackupPlan(ILeafModular iModular) {
+		return this.selectPlan(this.paymentConfig.getDefaultPlan(), iModular);
+	}
+
+	@Transactional
+	public LeafPaymentPlan selectPlan(LeafPaymentPlan selectedPlan, ILeafModular iModular) {
 		LeafPaymentPlan availableSelectedPlan = this.fetchPlanByName(selectedPlan.getName());
 		if (availableSelectedPlan == null) {
 			throw new BadRequestException("The given plan does not exist or is not available");
 		}
 		availableSelectedPlan.setSuspensionBackupPlan(this.paymentConfig.getDefaultPlan());
 
-		LeafPaymentPlan previousPlan = this.getCurrentPlan();
-		
-		if (previousPlan == null || previousPlan.isInTrial()) {
+		// Revoke previous plan
+		LeafPaymentPlan previousPlan = this.getCurrentPlan(iModular);
+		if (previousPlan != null && !previousPlan.getPricing().isFree() && !previousPlan.isSuspended()) {
+			this.revokePaymentSubscription(previousPlan);
+		}
+
+		// Create next plan
+		if (availableSelectedPlan.getTrialDuration() > 0) {
 			availableSelectedPlan.setInTrial(true);
 		}
 		availableSelectedPlan.setStartedAt(ZonedDateTime.now());
-		
+
 		this.attachPaymentPlan(availableSelectedPlan);
 		if (!availableSelectedPlan.getPricing().isFree()) {
-			this.createPaymentSubscription(availableSelectedPlan);
+			this.createPaymentSubscription(iModular, availableSelectedPlan);
 		}
-		if (previousPlan != null && !previousPlan.getPricing().isFree()) {
-			this.revokePaymentSubscription(previousPlan);
-		}
+
+		// Save plan selection
 		this.savePlanAttachment();
 
 		// This will update user or organization depending on selected plan
@@ -107,8 +118,8 @@ public class PlanService {
 		return availableSelectedPlan;
 	}
 
-	private LeafPaymentPlan getCurrentPlan() {
-		SelectedPlanModule selectedPlan = this.getSelectedPlanModule();
+	private LeafPaymentPlan getCurrentPlan(ILeafModular iModular) {
+		SelectedPlanModule selectedPlan = this.getSelectedPlanModule(iModular);
 		return selectedPlan.getSelectedPlan();
 	}
 
@@ -166,23 +177,6 @@ public class PlanService {
 		return null;
 	}
 
-	private PaymentAttachment getPaymentAttachment() {
-		PaymentAttachment attachment = new PaymentAttachment();
-		PlanAttachment planAttachment = this.paymentConfig.getPlanAttachment();
-		attachment.setType(planAttachment);
-		switch (planAttachment) {
-		case USER:
-			attachment.setId(this.coreContext.getAccount().getId());
-			break;
-		case ORGANIZATION:
-			attachment.setId(this.coreContext.getOrganization().getId());
-			break;
-		default:
-			break;
-		}
-		return attachment;
-	}
-
 	public ILeafModular getPlanAttachement() {
 		PlanAttachment planAttachment = this.paymentConfig.getPlanAttachment();
 		ILeafModular planOwnerTarget = null;
@@ -235,18 +229,6 @@ public class PlanService {
 		return this.moduleService.get(SelectedPlanModule.class, planOwnerTarget);
 	}
 
-	public PaymentSubscriptionModule getPaymentSubscriptionModule() {
-		ILeafModular planOwnerTarget = this.getPlanAttachement();
-		return this.getPaymentSubscriptionModule(planOwnerTarget);
-	}
-
-	public PaymentSubscriptionModule getPaymentSubscriptionModule(ILeafModular planOwnerTarget) {
-		if (planOwnerTarget == null) {
-			throw new BadRequestException("No recipiant for payment subscription module");
-		}
-		return this.moduleService.get(PaymentSubscriptionModule.class, planOwnerTarget);
-	}
-
 	public PaymentCustomerModule getPaymentCustomerModule() {
 		ILeafModular planOwnerTarget = this.getPlanAttachement();
 		return this.getPaymentCustomerModule(planOwnerTarget);
@@ -259,23 +241,19 @@ public class PlanService {
 		return this.moduleService.get(PaymentCustomerModule.class, planOwnerTarget);
 	}
 
-	private void createPaymentSubscription(LeafPaymentPlan selectedPlan) {
-		PaymentAttachment attachment = this.getPaymentAttachment();
-		PaymentSubscriptionModule subscription = this.getPaymentSubscriptionModule();
+	private void createPaymentSubscription(ILeafModular iModular, LeafPaymentPlan selectedPlan) {
 		PaymentCustomerModule customer = this.getPaymentCustomerModule();
 		try {
-			this.stripeSubcriptionService.createSubscription(attachment, customer, subscription, selectedPlan);
+			this.stripeSubcriptionService.createSubscription(iModular, customer, selectedPlan);
 		} catch (StripeException e) {
 			e.printStackTrace();
 			throw new InternalServerErrorException("Cannot create plan subscription");
 		}
 	}
 
-	private void revokePaymentSubscription(LeafPaymentPlan selectedPlan) {
-		PaymentSubscriptionModule subscription = this.getPaymentSubscriptionModule();
-		PaymentCustomerModule customer = this.getPaymentCustomerModule();
+	private void revokePaymentSubscription(LeafPaymentPlan plan) {
 		try {
-			this.stripeSubcriptionService.revokeSubscription(customer, subscription, selectedPlan);
+			this.stripeSubcriptionService.revokeSubscription(plan);
 		} catch (StripeException e) {
 			e.printStackTrace();
 			throw new InternalServerErrorException("Cannot create plan subscription");
@@ -321,7 +299,11 @@ public class PlanService {
 	}
 
 	public LeafPaymentPlan getSelectedOrDefaultPlan() {
-		LeafPaymentPlan selectedPlan = this.getSelectedPlanModule().getSelectedPlan();
+		ILeafModular iModular = this.getPlanAttachement();
+		LeafPaymentPlan selectedPlan = null;
+		if (iModular != null) {
+			selectedPlan = this.getSelectedPlanModule(iModular).getSelectedPlan();
+		}
 		if (selectedPlan == null) {
 			selectedPlan = this.paymentConfig.getDefaultPlan();
 		}
@@ -348,17 +330,9 @@ public class PlanService {
 	public void stopPlanFor(String iModularId) {
 		ILeafModular planAttachment = this.getPlanAttachement(iModularId);
 		SelectedPlanModule selectedPlanModule = this.getSelectedPlanModule(planAttachment);
-		PaymentSubscriptionModule paymentSubscriptionModule = this.getPaymentSubscriptionModule(planAttachment);
 		
-		paymentSubscriptionModule.setInactiveByPlanId(selectedPlanModule.getSelectedPlan().getName());
-
-		LeafPaymentPlan backup = selectedPlanModule.getSelectedPlan().getSuspensionBackupPlan();
-		if (backup != null) {
-			backup.setInTrial(false);
-			backup.setStartedAt(ZonedDateTime.now());
-		}
-		selectedPlanModule.setSelectedPlan(backup);
-
-		this.savePlanAttachment(planAttachment);
+		selectedPlanModule.getSelectedPlan().setSuspended(true);
+		
+		this.selectBackupPlan(planAttachment);
 	}
 }

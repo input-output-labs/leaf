@@ -14,9 +14,11 @@ public class LeafPaymentPlan implements Cloneable {
 	private LeafPaymentPlanPricing pricing;
 	private boolean suspended;
 	private LeafPaymentPlan suspensionBackupPlan;
+	private int trialDuration;
 	private List<String> descriptions;
 	private ZonedDateTime startedAt;
 	private boolean inTrial;
+	private String stripeSubscriptionId;
 	
 	public LeafPaymentPlan clone() {
 		LeafPaymentPlan clone = new LeafPaymentPlan();
@@ -36,6 +38,10 @@ public class LeafPaymentPlan implements Cloneable {
 		if (this.suspensionBackupPlan != null) {
 			clone.suspensionBackupPlan = this.suspensionBackupPlan.clone();	
 		}
+		clone.trialDuration = this.trialDuration;
+		clone.startedAt = this.startedAt;
+		clone.inTrial = this.inTrial;
+		clone.stripeSubscriptionId = this.stripeSubscriptionId;
 		return clone;
 	}
 
@@ -133,5 +139,21 @@ public class LeafPaymentPlan implements Cloneable {
 
 	public void setInTrial(boolean inTrial) {
 		this.inTrial = inTrial;
+	}
+
+	public String getStripeSubscriptionId() {
+		return stripeSubscriptionId;
+	}
+
+	public void setStripeSubscriptionId(String stripeSubscriptionId) {
+		this.stripeSubscriptionId = stripeSubscriptionId;
+	}
+
+	public int getTrialDuration() {
+		return trialDuration;
+	}
+
+	public void setTrialDuration(int trialDuration) {
+		this.trialDuration = trialDuration;
 	}
 }

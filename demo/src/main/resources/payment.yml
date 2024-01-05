@@ -6,6 +6,7 @@ plans:
   defaultPlan: true
   available: true
   stripePriceId: price_1OHtUwC2crD6qr6LhGCEExqq
+  trialDuration: 0
   features:
     -
       name: userCount
@@ -32,6 +33,7 @@ plans:
   defaultPlan: false
   available: true
   stripePriceId: price_1OHtXkC2crD6qr6LinwkrpNS
+  trialDuration: 30
   features:
     -
       name: userCount
@@ -61,6 +63,7 @@ plans:
   defaultPlan: false
   available: true
   stripePriceId: price_1OHtajC2crD6qr6LKJbSXyek
+  trialDuration: 30
   features:
     -
       name: userCount
