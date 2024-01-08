@@ -109,7 +109,7 @@ public class PlanService {
 		}
 		availableSelectedPlan.setStartedAt(ZonedDateTime.now());
 
-		this.attachPaymentPlan(availableSelectedPlan);
+		this.attachPaymentPlanTo(availableSelectedPlan, iModular);
 		if (!availableSelectedPlan.getPricing().isFree()) {
 			this.createPaymentSubscription(iModular, availableSelectedPlan);
 		}
@@ -335,11 +335,16 @@ public class PlanService {
 
 	public void stopPlanFor(String iModularId) {
 		ILeafModular planAttachment = this.getPlanAttachement(iModularId);
+		if (planAttachment == null) {
+			throw new BadRequestException("No attachment with id: " + iModularId);
+		}
 		SelectedPlanModule selectedPlanModule = this.getSelectedPlanModule(planAttachment);
 		
 		selectedPlanModule.getSelectedPlan().setSuspended(true);
 		
 		this.selectBackupPlan(planAttachment);
+
+		this.savePlanAttachment(planAttachment);
 
 		String targetAccountId = this.getPlanAttachementNotificationTargetAccountId(planAttachment);
 		if (targetAccountId != null) {
@@ -360,6 +365,20 @@ public class PlanService {
 				if (targetAccountId != null) {
 					this.notificationService.emit(LeafNotification.of("LEAF_PAYMENT_PLAN_TRIAL_ENDING_SOON", targetAccountId));
 				}
+			}
+		}
+	}
+
+	public void sendUsageMetrics(String iModularId, long quantity) {
+		ILeafModular planAttachment = this.getPlanAttachement(iModularId);
+		SelectedPlanModule selectedPlanModule = this.getSelectedPlanModule(planAttachment);
+
+		LeafPaymentPlan selectedPlan = selectedPlanModule.getSelectedPlan();
+		if (selectedPlan != null && !selectedPlan.isSuspended() && selectedPlan.getStripeSubscriptionId() != null) {
+			try {
+				this.stripeSubcriptionService.sendUsageMetrics(selectedPlan.getStripeSubscriptionId(), quantity);
+			} catch (StripeException e) {
+				e.printStackTrace();
 			}
 		}
 	}

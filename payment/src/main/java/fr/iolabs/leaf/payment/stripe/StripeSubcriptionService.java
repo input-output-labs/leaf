@@ -14,7 +14,10 @@ import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.model.Subscription;
+import com.stripe.model.UsageRecord;
 import com.stripe.model.checkout.Session;
+import com.stripe.net.RequestOptions;
+import com.stripe.param.UsageRecordCreateOnSubscriptionItemParams;
 
 import fr.iolabs.leaf.common.ILeafModular;
 import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
@@ -128,5 +131,11 @@ public class StripeSubcriptionService implements InitializingBean {
 		Map<String, String> checkoutData = new HashMap<>();
 		checkoutData.put("checkout_url", session.getUrl());
 		return checkoutData;
+	}
+
+	public void sendUsageMetrics(String stripeSubscriptionId, long quantity) throws StripeException {
+		UsageRecord.createOnSubscriptionItem(stripeSubscriptionId, UsageRecordCreateOnSubscriptionItemParams.builder()
+				.setQuantity(quantity).setTimestamp(System.currentTimeMillis() / 1000).build(),
+				RequestOptions.getDefault());
 	}
 }
