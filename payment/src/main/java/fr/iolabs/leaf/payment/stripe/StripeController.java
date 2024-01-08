@@ -109,6 +109,10 @@ public class StripeController {
 			// Subscription deleted : no payment method at end of trial
 			this.stripeHookService.handleSubscriptionDeleted(event);
 			break;
+		case "customer.subscription.trial_will_end":
+			// Subscription trial will end in 3 days
+			this.stripeHookService.handleSubscriptionTrialEnding(event);
+			break;
 		}
 		return ResponseEntity.ok().build();
 	}

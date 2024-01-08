@@ -135,4 +135,18 @@ public class StripeHookService {
 		
 		this.planService.stopPlanFor(innerId);
 	}
+
+	public void handleSubscriptionTrialEnding(Event event) {
+		// Deserialize the nested object inside the event
+		Data eventData = event.getData();
+		// String eventString = stripeObject.toJson();
+		StripeObject subscription = eventData.getObject();
+		JsonObject jsonSubscription = JsonParser.parseString(subscription.toJson()).getAsJsonObject();
+
+		JsonObject metadata = jsonSubscription.get("metadata").getAsJsonObject();
+		String innerId = metadata.get("innerId").getAsString();
+		
+		this.planService.sendEndOfTrialApprochingFor(innerId);
+	}
+	
 }

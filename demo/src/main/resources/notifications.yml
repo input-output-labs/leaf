@@ -14,3 +14,11 @@ notifications:
     ui: yes
     email: d-6725411ee4224cf2b542755ddbe024d0
     ws: yes
+  LEAF_PAYMENT_PLAN_TRIAL_ENDING_SOON:
+    ui: yes
+    email: d-c7d99cff524a43fd8708de94214db477
+    ws: yes
+  LEAF_PAYMENT_PLAN_DELETED:
+    ui: yes
+    email: d-2d20b1f587514fb98c942e1bd8bee834
+    ws: yes

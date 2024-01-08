@@ -21,8 +21,11 @@ import fr.iolabs.leaf.common.ILeafModular;
 import fr.iolabs.leaf.common.LeafModuleService;
 import fr.iolabs.leaf.common.errors.BadRequestException;
 import fr.iolabs.leaf.common.errors.InternalServerErrorException;
+import fr.iolabs.leaf.notifications.LeafNotification;
+import fr.iolabs.leaf.notifications.LeafNotificationService;
 import fr.iolabs.leaf.organization.LeafOrganizationRepository;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
+import fr.iolabs.leaf.organization.model.OrganizationMembership;
 import fr.iolabs.leaf.payment.models.LeafInvoice;
 import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
 import fr.iolabs.leaf.payment.models.PaymentMethod;
@@ -60,6 +63,9 @@ public class PlanService {
 
 	@Autowired
 	private StripeInvoicesService stripeInvoicesService;
+
+	@Autowired
+	private LeafNotificationService notificationService;
 
 	public List<LeafPaymentPlan> fetchPlans() {
 		return this.paymentConfig.getPlans();
@@ -334,5 +340,40 @@ public class PlanService {
 		selectedPlanModule.getSelectedPlan().setSuspended(true);
 		
 		this.selectBackupPlan(planAttachment);
+
+		String targetAccountId = this.getPlanAttachementNotificationTargetAccountId(planAttachment);
+		if (targetAccountId != null) {
+			this.notificationService.emit(LeafNotification.of("LEAF_PAYMENT_PLAN_DELETED", targetAccountId));
+		}
+	}
+
+	public void sendEndOfTrialApprochingFor(String iModularId) {
+		ILeafModular planAttachment = this.getPlanAttachement(iModularId);
+		SelectedPlanModule selectedPlanModule = this.getSelectedPlanModule(planAttachment);
+		PaymentCustomerModule paymentCustomerModule = this.getPaymentCustomerModule(planAttachment);
+
+		LeafPaymentPlan selectedPlan = selectedPlanModule.getSelectedPlan();
+		if (selectedPlan != null && selectedPlan.isInTrial() && !selectedPlan.isSuspended()) {
+			if (paymentCustomerModule.getDefaultPaymentMethod() == null) {
+				// if no payment method, send no payment method notification
+				String targetAccountId = this.getPlanAttachementNotificationTargetAccountId(planAttachment);
+				if (targetAccountId != null) {
+					this.notificationService.emit(LeafNotification.of("LEAF_PAYMENT_PLAN_TRIAL_ENDING_SOON", targetAccountId));
+				}
+			}
+		}
+	}
+
+	private String getPlanAttachementNotificationTargetAccountId(ILeafModular iModular) {
+		if (iModular instanceof LeafAccount) {
+			return iModular.getId();
+		} else if (iModular instanceof LeafOrganization) {
+			LeafOrganization organization = (LeafOrganization) iModular;
+			OrganizationMembership firstMember = organization.getMembers().get(0);
+			if (firstMember != null) {
+				return firstMember.getAccountId();
+			}
+		}
+		return null;
 	}
 }
