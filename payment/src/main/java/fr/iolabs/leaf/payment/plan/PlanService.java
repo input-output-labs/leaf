@@ -374,9 +374,9 @@ public class PlanService {
 		SelectedPlanModule selectedPlanModule = this.getSelectedPlanModule(planAttachment);
 
 		LeafPaymentPlan selectedPlan = selectedPlanModule.getSelectedPlan();
-		if (selectedPlan != null && !selectedPlan.isSuspended() && selectedPlan.getStripeSubscriptionId() != null) {
+		if (selectedPlan != null && !selectedPlan.isSuspended() && selectedPlan.getStripeSubscriptionId() != null && selectedPlan.getStripePriceId() != null) {
 			try {
-				this.stripeSubcriptionService.sendUsageMetrics(selectedPlan.getStripeSubscriptionId(), quantity);
+				this.stripeSubcriptionService.sendUsageMetrics(selectedPlan.getStripeSubscriptionId(), selectedPlan.getStripePriceId(), quantity);
 			} catch (StripeException e) {
 				e.printStackTrace();
 			}
