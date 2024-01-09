@@ -115,7 +115,7 @@ public class PlanService {
 		}
 
 		// Save plan selection
-		this.savePlanAttachment();
+		this.savePlanAttachment(iModular);
 
 		// This will update user or organization depending on selected plan
 		this.applicationEventPublisher
@@ -343,8 +343,6 @@ public class PlanService {
 		selectedPlanModule.getSelectedPlan().setSuspended(true);
 		
 		this.selectBackupPlan(planAttachment);
-
-		this.savePlanAttachment(planAttachment);
 
 		String targetAccountId = this.getPlanAttachementNotificationTargetAccountId(planAttachment);
 		if (targetAccountId != null) {
