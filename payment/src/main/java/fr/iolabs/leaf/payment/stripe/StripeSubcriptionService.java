@@ -55,19 +55,25 @@ public class StripeSubcriptionService implements InitializingBean {
 
 	private Subscription createSubscription(String innerId, String stripeCustomerId, LeafPaymentPlan plan)
 			throws StripeException {
-
-		Map<String, Object> metadata = new HashMap<>();
-		metadata.put("innerId", innerId);
+		Map<String, Object> params = new HashMap<>();
+		params.put("customer", stripeCustomerId);
+		params.put("trial_period_days", plan.getTrialDuration());
 
 		List<Object> items = new ArrayList<>();
 		Map<String, Object> item1 = new HashMap<>();
 		item1.put("price", plan.getStripePriceId());
 		items.add(item1);
-		Map<String, Object> params = new HashMap<>();
-		params.put("customer", stripeCustomerId);
-		params.put("trial_period_days", plan.getTrialDuration());
 		params.put("items", items);
+
+		Map<String, Object> metadata = new HashMap<>();
+		metadata.put("innerId", innerId);
 		params.put("metadata", metadata);
+
+		Map<String, Object> trial_settings = new HashMap<>();
+		Map<String, Object> end_behavior = new HashMap<>();
+		end_behavior.put("missing_payment_method", "cancel");
+		trial_settings.put("end_behavior", end_behavior);
+		params.put("trial_settings", trial_settings);
 
 		return Subscription.create(params);
 	}

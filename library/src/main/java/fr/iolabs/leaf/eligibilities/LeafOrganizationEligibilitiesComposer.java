@@ -6,6 +6,7 @@ import fr.iolabs.leaf.common.LeafPolicy;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
 import fr.iolabs.leaf.organization.model.OrganizationMembership;
 import fr.iolabs.leaf.organization.model.OrganizationRole;
+import fr.iolabs.leaf.organization.model.config.LeafOrganizationConfig;
 
 import java.util.List;
 import java.util.Map;
@@ -23,11 +24,23 @@ public class LeafOrganizationEligibilitiesComposer implements ApplicationListene
 
 	@Autowired
 	private LeafEligibilitiesService eligibilitiesService;
+	
+	
+	@Autowired
+	private LeafOrganizationConfig organizationConfig;
 
 	@Override
 	public void onApplicationEvent(LeafEligibilitiesEvent event) {
 		LeafAccount account = coreContext.getAccount();
 		LeafOrganization organization = coreContext.getOrganization();
+		
+		for(String policyName: organizationConfig.getPolicies().keySet()) {
+			if (event.eligibilities().get(policyName) == null) {
+				event.eligibilities().put(policyName, LeafEligibility.notEligible(List.of("Default to not eligible")));
+			}
+		}
+		
+		
 		if (account == null || organization == null) {
 			return;
 		}
