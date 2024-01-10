@@ -34,14 +34,12 @@ public class LeafOrganizationEligibilitiesComposer implements ApplicationListene
 		LeafAccount account = coreContext.getAccount();
 		LeafOrganization organization = coreContext.getOrganization();
 		
-		for(String policyName: organizationConfig.getPolicies().keySet()) {
-			if (event.eligibilities().get(policyName) == null) {
-				event.eligibilities().put(policyName, LeafEligibility.notEligible(List.of("Default to not eligible")));
-			}
-		}
-		
-		
 		if (account == null || organization == null) {
+			for(String policyName: organizationConfig.getPolicies().keySet()) {
+				if (event.eligibilities().get(policyName) == null) {
+					event.eligibilities().put(policyName, LeafEligibility.notEligible(List.of("Default to not eligible")));
+				}
+			}
 			return;
 		}
 		this.getEligibilities(account, organization, event.eligibilities(), event.eligibilityKey());
