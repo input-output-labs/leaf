@@ -41,7 +41,7 @@ public class LeafOrganizationMembershipController {
 	}
 
 	@CrossOrigin
-	@LeafEligibilityCheck("manageMembers")
+	@LeafEligibilityCheck({"manageMembers"})
 	@DeleteMapping("/selected/members/{accountId}")
 	public LeafOrganization removeUserFromOrganization(@PathVariable String accountId) {
 		if (accountId == null || accountId.isBlank()) {
@@ -51,7 +51,7 @@ public class LeafOrganizationMembershipController {
 	}
 
 	@CrossOrigin
-	@LeafEligibilityCheck("manageMembers")
+	@LeafEligibilityCheck({"manageMembers"})
 	@PutMapping("/selected/members/{accountId}/role")
 	public LeafOrganization setUserRole(@PathVariable String accountId, @RequestBody SetMemberRoleAction action) {
 		if (accountId == null || accountId.isBlank()) {
@@ -61,7 +61,7 @@ public class LeafOrganizationMembershipController {
 	}
 
 	@CrossOrigin
-	@LeafEligibilityCheck("manageMembers")
+	@LeafEligibilityCheck({"manageMembers"})
 	@PostMapping("/selected/invitations")
 	public LeafOrganization inviteUserToOrganization(@RequestBody InviteUserToOrganizationAction action) {
 		return this.organizationMembershipService.inviteUserToOrganization(action.getEmail());
@@ -78,7 +78,7 @@ public class LeafOrganizationMembershipController {
 	}
 
 	@CrossOrigin
-	@LeafEligibilityCheck("manageMembers")
+	@LeafEligibilityCheck({"manageMembers"})
 	@PostMapping("/selected/invitations/{email}/cancel")
 	public void cancelInvitation(@PathVariable String email) {
 		if (email == null || email.isBlank()) {

@@ -17,7 +17,7 @@ public class LeafOrganizationPoliciesController {
 	private LeafOrganizationPoliciesService organizationPoliciesService;
 
 	@CrossOrigin
-	@LeafEligibilityCheck("managePolicies")
+	@LeafEligibilityCheck({"managePolicies"})
 	@PostMapping("/roles")
 	public LeafOrganization createNewRole(@RequestBody AddRoleToOrganizationAction action) {
 		String newRoleName = action.getName();
@@ -28,7 +28,7 @@ public class LeafOrganizationPoliciesController {
 	}
 
 	@CrossOrigin
-	@LeafEligibilityCheck("managePolicies")
+	@LeafEligibilityCheck({"managePolicies"})
 	@PutMapping("/roles/{roleName}")
 	public LeafOrganization updateRole(@PathVariable String roleName, @RequestBody OrganizationRole role) {
 		if (roleName == null || roleName.isBlank()) {
@@ -38,7 +38,7 @@ public class LeafOrganizationPoliciesController {
 	}
 
 	@CrossOrigin
-	@LeafEligibilityCheck("managePolicies")
+	@LeafEligibilityCheck({"managePolicies"})
 	@DeleteMapping("/roles/{roleName}")
 	public LeafOrganization deleteRole(@PathVariable String roleName) {
 		if (roleName == null || roleName.isBlank()) {

@@ -1,5 +1,8 @@
 package fr.iolabs.leaf.authentication;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Resource;
@@ -75,10 +78,13 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 					throw new UnauthorizedException();
 				}
 				if (leafEligibilityCheck) {
-					String eligibilityKey = method.getMethodAnnotation(LeafEligibilityCheck.class).value();
-					LeafEligibility eligibility = this.eligibilitiesService.getEligibility(eligibilityKey);
-					if (eligibility == null || !eligibility.eligible) {
-						throw new UnauthorizedException();
+					String[] eligibilityKeys = method.getMethodAnnotation(LeafEligibilityCheck.class).value();
+					Map<String, LeafEligibility> eligibilities = this.eligibilitiesService
+							.getEligibilities(Arrays.asList(eligibilityKeys));
+					for (LeafEligibility eligibility : eligibilities.values()) {
+						if (eligibility == null || !eligibility.eligible) {
+							throw new UnauthorizedException();
+						}
 					}
 				}
 			}
@@ -90,7 +96,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 		LeafAccount account = this.coreContext.getAccount();
 		LeafOrganization organization = this.coreContext.getOrganization();
 		if (account != null && organization != null) {
-			for(OrganizationMembership member : organization.getMembers()) {
+			for (OrganizationMembership member : organization.getMembers()) {
 				if (member.getAccountId().equals(account.getId())) {
 					return true;
 				}

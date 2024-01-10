@@ -9,5 +9,5 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Target(METHOD)
 public @interface LeafEligibilityCheck {
-	String value();
+	String[] value();
 }
