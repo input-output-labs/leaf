@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
@@ -30,12 +29,7 @@ public class StripeController {
 	private String endpointSecret;
 
 	@Autowired
-	private StripeService stripeService;
-
-	@Autowired
 	private StripeHookService stripeHookService;
-
-	private static Gson gson = new Gson();
 
 	/**
 	 * To uncomment for testing purposes

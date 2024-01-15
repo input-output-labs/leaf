@@ -81,9 +81,11 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 					String[] eligibilityKeys = method.getMethodAnnotation(LeafEligibilityCheck.class).value();
 					Map<String, LeafEligibility> eligibilities = this.eligibilitiesService
 							.getEligibilities(Arrays.asList(eligibilityKeys));
-					for (LeafEligibility eligibility : eligibilities.values()) {
+
+					for (String eligibilityKey : eligibilities.keySet()) {
+						LeafEligibility eligibility = eligibilities.get(eligibilityKey);
 						if (eligibility == null || !eligibility.eligible) {
-							throw new UnauthorizedException();
+							throw new UnauthorizedException("eligibility check is false for " + eligibilityKey);
 						}
 					}
 				}

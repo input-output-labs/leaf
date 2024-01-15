@@ -109,7 +109,6 @@ public class StripeHookService {
 	public void handleSubscriptionUpdated(Event event) {
 		// Deserialize the nested object inside the event
 		Data eventData = event.getData();
-		// String eventString = stripeObject.toJson();
 		StripeObject subscription = eventData.getObject();
 		JsonObject jsonSubscription = JsonParser.parseString(subscription.toJson()).getAsJsonObject();
 		String status = jsonSubscription.get("status").getAsString();
@@ -126,27 +125,27 @@ public class StripeHookService {
 	public void handleSubscriptionDeleted(Event event) {
 		// Deserialize the nested object inside the event
 		Data eventData = event.getData();
-		// String eventString = stripeObject.toJson();
 		StripeObject subscription = eventData.getObject();
 		JsonObject jsonSubscription = JsonParser.parseString(subscription.toJson()).getAsJsonObject();
+		String subscriptionId = jsonSubscription.get("id").getAsString();
 
 		JsonObject metadata = jsonSubscription.get("metadata").getAsJsonObject();
 		String innerId = metadata.get("innerId").getAsString();
 		
-		this.planService.stopPlanFor(innerId);
+		this.planService.stopPlanFor(innerId, subscriptionId);
 	}
 
 	public void handleSubscriptionTrialEnding(Event event) {
 		// Deserialize the nested object inside the event
 		Data eventData = event.getData();
-		// String eventString = stripeObject.toJson();
 		StripeObject subscription = eventData.getObject();
 		JsonObject jsonSubscription = JsonParser.parseString(subscription.toJson()).getAsJsonObject();
+		String subscriptionId = jsonSubscription.get("id").getAsString();
 
 		JsonObject metadata = jsonSubscription.get("metadata").getAsJsonObject();
 		String innerId = metadata.get("innerId").getAsString();
 		
-		this.planService.sendEndOfTrialApprochingFor(innerId);
+		this.planService.sendEndOfTrialApprochingFor(innerId, subscriptionId);
 	}
 	
 }

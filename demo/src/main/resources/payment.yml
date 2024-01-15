@@ -7,6 +7,8 @@ plans:
   available: true
   stripePriceId: price_1OHtUwC2crD6qr6LhGCEExqq
   trialDuration: 0
+  metadata:
+    hello: "world"
   features:
     -
       name: userCount
@@ -34,6 +36,8 @@ plans:
   available: true
   stripePriceId: price_1OHtXkC2crD6qr6LinwkrpNS
   trialDuration: 30
+  metadata:
+    hello: "world"
   features:
     -
       name: userCount
@@ -64,6 +68,8 @@ plans:
   available: true
   stripePriceId: price_1OHtajC2crD6qr6LKJbSXyek
   trialDuration: 30
+  metadata:
+    hello: "world"
   features:
     -
       name: userCount

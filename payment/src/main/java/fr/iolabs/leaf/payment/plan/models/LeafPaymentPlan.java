@@ -2,6 +2,7 @@ package fr.iolabs.leaf.payment.plan.models;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class LeafPaymentPlan implements Cloneable {
@@ -19,6 +20,7 @@ public class LeafPaymentPlan implements Cloneable {
 	private ZonedDateTime startedAt;
 	private boolean inTrial;
 	private String stripeSubscriptionId;
+	private Map<String, String> metadata;
 	
 	public LeafPaymentPlan clone() {
 		LeafPaymentPlan clone = new LeafPaymentPlan();
@@ -155,5 +157,13 @@ public class LeafPaymentPlan implements Cloneable {
 
 	public void setTrialDuration(int trialDuration) {
 		this.trialDuration = trialDuration;
+	}
+
+	public Map<String, String> getMetadata() {
+		return metadata;
+	}
+
+	public void setMetadata(Map<String, String> metadata) {
+		this.metadata = metadata;
 	}
 }

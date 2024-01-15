@@ -84,7 +84,7 @@ public class PlanService {
 		ILeafModular iModular = this.getPlanAttachement();
 		return this.selectPlan(selectedPlan, iModular);
 	}
-	
+
 	public LeafPaymentPlan selectBackupPlan(ILeafModular iModular) {
 		return this.selectPlan(this.paymentConfig.getDefaultPlan(), iModular);
 	}
@@ -119,7 +119,7 @@ public class PlanService {
 
 		// This will update user or organization depending on selected plan
 		this.applicationEventPublisher
-				.publishEvent(new LeafPlanSelectionEvent(PlanService.class, availableSelectedPlan));
+				.publishEvent(new LeafPlanSelectionEvent(PlanService.class, this.paymentConfig.getPlanAttachment(), iModular, availableSelectedPlan, previousPlan));
 
 		return availableSelectedPlan;
 	}
@@ -150,19 +150,6 @@ public class PlanService {
 		SelectedPlanModule selectedPlanModule = this.getSelectedPlanModule(planOwnerTarget);
 		selectedPlanModule.setSelectedPlan(plan);
 		selectedPlanModule.getMetadata().updateLastModification();
-	}
-
-	private void savePlanAttachment() {
-		switch (this.paymentConfig.getPlanAttachment()) {
-		case USER:
-			this.accountRepository.save(this.coreContext.getAccount());
-			break;
-		case ORGANIZATION:
-			this.organizationRepository.save(this.coreContext.getOrganization());
-			break;
-		default:
-			break;
-		}
 	}
 
 	private ILeafModular savePlanAttachment(ILeafModular iModular) {
@@ -333,35 +320,48 @@ public class PlanService {
 		this.savePlanAttachment(planAttachment);
 	}
 
-	public void stopPlanFor(String iModularId) {
+	public void stopPlanFor(String iModularId, String subscriptionId) {
 		ILeafModular planAttachment = this.getPlanAttachement(iModularId);
 		if (planAttachment == null) {
 			throw new BadRequestException("No attachment with id: " + iModularId);
 		}
 		SelectedPlanModule selectedPlanModule = this.getSelectedPlanModule(planAttachment);
-		
-		selectedPlanModule.getSelectedPlan().setSuspended(true);
-		
-		this.selectBackupPlan(planAttachment);
 
-		String targetAccountId = this.getPlanAttachementNotificationTargetAccountId(planAttachment);
-		if (targetAccountId != null) {
-			this.notificationService.emit(LeafNotification.of("LEAF_PAYMENT_PLAN_DELETED", targetAccountId));
+		LeafPaymentPlan selectedPlan = selectedPlanModule.getSelectedPlan();
+		if (selectedPlan != null) {
+			boolean hasCorrectSubscriptionId = selectedPlan.getStripeSubscriptionId() != null
+					&& selectedPlan.getStripeSubscriptionId().equals(subscriptionId);
+			if (hasCorrectSubscriptionId) {
+				selectedPlanModule.getSelectedPlan().setSuspended(true);
+
+				this.selectBackupPlan(planAttachment);
+
+				String targetAccountId = this.getPlanAttachementNotificationTargetAccountId(planAttachment);
+				if (targetAccountId != null) {
+					this.notificationService.emit(LeafNotification.of("LEAF_PAYMENT_PLAN_DELETED", targetAccountId));
+				}
+			}
 		}
 	}
 
-	public void sendEndOfTrialApprochingFor(String iModularId) {
+	public void sendEndOfTrialApprochingFor(String iModularId, String subscriptionId) {
 		ILeafModular planAttachment = this.getPlanAttachement(iModularId);
 		SelectedPlanModule selectedPlanModule = this.getSelectedPlanModule(planAttachment);
 		PaymentCustomerModule paymentCustomerModule = this.getPaymentCustomerModule(planAttachment);
 
 		LeafPaymentPlan selectedPlan = selectedPlanModule.getSelectedPlan();
-		if (selectedPlan != null && selectedPlan.isInTrial() && !selectedPlan.isSuspended()) {
-			if (paymentCustomerModule.getDefaultPaymentMethod() == null) {
+		if (selectedPlan != null) {
+			boolean isInTrial = selectedPlan.isInTrial();
+			boolean isNotSuspended = !selectedPlan.isSuspended();
+			boolean hasCorrectSubscriptionId = selectedPlan.getStripeSubscriptionId() != null
+					&& selectedPlan.getStripeSubscriptionId().equals(subscriptionId);
+			boolean defaultPaymentMethodDefined = paymentCustomerModule.getDefaultPaymentMethod() == null;
+			if (isInTrial && isNotSuspended && hasCorrectSubscriptionId && defaultPaymentMethodDefined) {
 				// if no payment method, send no payment method notification
 				String targetAccountId = this.getPlanAttachementNotificationTargetAccountId(planAttachment);
 				if (targetAccountId != null) {
-					this.notificationService.emit(LeafNotification.of("LEAF_PAYMENT_PLAN_TRIAL_ENDING_SOON", targetAccountId));
+					this.notificationService
+							.emit(LeafNotification.of("LEAF_PAYMENT_PLAN_TRIAL_ENDING_SOON", targetAccountId));
 				}
 			}
 		}
@@ -372,9 +372,11 @@ public class PlanService {
 		SelectedPlanModule selectedPlanModule = this.getSelectedPlanModule(planAttachment);
 
 		LeafPaymentPlan selectedPlan = selectedPlanModule.getSelectedPlan();
-		if (selectedPlan != null && !selectedPlan.isSuspended() && selectedPlan.getStripeSubscriptionId() != null && selectedPlan.getStripePriceId() != null) {
+		if (selectedPlan != null && !selectedPlan.isSuspended() && selectedPlan.getStripeSubscriptionId() != null
+				&& selectedPlan.getStripePriceId() != null) {
 			try {
-				this.stripeSubcriptionService.sendUsageMetrics(selectedPlan.getStripeSubscriptionId(), selectedPlan.getStripePriceId(), quantity);
+				this.stripeSubcriptionService.sendUsageMetrics(selectedPlan.getStripeSubscriptionId(),
+						selectedPlan.getStripePriceId(), quantity);
 			} catch (StripeException e) {
 				e.printStackTrace();
 			}
