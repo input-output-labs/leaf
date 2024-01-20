@@ -13,13 +13,13 @@
 
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf-demo</artifactId>
-	<version>1.61-SNAPSHOT</version>
+	<version>1.62-SNAPSHOT</version>
 	<name>Leaf - demo</name>
 
 	<properties>
 		<java.version>1.8</java.version>
 		<spring.version>2.6.8</spring.version>
-		<leaf.version>1.61-SNAPSHOT</leaf.version>
+		<leaf.version>1.62-SNAPSHOT</leaf.version>
 	</properties>
 
 	<dependencies>
@@ -85,6 +85,7 @@
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
 		</dependency>
+<<<<<<< Updated upstream
 
 		<!-- Stripe -->
 		<dependency>
@@ -96,6 +97,13 @@
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 			<version>2.9.1</version>
+=======
+		<!-- SMS dependencies --> 
+		<dependency>
+		  <groupId>com.twilio.sdk</groupId>
+		  <artifactId>twilio</artifactId>
+		  <version>9.1.3</version>
+>>>>>>> Stashed changes
 		</dependency>
 	</dependencies>
 
