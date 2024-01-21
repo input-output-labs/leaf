@@ -54,8 +54,9 @@ public class EmailingController {
 
 	@CrossOrigin
 	@AdminOnly
-	@GetMapping("/categories")
+	@GetMapping("/categoriess")
 	public List<LeafEmailingCategory> findAllCategories() {
+		System.out.println("OUIOUI");
 		List<LeafEmailingCategory> categories = new ArrayList<LeafEmailingCategory>();
 
 		// Get app custom categories
