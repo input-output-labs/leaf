@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.PropertySources;
 import org.springframework.stereotype.Component;
 
 import fr.iolabs.leaf.notifications.YamlPropertySourceFactory;
@@ -13,7 +14,10 @@ import fr.iolabs.leaf.organization.model.OrganizationPolicy;
 @Component
 @Configuration
 @ConfigurationProperties
-@PropertySource(value = "classpath:organizations.yml", factory = YamlPropertySourceFactory.class)
+@PropertySources({
+    @PropertySource(value = "classpath:organizations.yml", factory = YamlPropertySourceFactory.class),
+    @PropertySource(value = "classpath:organizations-${spring.profiles.active}.yml", ignoreResourceNotFound = true, factory = YamlPropertySourceFactory.class)
+})
 public class LeafOrganizationConfig {
 	private Map<String, OrganizationPolicy> policies;
 	private Map<String, LeafDefaultRoleConfig> defaultRoles;

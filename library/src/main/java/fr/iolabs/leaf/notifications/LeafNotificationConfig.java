@@ -5,12 +5,16 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.PropertySources;
 import org.springframework.stereotype.Component;
 
 @Component
 @Configuration
 @ConfigurationProperties
-@PropertySource(value = "classpath:notifications.yml", factory = YamlPropertySourceFactory.class)
+@PropertySources({
+    @PropertySource(value = "classpath:notifications.yml", factory = YamlPropertySourceFactory.class),
+    @PropertySource(value = "classpath:notifications-${spring.profiles.active}.yml", ignoreResourceNotFound = true, factory = YamlPropertySourceFactory.class)
+})
 public class LeafNotificationConfig {
 	private Map<String, Map<String, String>> notifications;
 
