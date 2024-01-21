@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf</artifactId>
-	<version>1.62-SNAPSHOT</version>
+	<version>1.64-SNAPSHOT</version>
 	<name>leaf</name>
 
 	<properties>
@@ -78,7 +78,6 @@
 			<artifactId>java-jwt</artifactId>
 			<version>3.2.0</version>
 		</dependency>
-
 	</dependencies>
 
 	<distributionManagement>
