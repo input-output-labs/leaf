@@ -3,6 +3,7 @@ package fr.iolabs.leaf.eligibilities;
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
 
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Resource;
 import org.springframework.context.ApplicationListener;
@@ -17,15 +18,16 @@ public class LeafAdministrationEligibilitiesComposer implements ApplicationListe
     @Override
     public void onApplicationEvent(LeafEligibilitiesEvent event) {
     	LeafAccount account = coreContext.getAccount();
-        this.getEligibilities(account, event.eligibilities());
+		this.getEligibilities(account, event.eligibilities(), event.eligibilityKey());
     }
-
 	
-	public void getEligibilities(LeafAccount account, Map<String, LeafEligibility> eligibilities) {
-		LeafEligibility canAccessAdminPage = new LeafEligibility(account != null && account.isAdmin());
-		if (!canAccessAdminPage.eligible) {
-			canAccessAdminPage.reasons.add("Not an admin");
+	public void getEligibilities(LeafAccount account, Map<String, LeafEligibility> eligibilities, List<String> eligibilityKeys) {
+		if (eligibilityKeys == null || eligibilityKeys.contains("seeAdmin")) {
+			LeafEligibility canAccessAdminPage = new LeafEligibility(account != null && account.isAdmin());
+			if (!canAccessAdminPage.eligible) {
+				canAccessAdminPage.reasons.add("Not an admin");
+			}
+			eligibilities.put("seeAdmin", canAccessAdminPage);
 		}
-		eligibilities.put("seeAdmin", canAccessAdminPage);
 	}
 }
