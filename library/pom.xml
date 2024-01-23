@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf</artifactId>
-	<version>1.66-SNAPSHOT</version>
+	<version>1.67-SNAPSHOT</version>
 	<name>leaf</name>
 
 	<properties>
@@ -67,6 +67,13 @@
 			<version>2.13.2</version>
 		</dependency>
 
+		<!-- S3 bucket deployment -->
+		<dependency>
+		    <groupId>com.amazonaws</groupId>
+		    <artifactId>aws-java-sdk-s3</artifactId>
+		    <version>1.12.641</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.reflections</groupId>
 			<artifactId>reflections</artifactId>
@@ -77,6 +84,13 @@
 			<groupId>com.auth0</groupId>
 			<artifactId>java-jwt</artifactId>
 			<version>3.2.0</version>
+		</dependency>
+
+		<!-- IO Utils -->
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.4</version>
 		</dependency>
 	</dependencies>
 

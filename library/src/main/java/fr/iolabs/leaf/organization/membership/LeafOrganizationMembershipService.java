@@ -47,7 +47,7 @@ public class LeafOrganizationMembershipService {
 	@Autowired
 	private LeafNotificationService leafNotificationService;
 
-	@Value("${leaf.protocol_hostname}")
+	@Value("${leaf.appDomain}")
 	String hostUrl;
 
 	@Value("${leaf.emailing.sendgrid.templates.organization-invitation-template}")

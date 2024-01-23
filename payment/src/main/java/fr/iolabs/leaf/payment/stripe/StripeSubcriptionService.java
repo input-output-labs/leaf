@@ -31,7 +31,7 @@ public class StripeSubcriptionService implements InitializingBean {
 	@Value("${leaf.payment.stripe.api.key}")
 	private String privateKey;
 
-	@Value("${leaf.protocol_hostname}")
+	@Value("${leaf.appDomain}")
 	String protocol_hostname;
 
 	@Autowired

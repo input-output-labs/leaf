@@ -27,8 +27,8 @@ public class LeafSendgridEmailService {
 	@Value("${leaf.emailing.sendgrid.email.from}")
 	String sendgridEmailFrom;
 
-	@Value("${leaf.protocol_hostname}")
-	String protocol_hostname;
+	@Value("${leaf.appDomain}")
+	String appDomain;
 
 	@Value("${leaf.emailing.unsubscribe-url}")
 	String emailingUnsubscribeUrl;
@@ -60,7 +60,7 @@ public class LeafSendgridEmailService {
 				String encodedType = URLParamEncoder.encode(emailingCategoryName);
 				String encodedEmail = URLParamEncoder.encode(to);
 
-				String url = this.protocol_hostname + "/"+ this.emailingUnsubscribeUrl + "?type=" + encodedType
+				String url = this.appDomain + "/"+ this.emailingUnsubscribeUrl + "?type=" + encodedType
 						+ "&email=" + encodedEmail;
 				String protocol;
 				String hostAndPath;

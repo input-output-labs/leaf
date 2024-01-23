@@ -13,6 +13,10 @@ public class LeafFileModel {
     private String contentType;
     private String url;
 
+    public static LeafFileModel from(String contentType, String uploaderAccountId) {
+        return LeafFileModel.from(null, contentType, uploaderAccountId);
+    }
+
     public static LeafFileModel from(byte[] fileBytes, String contentType, String uploaderAccountId) {
         LeafFileModel file = new LeafFileModel();
         file.uploadDateTime = LocalDateTime.now();

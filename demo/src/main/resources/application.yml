@@ -17,13 +17,23 @@ server:
   servlet:
     context-path: /
 leaf:
+  apiDomain: "${API_URL}"
+  appDomain: "${HOST_URL}"
   whitelisting:
     enabled: false
   firstuser:
     enabled: true
     email: admin
     password: admin
-  protocol_hostname: ${HOST_URL}
+  filestorage:
+    mode: "database"
+    localfolder: "./"
+    publicfolder: "public"
+    s3:
+      folder: "share"
+      bucketName: "<bucketName>"
+      accessKey: "<accessKey>"
+      secretAccessKey: "<secretAccessKey>"
   emailing:
     unsubscribe-url: /mailings/unsubscribe
     sendgrid:
