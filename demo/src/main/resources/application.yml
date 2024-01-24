@@ -30,10 +30,10 @@ leaf:
     localfolder: "./"
     publicfolder: "public"
     s3:
-      folder: "share"
       bucketName: "<bucketName>"
       accessKey: "<accessKey>"
       secretAccessKey: "<secretAccessKey>"
+      distributionId: "<distributionId>"
   emailing:
     unsubscribe-url: /mailings/unsubscribe
     sendgrid:

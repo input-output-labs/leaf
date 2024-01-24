@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.Resource;
@@ -15,9 +16,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.amazonaws.services.cloudfront.AmazonCloudFront;
+import com.amazonaws.services.cloudfront.model.CreateInvalidationRequest;
+import com.amazonaws.services.cloudfront.model.InvalidationBatch;
+import com.amazonaws.services.cloudfront.model.Paths;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.PutObjectResult;
 
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.common.errors.InternalServerErrorException;
@@ -46,6 +52,9 @@ public class LeafFileService {
 
 	@Autowired
 	private AmazonS3 amazonS3;
+
+	@Autowired
+	private AmazonCloudFront amazonCloudFront;
 
 	@Autowired
 	private AWSClientConfig awsClientConfig;
@@ -109,9 +118,28 @@ public class LeafFileService {
 		objectMetadata.setContentType(contentType);
 		InputStream targetStream = new ByteArrayInputStream(content);
 
-		amazonS3.putObject(new PutObjectRequest(awsClientConfig.getBucketName(),
-				options.getPublicfolder() + "/" + filename, targetStream, objectMetadata));
-		String url = this.cleanUrl(this.appDomain + "/" + options.getPublicfolder() + "/" + filename);
+		String bucketObjectKey = options.getPublicfolder() + "/" + filename;
+		String publicPath = "/" + bucketObjectKey;
+		boolean alreayExists = false;
+		try {
+			amazonS3.getObjectMetadata(awsClientConfig.getBucketName(), bucketObjectKey);
+			alreayExists = true;
+		}catch (Exception e) {
+			// TODO: handle exception
+		};
+		PutObjectResult s3PutObjectResult = amazonS3.putObject(
+				new PutObjectRequest(awsClientConfig.getBucketName(), bucketObjectKey, targetStream, objectMetadata));
+
+		// Invalidation:
+		if (alreayExists) {
+			Paths invalidationPaths = new Paths().withItems(publicPath).withQuantity(1);
+			InvalidationBatch invalidationBatch = new InvalidationBatch(invalidationPaths, "" + System.currentTimeMillis());
+			CreateInvalidationRequest createInvalidationRequest = new CreateInvalidationRequest(
+					this.awsClientConfig.getDistributionId(), invalidationBatch);
+			amazonCloudFront.createInvalidation(createInvalidationRequest);
+		}
+
+		String url = this.cleanUrl(this.appDomain + publicPath);
 
 		if (createdFile == null) {
 			createdFile = LeafFileModel.from(contentType, accountId);

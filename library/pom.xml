@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf</artifactId>
-	<version>1.67-SNAPSHOT</version>
+	<version>1.68-SNAPSHOT</version>
 	<name>leaf</name>
 
 	<properties>
@@ -71,6 +71,11 @@
 		<dependency>
 		    <groupId>com.amazonaws</groupId>
 		    <artifactId>aws-java-sdk-s3</artifactId>
+		    <version>1.12.641</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.amazonaws</groupId>
+		    <artifactId>aws-java-sdk-cloudfront</artifactId>
 		    <version>1.12.641</version>
 		</dependency>
 
