@@ -21,9 +21,18 @@ import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
     @PropertySource(value = "classpath:payment-${spring.profiles.active}.yml", ignoreResourceNotFound = true, factory = YamlPropertySourceFactory.class)
 })
 public class LeafPaymentConfig {
+	private boolean collectTaxId;
 	private PlanAttachment planAttachment;
 	private List<LeafPaymentPlan> plans;
 	private Map<String, String> redirect;
+
+	public boolean isCollectTaxId() {
+		return collectTaxId;
+	}
+
+	public void setCollectTaxId(boolean collectTaxId) {
+		this.collectTaxId = collectTaxId;
+	}
 
 	public PlanAttachment getPlanAttachment() {
 		return planAttachment;

@@ -31,6 +31,7 @@ import fr.iolabs.leaf.payment.models.LeafPaymentTransaction;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransactionRepository;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransactionStatusEnum;
 import fr.iolabs.leaf.payment.models.PaymentMethod;
+import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.stripe.models.PaymentCheckoutCreationAction;
 import fr.iolabs.leaf.payment.stripe.models.PaymentIntentCaptureAction;
 import fr.iolabs.leaf.payment.stripe.models.PaymentIntentCreationAction;
@@ -46,6 +47,9 @@ public class StripeService {
 
 	@Autowired
 	private ApplicationEventPublisher applicationEventPublisher;
+
+	@Autowired
+	private LeafPaymentConfig paymentConfig;
 
 	public Map<String, String> createPaymentLink(PaymentLinkCreationAction paymentLinkCreationAction)
 			throws StripeException {
@@ -96,6 +100,10 @@ public class StripeService {
 		HashMap<String, Object> metadata = new HashMap<>();
 		metadata.put("paymentMetadata", paymentCheckoutCreationAction.getMetadata());
 		params.put("metadata", paymentCheckoutCreationAction.getMetadata());
+
+		Map<String, Object> tax_id_collection = new HashMap<>();
+		tax_id_collection.put("enabled", this.paymentConfig.isCollectTaxId());
+		params.put("tax_id_collection", tax_id_collection);
 
 		if (paymentCheckoutCreationAction.isAllowPromotionCodes()) {
 			params.put("allow_promotion_codes", true);
