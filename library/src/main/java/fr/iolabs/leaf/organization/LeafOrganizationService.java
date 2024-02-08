@@ -3,6 +3,8 @@ package fr.iolabs.leaf.organization;
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.authentication.LeafAccountRepository;
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
+import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
+import fr.iolabs.leaf.common.errors.NotFoundException;
 import fr.iolabs.leaf.organization.actions.CreateOrganizationAction;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
 import fr.iolabs.leaf.organization.model.OrganizationMembership;
@@ -51,7 +53,7 @@ public class LeafOrganizationService {
 
 	public LeafOrganization create(CreateOrganizationAction action) {
 		LeafOrganization organization = new LeafOrganization();
-		
+
 		organization.setName(action.getName());
 		organization.setMetadata(ResourceMetadata.create());
 		organization.setPolicies(this.policiesService.createDefaultPolicies());
@@ -71,5 +73,18 @@ public class LeafOrganizationService {
 		this.accountRepository.save(coreContext.getAccount());
 
 		return savedOrganization;
+	}
+
+	public LeafOrganization updateProfile(String organizationId, LeafAccountProfile profile) {
+		LeafOrganization organization = this.getById(organizationId).orElseThrow(NotFoundException::new);
+		if (organization.getProfile() == null) {
+			organization.setProfile(profile);
+		} else {
+			organization.getProfile().updateWith(profile);
+		}
+
+		this.applicationEventPublisher.publishEvent(new OrganizationProfileUpdateEvent(this, organization));
+
+		return this.organizationRepository.save(organization);
 	}
 }

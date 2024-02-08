@@ -10,6 +10,8 @@ public class LeafAccountProfile {
 	private String lastname;
 	private String phoneNumber;
 	private LeafAddress address;
+	private Boolean corporate;
+	private String taxId;
 	
 	public LeafAccountProfile() {}
 	
@@ -20,6 +22,8 @@ public class LeafAccountProfile {
 		this.lastname = from.lastname;
 		this.phoneNumber = from.phoneNumber;
 		this.address = from.address;
+		this.corporate = from.corporate;
+		this.taxId = from.taxId;
 	}
 	public String getUsername() {
 		return username;
@@ -58,6 +62,22 @@ public class LeafAccountProfile {
 		this.address = address;
 	}
 
+	public Boolean getCorporate() {
+		return corporate;
+	}
+
+	public void setCorporate(Boolean corporate) {
+		this.corporate = corporate;
+	}
+
+	public String getTaxId() {
+		return taxId;
+	}
+
+	public void setTaxId(String taxId) {
+		this.taxId = taxId;
+	}
+
 	public Map<String, Object> toMap() {
 		Map<String, Object> object = new HashMap<String, Object>();
 		object.put("username", this.username);
@@ -91,6 +111,12 @@ public class LeafAccountProfile {
 			} else {
 				this.address = LeafAddress.from(updates.address);
 			}
+		}
+		if (updates.corporate != null) {
+			this.corporate = updates.corporate;
+		}
+		if (updates.taxId != null) {
+			this.taxId = updates.taxId;
 		}
 	}
 }

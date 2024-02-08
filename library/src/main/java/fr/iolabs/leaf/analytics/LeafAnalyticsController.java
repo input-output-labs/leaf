@@ -1,6 +1,7 @@
 package fr.iolabs.leaf.analytics;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -29,7 +30,7 @@ public class LeafAnalyticsController {
 	@PermitAll
 	@PostMapping()
 	public void insertAnalytics(@RequestBody List<LeafAnalyticEvent> events) {
-		LocalDateTime now = LocalDateTime.now();
+		ZonedDateTime now = ZonedDateTime.now();
 
 		List<LeafAnalyticEvent> eventsToSave = events.stream().filter(LeafAnalyticEvent::isValid).map(event -> {
 			if (event.getCreationDate() == null) {

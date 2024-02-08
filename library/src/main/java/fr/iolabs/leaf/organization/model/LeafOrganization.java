@@ -1,6 +1,7 @@
 package fr.iolabs.leaf.organization.model;
 
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
+import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.common.ILeafModular;
 
 import org.springframework.data.annotation.Id;
@@ -17,6 +18,8 @@ public class LeafOrganization implements ILeafModular {
 	protected String id;
 
 	protected String name;
+
+	protected LeafAccountProfile profile;
 
 	protected Map<String, Object> modules;
 
@@ -38,6 +41,7 @@ public class LeafOrganization implements ILeafModular {
 		this();
 		this.id = from.id;
 		this.name = from.name;
+		this.profile = from.profile;
 		this.metadata = from.metadata;
 	}
 
@@ -55,6 +59,14 @@ public class LeafOrganization implements ILeafModular {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public LeafAccountProfile getProfile() {
+		return profile;
+	}
+
+	public void setProfile(LeafAccountProfile profile) {
+		this.profile = profile;
 	}
 
 	public ResourceMetadata getMetadata() {

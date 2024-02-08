@@ -1,14 +1,13 @@
 package fr.iolabs.leaf.organization;
 
 import fr.iolabs.leaf.LeafContext;
+import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
-import fr.iolabs.leaf.common.errors.BadRequestException;
 import fr.iolabs.leaf.common.errors.NotFoundException;
 import fr.iolabs.leaf.eligibilities.LeafEligibility;
 import fr.iolabs.leaf.eligibilities.LeafOrganizationEligibilitiesComposer;
 import fr.iolabs.leaf.organization.actions.CreateOrganizationAction;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
-import fr.iolabs.leaf.organization.model.config.LeafOrganizationConfig;
 import fr.iolabs.leaf.organization.policies.LeafOrganizationPoliciesService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,6 +91,15 @@ public class LeafOrganizationController {
 				.get(0);
 	}
 
+	@CrossOrigin
+	@PostMapping("/{organizationId}/profile")
+	public LeafOrganization updateProfile(@PathVariable String organizationId,
+			@RequestBody LeafAccountProfile profile) {
+		return this
+				.protectOrganizations(
+						List.of(this.organizationService.updateProfile(organizationId, profile)))
+				.get(0);
+	}
 
 	@CrossOrigin
 	@AdminOnly
