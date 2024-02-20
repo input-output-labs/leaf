@@ -49,24 +49,35 @@ public class LeafOrganizationEligibilitiesComposer implements ApplicationListene
 			Map<String, LeafEligibility> eligibilities, List<String> eligibilityKeys) {
 		String userRole = "";
 		for (OrganizationMembership member : organization.getMembers()) {
+			System.out.println("_____________ account part of org: " + account.getId().equals(member.getAccountId()));
+			System.out.println("account.getId(): " + account.getId());
+			System.out.println("member.getAccountId(): " + member.getAccountId());
 			if (account.getId().equals(member.getAccountId())) {
 				userRole = member.getRole();
 			}
 		}
+		System.out.println("account.getId() " + account.getId());
+		System.out.println("userRole " + userRole);
+		System.out.println("organization  id" + organization.getId());
 		for (OrganizationRole role : organization.getPolicies().getRoles()) {
-			if (userRole.equals(role.getName())) {
-				for (LeafPolicy policy : role.getRights()) {
-					if (eligibilityKeys == null || eligibilityKeys.contains(policy.getName())) {
-						LeafEligibility existingEligibility = eligibilities.get(policy.getName());
-						LeafEligibility eligibility = this.eligibilitiesService.readEligibility(policy, "Blocked by organization policies");
-						if (existingEligibility == null) {
-							eligibilities.put(policy.getName(), eligibility);
-						} else {
-							LeafEligibility newEligibility = new LeafEligibility(
-									existingEligibility.eligible && eligibility.eligible);
-							newEligibility.reasons.addAll(existingEligibility.reasons);
-							newEligibility.reasons.addAll(eligibility.reasons);
-							eligibilities.put(policy.getName(), newEligibility);
+			System.out.println("role getName" + role.getName());
+		}
+		if(userRole != null) {
+			for (OrganizationRole role : organization.getPolicies().getRoles()) {
+				if (userRole.equals(role.getName())) {
+					for (LeafPolicy policy : role.getRights()) {
+						if (eligibilityKeys == null || eligibilityKeys.contains(policy.getName())) {
+							LeafEligibility existingEligibility = eligibilities.get(policy.getName());
+							LeafEligibility eligibility = this.eligibilitiesService.readEligibility(policy, "Blocked by organization policies");
+							if (existingEligibility == null) {
+								eligibilities.put(policy.getName(), eligibility);
+							} else {
+								LeafEligibility newEligibility = new LeafEligibility(
+										existingEligibility.eligible && eligibility.eligible);
+								newEligibility.reasons.addAll(existingEligibility.reasons);
+								newEligibility.reasons.addAll(eligibility.reasons);
+								eligibilities.put(policy.getName(), newEligibility);
+							}
 						}
 					}
 				}
