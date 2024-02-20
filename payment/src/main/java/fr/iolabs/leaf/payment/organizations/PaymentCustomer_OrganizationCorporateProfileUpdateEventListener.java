@@ -32,7 +32,7 @@ public class PaymentCustomer_OrganizationCorporateProfileUpdateEventListener
 			LeafOrganization organization = event.getOrganization();
 			PaymentCustomerModule customer = this.planService.getPaymentCustomerModule(organization);
 			try {
-				if (organization.getProfile().getCorporate()) {
+				if (organization.getProfile().isCorporate()) {
 					this.stripeSubcriptionService.updateCustomerBillingDetails(organization, customer,
 							organization.getProfile());
 				}

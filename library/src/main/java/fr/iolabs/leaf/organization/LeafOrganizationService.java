@@ -82,6 +82,9 @@ public class LeafOrganizationService {
 		} else {
 			organization.getProfile().updateWith(profile);
 		}
+		if (profile != null && profile.getDisplayName() != null) {
+			organization.setName(profile.getDisplayName());
+		}
 
 		this.applicationEventPublisher.publishEvent(new OrganizationProfileUpdateEvent(this, organization));
 

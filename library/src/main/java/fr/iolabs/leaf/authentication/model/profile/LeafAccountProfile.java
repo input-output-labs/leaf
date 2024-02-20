@@ -2,6 +2,9 @@ package fr.iolabs.leaf.authentication.model.profile;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringJoiner;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class LeafAccountProfile {
 	private String username;
@@ -25,6 +28,26 @@ public class LeafAccountProfile {
 		this.corporate = from.corporate;
 		this.taxId = from.taxId;
 	}
+	
+	@JsonIgnore
+	public String getDisplayName() {
+		boolean firstnameDefined = this.firstname != null && !this.firstname.isBlank();
+		boolean lastnameDefined = this.lastname != null && !this.lastname.isBlank();
+		if (firstnameDefined || lastnameDefined) {
+			StringJoiner sj = new StringJoiner(" ");
+			if (firstnameDefined) {
+				sj.add(this.firstname);
+			}
+			if (lastnameDefined) {
+				sj.add(this.lastname);
+			}
+			return sj.toString();
+		} else if (this.username != null && !this.username.isBlank()) {
+			return this.username;
+		}
+		return null;
+	}
+	
 	public String getUsername() {
 		return username;
 	}
@@ -64,6 +87,11 @@ public class LeafAccountProfile {
 
 	public Boolean getCorporate() {
 		return corporate;
+	}
+
+	@JsonIgnore
+	public boolean isCorporate() {
+		return this.corporate != null && this.corporate;
 	}
 
 	public void setCorporate(Boolean corporate) {

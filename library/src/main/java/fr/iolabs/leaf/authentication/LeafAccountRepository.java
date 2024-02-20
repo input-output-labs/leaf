@@ -35,6 +35,7 @@ public interface LeafAccountRepository extends MongoRepository<LeafAccount, Stri
 	@Query(value = "{'communication.unsubscription': {$not: {$in: [?0]}}}", fields = "{ 'email': 1}")
 	public List<LeafAccount> listAccountsSubscribedTo(String name, Pageable pageable);
 
+	@Query(value = "{'profile.username': {'$regex': ?0, '$options': 'i'}}")
 	public List<LeafAccount> findByUsernameLike(String input, PageRequest pageRequest);
 
 	public Iterable<LeafAccount> findAllById(Iterable<String> ids);
