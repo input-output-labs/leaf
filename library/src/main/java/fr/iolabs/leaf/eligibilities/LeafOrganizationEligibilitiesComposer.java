@@ -49,18 +49,9 @@ public class LeafOrganizationEligibilitiesComposer implements ApplicationListene
 			Map<String, LeafEligibility> eligibilities, List<String> eligibilityKeys) {
 		String userRole = "";
 		for (OrganizationMembership member : organization.getMembers()) {
-			System.out.println("_____________ account part of org: " + account.getId().equals(member.getAccountId()));
-			System.out.println("account.getId(): " + account.getId());
-			System.out.println("member.getAccountId(): " + member.getAccountId());
 			if (account.getId().equals(member.getAccountId())) {
 				userRole = member.getRole();
 			}
-		}
-		System.out.println("account.getId() " + account.getId());
-		System.out.println("userRole " + userRole);
-		System.out.println("organization  id" + organization.getId());
-		for (OrganizationRole role : organization.getPolicies().getRoles()) {
-			System.out.println("role getName" + role.getName());
 		}
 		if(userRole != null) {
 			for (OrganizationRole role : organization.getPolicies().getRoles()) {
