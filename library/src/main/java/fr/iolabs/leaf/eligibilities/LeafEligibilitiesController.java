@@ -20,7 +20,7 @@ public class LeafEligibilitiesController {
 	@PermitAll
 	@CrossOrigin
 	@GetMapping
-	public Map<String, LeafEligibility> create() {
+	public Map<String, LeafEligibility> list() {
 		return this.eligibilitiesService.getEligibilities();
 	}
 }
