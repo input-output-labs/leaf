@@ -54,7 +54,7 @@ public class EmailingController {
 
 	@CrossOrigin
 	@AdminOnly
-	@GetMapping("/categoriess")
+	@GetMapping("/categories")
 	public List<LeafEmailingCategory> findAllCategories() {
 		List<LeafEmailingCategory> categories = new ArrayList<LeafEmailingCategory>();
 
