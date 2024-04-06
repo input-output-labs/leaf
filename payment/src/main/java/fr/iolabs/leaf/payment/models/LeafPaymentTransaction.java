@@ -10,10 +10,16 @@ public class LeafPaymentTransaction {
 	@Id
 	private String id;
 	private String customerId;
+
+	private String customerEmail;
+
+	private String customerName;
+
 	private String checkoutSessionId;
 	private Map<String, Object> modules;
 	private ResourceMetadata metadata;
 	private LeafPaymentTransactionStatusEnum status;
+
 
 	public LeafPaymentTransaction(String customerId) {
 		this.customerId = customerId;
@@ -66,5 +72,21 @@ public class LeafPaymentTransaction {
 
 	public void setStatus(LeafPaymentTransactionStatusEnum status) {
 		this.status = status;
+	}
+
+	public String getCustomerEmail() {
+		return customerEmail;
+	}
+
+	public void setCustomerEmail(String customerEmail) {
+		this.customerEmail = customerEmail;
+	}
+
+	public String getCustomerName() {
+		return customerName;
+	}
+
+	public void setCustomerName(String customerName) {
+		this.customerName = customerName;
 	}
 }

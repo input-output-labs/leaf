@@ -46,9 +46,14 @@ public class StripeHookService {
 		String checkoutSessionId = jsonCheckoutSession.get("id").getAsString();
 		String checkoutSessionMode = jsonCheckoutSession.get("mode").getAsString();
 
+		// Extracting customer_details
+		JsonObject customerDetails = jsonCheckoutSession.getAsJsonObject("customer_details");
+		String customerEmail = customerDetails != null ? customerDetails.get("email").getAsString() : null;
+		String customerName = customerDetails != null ? customerDetails.get("name").getAsString() : null;
+
 		switch (checkoutSessionMode) {
 		case "payment":
-			this.handlePaymentCheckout(checkoutSessionId);
+			this.handlePaymentCheckout(checkoutSessionId, customerEmail, customerName);
 			break;
 		case "setup":
 			this.handleSetupCheckout(jsonCheckoutSession);
@@ -90,7 +95,7 @@ public class StripeHookService {
 		}
 	}
 
-	private void handlePaymentCheckout(String checkoutSessionId) {
+	private void handlePaymentCheckout(String checkoutSessionId, String customerEmail, String customerName) {
 		// Do we need to retrieve the payment intent to have a better payment
 		// management? jsonObject.get("payment_intent")
 		Optional<LeafPaymentTransaction> paymentTransactionOpt = this.leafPaymentTransactionRepository
@@ -99,6 +104,12 @@ public class StripeHookService {
 		if (paymentTransactionOpt.isPresent()) {
 			LeafPaymentTransaction paymentTransaction = paymentTransactionOpt.get();
 			paymentTransaction.setStatus(LeafPaymentTransactionStatusEnum.successful);
+			if(customerEmail != null) {
+				paymentTransaction.setCustomerEmail(customerEmail);
+			}
+			if(customerName != null) {
+				paymentTransaction.setCustomerName(customerName);
+			}
 			this.leafPaymentTransactionRepository.save(paymentTransaction);
 			this.applicationEventPublisher.publishEvent(new LeafPaymentResultEvent(this, paymentTransaction));
 		} else {
