@@ -10,6 +10,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
 import fr.iolabs.leaf.authentication.model.*;
+import fr.iolabs.leaf.authentication.model.authentication.LeafAccountAuthentication;
 import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
 import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.authentication.actions.LoginAction;
@@ -28,6 +29,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -45,6 +47,9 @@ public class LeafAccountService {
 	@Resource(name = "coreContext")
 	private LeafContext coreContext;
 
+	@Value("${leaf.appDomain}")
+	private String appDomain;
+
 	@Autowired
 	private WhitelistingService whitelistingService;
 
@@ -60,6 +65,10 @@ public class LeafAccountService {
 	private ApplicationEventPublisher applicationEventPublisher;
 	@Autowired
 	private LeafNotificationService notificationService;
+
+	private static final Integer GENERATED_PASSWORD_LENGTH = 8;
+
+	private static final String DEFAULT_DOMAIN_NAME = "io-labs.fr";
 
 	public LeafAccount me() {
 		return this.coreContext.getAccount();
@@ -78,7 +87,7 @@ public class LeafAccountService {
 	}
 
 	public LeafAccount register(RegistrationAction userRegistration) {
-		return this.register(userRegistration, false);
+		return userRegistration.isTemporary() ? this.registerTemporaryAccount(userRegistration) : this.register(userRegistration, false);
 	}
 
 	public LeafAccount register(RegistrationAction userRegistration, boolean isSystemAction) {
@@ -114,6 +123,27 @@ public class LeafAccountService {
 
 		return createdAccount;
 	}
+
+	public LeafAccount registerTemporaryAccount(RegistrationAction userRegistration) {
+		LeafAccount instantiatedAccount = new LeafAccount();
+		instantiatedAccount.setMetadata(ResourceMetadata.create());
+		instantiatedAccount.setIsTemporary(true);
+		this.mergeRegistrationActionInLeafAccount(instantiatedAccount, userRegistration);
+		LeafAccount accountSaved = accountRepository.save(instantiatedAccount);
+		String domainName = TemporaryAccountHelper.extractDomainName(this.appDomain);
+		if(domainName == null) {
+			domainName = DEFAULT_DOMAIN_NAME;
+		}
+		String tempEmail = accountSaved.getId() + "@" + domainName;
+		accountSaved.setEmail(tempEmail);
+		LeafAccountAuthentication authentication = new LeafAccountAuthentication();
+		String pwd = TemporaryAccountHelper.generateComplexPassword(GENERATED_PASSWORD_LENGTH);
+		authentication.setPassword(pwd);
+		authentication.hashPassword();
+		accountSaved.setAuthentication(authentication);
+		return this.accountRepository.save(accountSaved);
+	}
+
 
 	public void deleteUser(String deletedAccountId) {
 		Optional<LeafAccount> deletedAccountOpt = this.accountRepository.findById(deletedAccountId);

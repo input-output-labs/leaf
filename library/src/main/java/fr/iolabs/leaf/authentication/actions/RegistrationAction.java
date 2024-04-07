@@ -1,10 +1,14 @@
 package fr.iolabs.leaf.authentication.actions;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class RegistrationAction {
 	private String email;
 	private String password;
 	private String username;
 	private String avatarUrl;
+	@JsonProperty("isTemporary")
+	private boolean isTemporary;
 	
 	public String getEmail() {
 		return email;
@@ -29,5 +33,13 @@ public class RegistrationAction {
 	}
 	public void setAvatarUrl(String avatarUrl) {
 		this.avatarUrl = avatarUrl;
+	}
+
+	public boolean isTemporary() {
+		return isTemporary;
+	}
+
+	public void setTemporary(boolean temporary) {
+		isTemporary = temporary;
 	}
 }

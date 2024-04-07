@@ -45,6 +45,13 @@ public class LeafAccountActionController {
 
 	@CrossOrigin
 	@PermitAll
+	@PostMapping("/user")
+	public LeafAccount registerUserWithoutLogin(@RequestBody RegistrationAction userRegistration) {
+		return this.accountService.register(userRegistration);
+	}
+
+	@CrossOrigin
+	@PermitAll
 	@PostMapping("/login")
 	public JWT login(@RequestBody LoginAction accountLogin) {
 		return new JWT(this.accountService.login(accountLogin));

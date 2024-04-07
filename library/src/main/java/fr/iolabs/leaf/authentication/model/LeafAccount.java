@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+
 @Document(collection = "account")
 public class LeafAccount extends LeafUser implements ILeafModular {
 	protected String email;
@@ -32,6 +33,8 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 	protected AccountVerification accountVerification;
 	protected Map<String, Object> modules;
 	protected ResourceMetadata metadata;
+
+	protected boolean isTemporary;
 
 	protected boolean admin;
 
@@ -194,4 +197,14 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 		object.put("profile", this.profile.toMap());
 		return object;
 	}
+
+	public boolean isTemporary() {
+		return this.isTemporary;
+	}
+
+	public void setIsTemporary(boolean isTemporary) {
+		this.isTemporary = isTemporary;
+	}
+
+
 }
