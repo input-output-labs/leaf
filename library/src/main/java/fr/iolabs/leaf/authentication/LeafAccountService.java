@@ -340,4 +340,37 @@ public class LeafAccountService {
 		me.getProfile().updateWith(profile);
 		return this.accountRepository.save(me);
 	}
+	
+	public LeafAccount updateAccount(LeafAccount account) {
+		LeafAccount existingAccount = this.accountRepository.findById(account.getId()).orElseThrow(() -> new NotFoundException());
+
+		if (account.getEmail() != null) {
+			existingAccount.setEmail(account.getEmail());
+		}
+		if ( account.getAuthentication() != null) {
+			existingAccount.setAuthentication(account.getAuthentication());
+		}
+		if ( account.getProfile() != null) {
+			existingAccount.setProfile(account.getProfile());
+		}
+		if ( account.getCommunication() != null) {
+			existingAccount.setCommunication(account.getCommunication());
+		}
+		if ( account.getModules() != null) {
+			existingAccount.setModules(account.getModules());
+		}
+		if ( account.getMetadata() != null) {
+			existingAccount.setMetadata(account.getMetadata());
+		}
+		if ( account.getOrganizationIds() != null) {
+			existingAccount.setOrganizationIds(account.getOrganizationIds());
+		}
+		if ( account.getAccountVerification() != null) {
+			existingAccount.setAccountVerification(account.getAccountVerification());
+		}
+		existingAccount.setIsTemporary(account.isTemporary());
+		existingAccount.setAdmin(account.isAdmin());
+
+		return this.accountRepository.save(existingAccount);
+	}
 }
