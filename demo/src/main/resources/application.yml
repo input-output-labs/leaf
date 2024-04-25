@@ -49,3 +49,9 @@ leaf:
       api:
         key: "${STRIPE_API_KEY}"
         webhook-secret: "${STRIPE_WEBHOOK_SECRET}"
+  smsender:
+    twilio:
+      api:
+        accountSid: "${TWILIO_ACCOUNT_SID}"
+        authToken: "${TWILIO_AUTH_TOKEN}"
+        phoneNumber: "${TWILIO_PHONE_NUMBER}"

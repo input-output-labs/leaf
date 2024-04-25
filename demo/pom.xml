@@ -73,6 +73,12 @@
 			<version>${leaf.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>fr.io-labs</groupId>
+			<artifactId>leaf-smsender</artifactId>
+			<version>${leaf.version}</version>
+		</dependency>
+
 		<!-- Emailing -->
 		<dependency>
 			<groupId>com.sendgrid</groupId>
