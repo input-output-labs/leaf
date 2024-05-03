@@ -5,9 +5,11 @@ import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 public class PaymentCustomerModule {
 	private String stripeId;
 	private PaymentMethod defaultPaymentMethod;
+	private int freeTrialRemaining;
 	private ResourceMetadata metadata;
 
 	public PaymentCustomerModule() {
+		this.freeTrialRemaining = -1;
 		this.metadata = ResourceMetadata.create();
 	}
 	
@@ -24,6 +26,18 @@ public class PaymentCustomerModule {
 			this.metadata = ResourceMetadata.create();
 		}
 		return metadata;
+	}
+
+	public int getFreeTrialRemaining() {
+		return freeTrialRemaining;
+	}
+
+	public void setFreeTrialRemaining(int freeTrialRemaining) {
+		this.freeTrialRemaining = freeTrialRemaining;
+	}
+
+	public void decreaseFreeTrialRemaining() {
+		this.freeTrialRemaining--;
 	}
 
 	public PaymentMethod getDefaultPaymentMethod() {

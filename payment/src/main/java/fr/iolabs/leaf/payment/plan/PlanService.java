@@ -68,7 +68,22 @@ public class PlanService {
 	private LeafNotificationService notificationService;
 
 	public List<LeafPaymentPlan> fetchPlans() {
-		return this.paymentConfig.getPlans();
+		int freeTrialRemaining = 1;
+		ILeafModular planOwnerTarget = this.getPlanAttachement();
+		if (planOwnerTarget != null) {
+			PaymentCustomerModule customer = this.getPaymentCustomerModule(planOwnerTarget);
+			freeTrialRemaining = customer.getFreeTrialRemaining();
+		}
+		
+		List<LeafPaymentPlan> plans = this.paymentConfig.getPlans();
+		
+		if (freeTrialRemaining <= 0) {
+			for (LeafPaymentPlan plan : plans) {
+				plan.setTrialDuration(0);
+			}
+		}
+
+		return plans;
 	}
 
 	private LeafPaymentPlan fetchPlanByName(String name) {
@@ -231,7 +246,11 @@ public class PlanService {
 		if (planOwnerTarget == null) {
 			throw new BadRequestException("No recipiant for payment customer module");
 		}
-		return this.moduleService.get(PaymentCustomerModule.class, planOwnerTarget);
+		PaymentCustomerModule paymentCustomerModule = this.moduleService.get(PaymentCustomerModule.class, planOwnerTarget);
+		if (paymentCustomerModule.getFreeTrialRemaining() == -1) {
+			paymentCustomerModule.setFreeTrialRemaining(1);
+		}
+		return paymentCustomerModule;
 	}
 
 	private void createPaymentSubscription(ILeafModular iModular, LeafPaymentPlan selectedPlan) {
