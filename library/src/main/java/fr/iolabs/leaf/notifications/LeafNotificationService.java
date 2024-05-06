@@ -3,6 +3,7 @@ package fr.iolabs.leaf.notifications;
 import java.util.Map;
 import java.util.Optional;
 
+import fr.iolabs.leaf.common.sms.LeafSmsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,8 @@ public class LeafNotificationService {
 	private LeafAccountRepository leafAccountRepository;
 	@Autowired
 	private SimpMessagingTemplate simpMessagingTemplate;
+	@Autowired
+	private LeafSmsService leafSmsService;
 
 	public void emit(LeafNotification notification) {
 		Map<String, String> notificationConfig = this.notificationConfig.getConfigByCode(notification.getCode());
@@ -38,7 +41,7 @@ public class LeafNotificationService {
 			}
 			this.notificationRepository.save(notification);
 		} else {
-			System.err.println("[LeafNotificationService] Cannot retrieve targetted account with ID="
+			System.err.println("[LeafNotificationService] Cannot retrieve targeted account with ID="
 					+ notification.getTargetAccountId());
 		}
 	}
@@ -63,6 +66,9 @@ public class LeafNotificationService {
 		case WS:
 			this.emitOnWebsocket(notification, config, targetAccount);
 			break;
+		case SMS:
+			this.emitOnSms(notification, config, targetAccount);
+			break;
 		}
 	}
 
@@ -81,5 +87,12 @@ public class LeafNotificationService {
 		simpMessagingTemplate.convertAndSend("/notifications/" + notification.getTargetAccountId(), "REFRESH");
 		notification.getChannelSendingStatus().put(LeafNotificationChannel.WS,
 				LeafNotificationChannelSendingStatus.WS_SENT);
+	}
+
+	private void emitOnSms(LeafNotification notification, String config, LeafAccount targetAccount) {
+		if (targetAccount != null && targetAccount.getProfile() != null && targetAccount.getProfile().getPhoneNumber() != null) {
+			this.leafSmsService.sendSmsWithTemplate(targetAccount.getProfile().getPhoneNumber(), config, notification.getPayload(), "fr");
+			notification.getChannelSendingStatus().put(LeafNotificationChannel.SMS, LeafNotificationChannelSendingStatus.SMS_SENT);
+		}
 	}
 }

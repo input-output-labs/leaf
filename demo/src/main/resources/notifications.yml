@@ -6,6 +6,7 @@ notifications:
     ui: yes
     email: skip
     ws: true
+    sms: LEAF_TEST_NOTIF
   LEAF_ACCOUNT_EMAIL_VERIFICATION:
     ui: skip
     email: yes
