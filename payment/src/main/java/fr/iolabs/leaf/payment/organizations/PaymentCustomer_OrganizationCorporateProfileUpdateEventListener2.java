@@ -12,10 +12,11 @@ import fr.iolabs.leaf.organization.model.LeafOrganization;
 import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
 import fr.iolabs.leaf.payment.plan.PlanService;
 import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
+import fr.iolabs.leaf.payment.plan.config.PlanAttachment;
 import fr.iolabs.leaf.payment.stripe.StripeSubcriptionService;
 
 @Component
-public class PaymentCustomer_OrganizationCorporateProfileUpdateEventListener
+public class PaymentCustomer_OrganizationCorporateProfileUpdateEventListener2
 		implements ApplicationListener<OrganizationProfileUpdateEvent> {
 	@Autowired
 	private StripeSubcriptionService stripeSubcriptionService;
@@ -28,7 +29,7 @@ public class PaymentCustomer_OrganizationCorporateProfileUpdateEventListener
 
 	@Override
 	public void onApplicationEvent(OrganizationProfileUpdateEvent event) {
-		if (this.paymentConfig.isCollectTaxId()) {
+		if (this.paymentConfig.getPlanAttachment() == PlanAttachment.ORGANIZATION && this.paymentConfig.isCollectTaxId()) {
 			LeafOrganization organization = event.getOrganization();
 			PaymentCustomerModule customer = this.planService.getPaymentCustomerModule(organization);
 			try {

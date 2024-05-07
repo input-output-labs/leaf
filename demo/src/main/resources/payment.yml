@@ -1,5 +1,6 @@
 collectTaxId: true
 planAttachment: ORGANIZATION
+defaultFreeTrialRemaining: 1
 plans:
  -
   name: free

@@ -25,6 +25,7 @@ public class LeafPaymentConfig {
 	private PlanAttachment planAttachment;
 	private List<LeafPaymentPlan> plans;
 	private Map<String, String> redirect;
+	private int defaultFreeTrialRemaining;
 
 	public boolean isCollectTaxId() {
 		return collectTaxId;
@@ -65,5 +66,13 @@ public class LeafPaymentConfig {
 
 	public void setRedirect(Map<String, String> redirect) {
 		this.redirect = redirect;
+	}
+
+	public int getDefaultFreeTrialRemaining() {
+		return defaultFreeTrialRemaining;
+	}
+
+	public void setDefaultFreeTrialRemaining(int defaultFreeTrialRemaining) {
+		this.defaultFreeTrialRemaining = defaultFreeTrialRemaining;
 	}
 }
