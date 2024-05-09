@@ -13,21 +13,13 @@
 
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf-demo</artifactId>
-<<<<<<< Updated upstream
-	<version>1.80-SNAPSHOT</version>
-=======
-	<version>1.79-SNAPSHOT</version>
->>>>>>> Stashed changes
+	<version>1.81-SNAPSHOT</version>
 	<name>Leaf - demo</name>
 
 	<properties>
 		<java.version>1.8</java.version>
 		<spring.version>2.6.8</spring.version>
-<<<<<<< Updated upstream
-		<leaf.version>1.80-SNAPSHOT</leaf.version>
-=======
-		<leaf.version>1.79-SNAPSHOT</leaf.version>
->>>>>>> Stashed changes
+		<leaf.version>1.81-SNAPSHOT</leaf.version>
 	</properties>
 
 	<dependencies>
