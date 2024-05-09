@@ -217,7 +217,12 @@ public class LeafAccountService {
 		return this.accountRepository.save(me);
 	}
 
-	public void sendResetPasswordKey(String email) {
+	/**
+	 * Send an email to the user with a reset password key
+	 * @param email
+	 * @param wasTemporaryAccount: if the account was temporary, the email will be different. As the provided account has been already saved and set as non-temporary, we need to know if the email should be different
+	 */
+	public void sendResetPasswordKey(String email, boolean wasTemporaryAccount) {
 		LeafAccount fetchedAccount = this.accountRepository.findAccountByEmail(email);
 		if (fetchedAccount == null) {
 			throw new UnauthorizedException();
@@ -228,7 +233,7 @@ public class LeafAccountService {
 		this.accountRepository.save(fetchedAccount);
 
 		this.accountEmailing.sendResetPasswordKey(fetchedAccount,
-				fetchedAccount.getAuthentication().getResetPasswordKey());
+				fetchedAccount.getAuthentication().getResetPasswordKey(), wasTemporaryAccount);
 	}
 
 	public void resetPassword(ResetPasswordAction resetPasswordAction) {

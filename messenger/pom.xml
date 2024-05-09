@@ -3,7 +3,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf-messenger</artifactId>
+<<<<<<< Updated upstream
 	<version>1.80-SNAPSHOT</version>
+=======
+	<version>1.79-SNAPSHOT</version>
+>>>>>>> Stashed changes
 	<name>leaf-messenger</name>
 
 	<properties>
@@ -11,7 +15,11 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<spring.version>2.6.8</spring.version>
+<<<<<<< Updated upstream
 		<leaf.version>1.80-SNAPSHOT</leaf.version>
+=======
+		<leaf.version>1.79-SNAPSHOT</leaf.version>
+>>>>>>> Stashed changes
 	</properties>
 
 	<dependencies>

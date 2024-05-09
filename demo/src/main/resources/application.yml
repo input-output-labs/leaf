@@ -44,6 +44,7 @@ leaf:
       templates:
         password-change-key-sending: "d-758e35d957d540b8bb23536610724177"
         organization-invitation-template: "d-6725411ee4224cf2b542755ddbe024d0"
+        password-change-key-sending-temporary-account: "d-135caa778f584d889ebbe9dff75fe2f3"
   payment:
     stripe:
       api:

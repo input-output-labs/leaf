@@ -17,11 +17,17 @@ public class LeafAccountEmailing {
 	@Value("${leaf.emailing.sendgrid.templates.password-change-key-sending}")
 	String sendgridPasswordChangeKeySendingTemplateId;
 
-	public void sendResetPasswordKey(LeafAccount to, String resetPasswordKey) {
+	@Value("${leaf.emailing.sendgrid.templates.password-change-key-sending-temporary-account}")
+	String sendgridPasswordChangeKeySendingTemporaryAccountTemplateId;
+
+	public void sendResetPasswordKey(LeafAccount to, String resetPasswordKey, boolean wasTemporaryAccount) {
 		Map<String, Object> templateData = new HashMap<String, Object>();
 		templateData.put("passwordChangeKey", resetPasswordKey);
-
-		this.sendgridEmailService.sendEmailWithTemplate(to.getEmail(), sendgridPasswordChangeKeySendingTemplateId,
+		String templateId = sendgridPasswordChangeKeySendingTemplateId;
+		if(wasTemporaryAccount) {
+			templateId = sendgridPasswordChangeKeySendingTemporaryAccountTemplateId;
+		}
+		this.sendgridEmailService.sendEmailWithTemplate(to.getEmail(), templateId,
 				templateData);
 	}
 }

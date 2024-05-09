@@ -117,7 +117,7 @@ public class LeafAccountActionController {
 	@PostMapping("/sendresetpasswordkey")
 	public ResponseEntity<Void> sendResetPasswordKey(@RequestBody String email) {
 		if(email != null) {
-			this.accountService.sendResetPasswordKey(email.toLowerCase());
+			this.accountService.sendResetPasswordKey(email.toLowerCase(), false);
 		} else {
 			throw new UnauthorizedException();
 		}
