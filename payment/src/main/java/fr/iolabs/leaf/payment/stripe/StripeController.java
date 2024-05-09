@@ -2,9 +2,6 @@ package fr.iolabs.leaf.payment.stripe;
 
 import javax.annotation.security.PermitAll;
 
-import com.stripe.Stripe;
-import fr.iolabs.leaf.payment.stripe.models.PaymentCheckoutCreationAction;
-import fr.iolabs.leaf.payment.stripe.models.PaymentLinkCreationAction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +18,6 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
 import com.stripe.net.Webhook;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/payment/stripe")
 public class StripeController {
@@ -36,51 +31,46 @@ public class StripeController {
     @Autowired
     private StripeHookService stripeHookService;
 
-    @Autowired
-    private StripeService stripeService;
-
     /**
      * To uncomment for testing purposes
-     ***/
-
-//    @CrossOrigin
-//    @PostMapping("/payment-intent")
-//    public String
-//    createPaymentIntent(
-//            @RequestBody PaymentIntentCreationAction paymentIntentCreationAction) throws
-//            StripeException {
-//        Stripe.apiKey = this.privateKey;
-//        return gson.toJson(this.stripeService.createPaymentIntent(paymentIntentCreationAction));
-//    }
-//
-//    @CrossOrigin
-//    @PostMapping("/payment-intent/capture")
-//    public String
-//    capturePayment(
-//            @RequestBody PaymentIntentCaptureAction paymentIntentCaptureAction) throws
-//            StripeException {
-//        Stripe.apiKey = this.privateKey;
-//        return gson.toJson(this.stripeService.capturePayment(paymentIntentCaptureAction));
-//    }
-
-    /* To uncomment for testing purposes */
-//    @CrossOrigin
-//    @PostMapping("/payment-links")
-//    public Map<String, String>
-//    createPaymentLink(@RequestBody PaymentLinkCreationAction
-//                              paymentLinkCreationAction) throws StripeException {
-//        Stripe.apiKey = this.privateKey;
-//        return this.stripeService.createPaymentLink(paymentLinkCreationAction);
-//    }
-//
-//    @CrossOrigin
-//    @PostMapping("/checkout-sessions")
-//    public Map<String, Object> createCheckoutSession(@RequestBody PaymentCheckoutCreationAction paymentCheckoutCreationAction)
-//            throws StripeException {
-//        Stripe.apiKey = this.privateKey;
-//        return this.stripeService.createCheckoutSession(paymentCheckoutCreationAction);
-//    }
-
+     *
+     * @CrossOrigin @PostMapping("/payment-links") public Map<String, String>
+     *              createPaymentLink(@RequestBody PaymentLinkCreationAction
+     *              paymentLinkCreationAction) throws StripeException {
+     *              Stripe.apiKey = this.privateKey; return
+     *              this.stripeService.createPaymentLink(paymentLinkCreationAction);
+     *              }
+     *
+     * @CrossOrigin @PostMapping("/payment-intent") public String
+     *              createPaymentIntent(
+     * @RequestBody PaymentIntentCreationAction paymentIntentCreationAction) throws
+     *              StripeException { Stripe.apiKey = this.privateKey; return
+     *              gson.toJson(this.stripeService.createPaymentIntent(paymentIntentCreationAction));
+     *              }
+     *
+     * @CrossOrigin @PostMapping("/payment-intent/capture") public String
+     *              capturePayment(
+     * @RequestBody PaymentIntentCaptureAction paymentIntentCaptureAction) throws
+     *              StripeException { Stripe.apiKey = this.privateKey; return
+     *              gson.toJson(this.stripeService.capturePayment(paymentIntentCaptureAction));
+     *              }
+     *
+     *              /** To uncomment for testing purposes
+     *
+     * @CrossOrigin @PostMapping("/payment-links") public Map<String, String>
+     *              createPaymentLink(@RequestBody PaymentLinkCreationAction
+     *              paymentLinkCreationAction) throws StripeException {
+     *              Stripe.apiKey = this.privateKey; return
+     *              this.stripeService.createPaymentLink(paymentLinkCreationAction);
+     *              }
+     *
+     * @CrossOrigin @PostMapping("/checkout-sessions") public Map<String, Object>
+     *              createCheckoutSession(
+     * @RequestBody PaymentCheckoutCreationAction paymentCheckoutCreationAction)
+     *              throws StripeException { Stripe.apiKey = this.privateKey; return
+     *              this.stripeService.createCheckoutSession(paymentCheckoutCreationAction);
+     *              }
+     **/
 
     @PermitAll
     @CrossOrigin
