@@ -6,5 +6,6 @@ public enum LeafNotificationChannelSendingStatus {
 	SKIP_PER_CONFIG,
 	UI_SEEN,
 	EMAIL_SENT,
-	WS_SENT;
+	WS_SENT,
+	SMS_SENT;
 }
