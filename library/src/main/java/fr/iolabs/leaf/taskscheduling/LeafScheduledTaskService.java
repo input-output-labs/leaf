@@ -34,7 +34,7 @@ public class LeafScheduledTaskService {
 		this.create(type, executeAt, null);
 	}
 
-	public void create(String type, ZonedDateTime executeAt, Map<String, Object> payload) {
+	public LeafScheduledTask create(String type, ZonedDateTime executeAt, Map<String, Object> payload) {
 		if (payload == null) {
 			payload = new HashMap<>();
 		}
@@ -43,7 +43,7 @@ public class LeafScheduledTaskService {
 		task.setExecuteAt(executeAt);
 		task.setPayload(payload);
 
-		this.scheduledTaskRepository.insert(task);
+		return this.scheduledTaskRepository.insert(task);
 	}
 
 	@Scheduled(fixedDelay = SCHEDULED_DELAY, timeUnit = TimeUnit.MINUTES)
