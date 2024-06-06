@@ -23,7 +23,12 @@ public class StripeInvoicesService {
 	public List<LeafInvoice> getCustomerInvoices(PaymentCustomerModule customer) throws StripeException {
 		InvoiceUpcomingParams upcomingInvoiceParams = InvoiceUpcomingParams.builder()
 				.setCustomer(customer.getStripeId()).build();
-		Invoice upcomingInvoice = Invoice.upcoming(upcomingInvoiceParams);
+		Invoice upcomingInvoice = null;
+		try {
+			upcomingInvoice = Invoice.upcoming(upcomingInvoiceParams);
+		} catch (StripeException e) {
+			
+		}
 
 		InvoiceListParams invoicesParams = InvoiceListParams.builder().setCustomer(customer.getStripeId())
 				.setLimit(MAX_INVOICES_LIMIT).build();		

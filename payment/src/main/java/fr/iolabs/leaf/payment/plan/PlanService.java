@@ -87,9 +87,15 @@ public class PlanService {
 	}
 
 	private LeafPaymentPlan fetchPlanByName(String name) {
+		return this.fetchPlanByName(name, true);
+	}
+
+	private LeafPaymentPlan fetchPlanByName(String name, boolean onlyAvailable) {
 		for (LeafPaymentPlan plan : this.fetchPlans()) {
-			if (plan.isAvailable() && name != null && name.equals(plan.getName())) {
-				return plan;
+			if (name != null && name.equals(plan.getName())) {
+				if (!onlyAvailable || plan.isAvailable()) {
+					return plan;
+				}
 			}
 		}
 		return null;
@@ -104,12 +110,24 @@ public class PlanService {
 		return this.selectPlan(this.paymentConfig.getDefaultPlan(), iModular);
 	}
 
-	@Transactional
 	public LeafPaymentPlan selectPlan(LeafPaymentPlan selectedPlan, ILeafModular iModular) {
 		LeafPaymentPlan availableSelectedPlan = this.fetchPlanByName(selectedPlan.getName());
 		if (availableSelectedPlan == null) {
 			throw new BadRequestException("The given plan does not exist or is not available");
 		}
+		return this.selectPlanUnsafe(availableSelectedPlan, iModular);
+	}
+
+	public LeafPaymentPlan selectPlan(String planName, ILeafModular iModular) {
+		LeafPaymentPlan availableSelectedPlan = this.fetchPlanByName(planName, false);
+		if (availableSelectedPlan == null) {
+			throw new BadRequestException("The given plan does not exist");
+		}
+		return this.selectPlanUnsafe(availableSelectedPlan, iModular);
+	}
+
+	@Transactional
+	public LeafPaymentPlan selectPlanUnsafe(LeafPaymentPlan availableSelectedPlan, ILeafModular iModular) {
 		availableSelectedPlan.setSuspensionBackupPlan(this.paymentConfig.getDefaultPlan());
 
 		// Revoke previous plan
@@ -327,6 +345,7 @@ public class PlanService {
 		try {
 			return this.stripeInvoicesService.getCustomerInvoices(customer);
 		} catch (StripeException e) {
+			e.printStackTrace();
 			throw new InternalServerErrorException("Cannot retrieve plan invoices");
 		}
 	}

@@ -64,6 +64,36 @@ plans:
     price: 4.99
     period: month
  -
+  name: specialbasic
+  color: lightblue
+  defaultPlan: false
+  available: false
+  stripePriceId: price_1OHtXkC2crD6qr6LinwkrpNS
+  trialDuration: 0
+  metadata:
+    hello: "world"
+  features:
+    -
+      name: userCount
+      type: number
+      value: 5
+    -
+      name: cardCount
+      type: number
+      value: 5
+    -
+      name: reporting
+      type: boolean
+      value: false
+  descriptions:
+    - allFromFree
+    - description
+    - products
+    - gallery
+    - services
+  pricing:
+    free: true
+ -
   name: pro
   color: lightcoral
   defaultPlan: false

@@ -46,6 +46,14 @@ public class LeafScheduledTaskService {
 		return this.scheduledTaskRepository.insert(task);
 	}
 
+	public LeafScheduledTask update(LeafScheduledTask task) {
+		if (task.getPayload() == null) {
+			task.setPayload(new HashMap<>());
+		}
+
+		return this.scheduledTaskRepository.save(task);
+	}
+
 	@Scheduled(fixedDelay = SCHEDULED_DELAY, timeUnit = TimeUnit.MINUTES)
 	public void findAndExecuteScheduledTasks() {
 		ZonedDateTime now = ZonedDateTime.now();
