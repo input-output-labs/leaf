@@ -54,6 +54,10 @@ public class LeafScheduledTaskService {
 		return this.scheduledTaskRepository.save(task);
 	}
 
+	public void delete(LeafScheduledTask task) {
+		this.scheduledTaskRepository.delete(task);
+	}
+
 	@Scheduled(fixedDelay = SCHEDULED_DELAY, timeUnit = TimeUnit.MINUTES)
 	public void findAndExecuteScheduledTasks() {
 		ZonedDateTime now = ZonedDateTime.now();
