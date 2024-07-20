@@ -31,6 +31,8 @@ public class LeafOrganization implements ILeafModular {
 
 	protected ResourceMetadata metadata;
 
+	protected CompanyDetails companyDetails;
+
 	public LeafOrganization() {
 		this.modules = new HashMap<>();
 		this.members = new ArrayList<>();
@@ -110,5 +112,13 @@ public class LeafOrganization implements ILeafModular {
 
 	public void setPolicies(OrganizationPolicies policies) {
 		this.policies = policies;
+	}
+
+	public CompanyDetails getCompanyDetails() {
+		return companyDetails;
+	}
+
+	public void setCompanyDetails(CompanyDetails companyDetails) {
+		this.companyDetails = companyDetails;
 	}
 }
