@@ -15,6 +15,7 @@ public class LeafAccountProfile {
 	private LeafAddress address;
 	private Boolean corporate;
 	private String taxId;
+    private String registrationNumber;
 	
 	public LeafAccountProfile() {}
 	
@@ -27,6 +28,7 @@ public class LeafAccountProfile {
 		this.address = from.address;
 		this.corporate = from.corporate;
 		this.taxId = from.taxId;
+		this.registrationNumber = from.registrationNumber;
 	}
 	
 	@JsonIgnore
@@ -89,7 +91,6 @@ public class LeafAccountProfile {
 		return corporate;
 	}
 
-	@JsonIgnore
 	public boolean isCorporate() {
 		return this.corporate != null && this.corporate;
 	}
@@ -105,6 +106,14 @@ public class LeafAccountProfile {
 	public void setTaxId(String taxId) {
 		this.taxId = taxId;
 	}
+	
+	public String getRegistrationNumber() {
+		return registrationNumber;
+	}
+
+	public void setRegistrationNumber(String registrationNumber) {
+		this.registrationNumber = registrationNumber;
+	}
 
 	public Map<String, Object> toMap() {
 		Map<String, Object> object = new HashMap<String, Object>();
@@ -114,6 +123,9 @@ public class LeafAccountProfile {
 		object.put("lastname", this.lastname);
 		object.put("phoneNumber", this.phoneNumber);
 		object.put("address", this.address != null ? this.address.toMap() : null);
+		object.put("corporate", this.corporate != null ? this.corporate.booleanValue() : null);
+		object.put("taxId", this.taxId);
+		object.put("registrationNumber", this.registrationNumber);
 		return object;
 	}
 
@@ -145,6 +157,9 @@ public class LeafAccountProfile {
 		}
 		if (updates.taxId != null) {
 			this.taxId = updates.taxId;
+		}
+		if (updates.registrationNumber != null) {
+			this.registrationNumber = updates.registrationNumber;
 		}
 	}
 }
