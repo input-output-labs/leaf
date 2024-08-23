@@ -50,4 +50,11 @@ public class LeafScheduledTaskController {
 		this.scheduledTaskService.executeTask(optTask.get());
 	}
 
+	@CrossOrigin
+	@AdminOnly
+	@GetMapping("/findAndExecute")
+	public void triggerAll(@PathVariable String id) {
+		this.scheduledTaskService.findAndExecuteScheduledTasks();
+	}
+
 }
