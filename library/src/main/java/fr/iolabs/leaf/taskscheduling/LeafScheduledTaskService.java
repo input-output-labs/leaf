@@ -19,7 +19,7 @@ import com.mongodb.client.result.UpdateResult;
 
 @Service
 public class LeafScheduledTaskService {
-	private static final int SCHEDULED_DELAY = 5;
+	private static final int SCHEDULED_DELAY = 2;
 
 	@Autowired
 	private LeafScheduledTaskRepository scheduledTaskRepository;

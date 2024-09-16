@@ -19,6 +19,7 @@
     <module>messenger</module>
     <module>sponsoring</module>
     <module>payment</module>
+    <module>redirect</module>
     <!--module>demo</module-->
   </modules>
 

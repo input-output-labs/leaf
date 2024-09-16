@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -41,7 +42,7 @@ public class LeafScheduledTaskController {
 
 	@CrossOrigin
 	@AdminOnly
-	@GetMapping("/{id}/execute")
+	@PostMapping("/{id}/execute")
 	public void executeTaskById(@PathVariable String id) {
 		Optional<LeafScheduledTask> optTask = this.scheduledTaskRepository.findById(id);
 		if (optTask.isEmpty()) {
@@ -52,8 +53,8 @@ public class LeafScheduledTaskController {
 
 	@CrossOrigin
 	@AdminOnly
-	@GetMapping("/findAndExecute")
-	public void triggerAll(@PathVariable String id) {
+	@PostMapping("/trigger")
+	public void trigger() {
 		this.scheduledTaskService.findAndExecuteScheduledTasks();
 	}
 
