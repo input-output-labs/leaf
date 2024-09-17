@@ -186,7 +186,7 @@ public class LeafAccountService {
 		return sessionToken;
 	}
 
-	private String createSession(LeafAccount account) {
+	public String createSession(LeafAccount account) {
 		String token = tokenService.createSessionJWT(account.getId());
 		account.getAuthentication().getHashedSessionTokens().add(StringHasher.hashString(token));
 
