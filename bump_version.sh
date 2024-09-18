@@ -10,6 +10,7 @@ fi
 # Update pom.xml files in demo, messenger, sponsoring, and library directories
 for dir in demo messenger payment sponsoring redirect; do
     pom_file="${dir}/pom.xml"
+    echo "Should update ${pom_file}"
     sed -i '' "s|<version>[0-9.]*-SNAPSHOT</version>|<version>${NEW_VERSION}</version>|g" "${pom_file}"
     sed -i '' "s|<leaf.version>[0-9.]*-SNAPSHOT</leaf.version>|<leaf.version>${NEW_VERSION}</leaf.version>|g" "${pom_file}"
     echo "Updated ${pom_file}"

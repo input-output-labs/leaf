@@ -5,5 +5,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LeafRedirectionCreationBatchRepository extends MongoRepository<LeafRedirectionCreationBatch, String> {
-	LeafRedirectionCreationBatch findFirstByOrderByEndAdDesc();
+	LeafRedirectionCreationBatch findFirstByOrderByEndAtDesc();
 }

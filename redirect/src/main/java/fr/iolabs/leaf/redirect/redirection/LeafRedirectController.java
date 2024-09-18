@@ -59,14 +59,14 @@ public class LeafRedirectController {
 			throw new BadRequestException("Batch must contain a positive non-null size");
 		}
 		LeafRedirectionCreationBatch previousBatch = this.redirectionCreationBatchRepository
-				.findFirstByOrderByEndAdDesc();
-		long lastId = previousBatch != null ? previousBatch.getEndAd() : -1;
+				.findFirstByOrderByEndAtDesc();
+		long lastId = previousBatch != null ? previousBatch.getEndAt() : 0;
 
 		long startAt = lastId + 1;
 		long endAt = startAt + redirectionCreationBatch.getSize() - 1;
 
 		redirectionCreationBatch.setStartAt(startAt);
-		redirectionCreationBatch.setEndAd(endAt);
+		redirectionCreationBatch.setEndAt(endAt);
 
 		redirectionCreationBatch.setCreatorId(this.coreContext.getAccount().getId());
 
@@ -123,8 +123,9 @@ public class LeafRedirectController {
 	@AdminOnly
 	@PatchMapping("/{redirectionId}")
 	public LeafRedirection updateById(@PathVariable(name = "redirectionId") String redirectionId,
-			@RequestParam(name = "hex", defaultValue = "true") boolean hex, LeafRedirection updates) {
+			@RequestParam(name = "hex", defaultValue = "true") boolean hex, @RequestBody LeafRedirection updates) {
 		LeafRedirection redirection = this.findById(redirectionId, hex);
+		System.out.println("new url: " + updates.getRedirectUrl());
 		redirection.setRedirectUrl(updates.getRedirectUrl());
 		return this.redirectionRepository.save(redirection);
 	}

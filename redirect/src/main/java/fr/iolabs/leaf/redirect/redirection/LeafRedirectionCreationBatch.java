@@ -10,7 +10,7 @@ public class LeafRedirectionCreationBatch {
 
 	private long startAt;
 
-	private long endAd;
+	private long endAt;
 
 	private long size;
 
@@ -36,12 +36,12 @@ public class LeafRedirectionCreationBatch {
 		this.startAt = startAt;
 	}
 
-	public long getEndAd() {
-		return endAd;
+	public long getEndAt() {
+		return endAt;
 	}
 
-	public void setEndAd(long endAd) {
-		this.endAd = endAd;
+	public void setEndAt(long endAt) {
+		this.endAt = endAt;
 	}
 
 	public long getSize() {
