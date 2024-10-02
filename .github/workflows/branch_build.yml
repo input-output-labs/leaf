@@ -34,3 +34,5 @@ jobs:
         mvn --batch-mode deploy
         cd ../payment
         mvn --batch-mode deploy
+        cd ../redirect
+        mvn --batch-mode deploy
