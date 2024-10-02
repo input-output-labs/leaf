@@ -88,14 +88,14 @@ public class LeafRedirectController {
 	}
 
 	@CrossOrigin
-	@PermitAll
+	@AdminOnly
 	@GetMapping
 	public List<LeafRedirection> listAllRedirections(@RequestParam(name = "batchId", required = true) String batchId) {
 		return this.redirectionRepository.findAllByCreationBatchId(batchId);
 	}
 
 	@CrossOrigin
-	@AdminOnly
+	@PermitAll
 	@GetMapping("/{redirectionId}")
 	public LeafRedirection findById(@PathVariable(name = "redirectionId") String redirectionId,
 			@RequestParam(name = "hex", defaultValue = "true") boolean hex) {
