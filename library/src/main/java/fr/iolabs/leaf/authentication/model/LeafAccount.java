@@ -62,6 +62,7 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 		this.metadata = from.metadata;
 		this.organizationIds = from.organizationIds;
 		this.accountVerification = from.accountVerification;
+		this.isTemporary = from.isTemporary;
 	}
 
 	public LeafAccountAuthentication getAuthentication() {

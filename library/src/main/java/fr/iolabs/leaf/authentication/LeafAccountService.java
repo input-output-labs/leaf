@@ -170,6 +170,7 @@ public class LeafAccountService {
 		if (Strings.isBlank(account.getProfile().getUsername())) {
 			account.getProfile().setUsername(action.getEmail());
 		}
+		account.setIsTemporary(action.isTemporary());
 	}
 
 	public String login(LoginAction accountLogin) {
