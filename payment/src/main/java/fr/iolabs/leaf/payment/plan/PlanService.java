@@ -26,6 +26,7 @@ import fr.iolabs.leaf.notifications.LeafNotificationService;
 import fr.iolabs.leaf.organization.LeafOrganizationRepository;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
 import fr.iolabs.leaf.organization.model.OrganizationMembership;
+import fr.iolabs.leaf.payment.customer.LeafCustomerService;
 import fr.iolabs.leaf.payment.models.LeafInvoice;
 import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
 import fr.iolabs.leaf.payment.models.PaymentMethod;
@@ -67,11 +68,14 @@ public class PlanService {
 	@Autowired
 	private LeafNotificationService notificationService;
 
+	@Autowired
+	private LeafCustomerService customerService;
+
 	public List<LeafPaymentPlan> fetchPlans() {
 		int freeTrialRemaining = 1;
 		ILeafModular planOwnerTarget = this.getPlanAttachement();
 		if (planOwnerTarget != null) {
-			PaymentCustomerModule customer = this.getPaymentCustomerModule(planOwnerTarget);
+			PaymentCustomerModule customer = this.customerService.getPaymentCustomerModule(planOwnerTarget);
 			freeTrialRemaining = customer.getFreeTrialRemaining();
 		}
 		
@@ -257,18 +261,7 @@ public class PlanService {
 
 	public PaymentCustomerModule getPaymentCustomerModule() {
 		ILeafModular planOwnerTarget = this.getPlanAttachement();
-		return this.getPaymentCustomerModule(planOwnerTarget);
-	}
-
-	public PaymentCustomerModule getPaymentCustomerModule(ILeafModular planOwnerTarget) {
-		if (planOwnerTarget == null) {
-			throw new BadRequestException("No recipiant for payment customer module");
-		}
-		PaymentCustomerModule paymentCustomerModule = this.moduleService.get(PaymentCustomerModule.class, planOwnerTarget);
-		if (paymentCustomerModule.getFreeTrialRemaining() == -1) {
-			paymentCustomerModule.setFreeTrialRemaining(1);
-		}
-		return paymentCustomerModule;
+		return this.customerService.getPaymentCustomerModule(planOwnerTarget);
 	}
 
 	private void createPaymentSubscription(ILeafModular iModular, LeafPaymentPlan selectedPlan) {
@@ -321,7 +314,7 @@ public class PlanService {
 
 	public void setCustomerPaymentMethod(String iModularId, PaymentMethod pm) {
 		ILeafModular planAttachment = this.getPlanAttachement(iModularId);
-		PaymentCustomerModule customer = this.getPaymentCustomerModule(planAttachment);
+		PaymentCustomerModule customer = this.customerService.getPaymentCustomerModule(planAttachment);
 		customer.setDefaultPaymentMethod(pm);
 		customer.getMetadata().updateLastModification();
 
@@ -385,7 +378,7 @@ public class PlanService {
 	public void sendEndOfTrialApprochingFor(String iModularId, String subscriptionId) {
 		ILeafModular planAttachment = this.getPlanAttachement(iModularId);
 		SelectedPlanModule selectedPlanModule = this.getSelectedPlanModule(planAttachment);
-		PaymentCustomerModule paymentCustomerModule = this.getPaymentCustomerModule(planAttachment);
+		PaymentCustomerModule paymentCustomerModule = this.customerService.getPaymentCustomerModule(planAttachment);
 
 		LeafPaymentPlan selectedPlan = selectedPlanModule.getSelectedPlan();
 		if (selectedPlan != null) {

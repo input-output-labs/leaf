@@ -9,8 +9,8 @@ import com.stripe.exception.StripeException;
 import fr.iolabs.leaf.common.errors.InternalServerErrorException;
 import fr.iolabs.leaf.organization.OrganizationProfileUpdateEvent;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
+import fr.iolabs.leaf.payment.customer.LeafCustomerService;
 import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
-import fr.iolabs.leaf.payment.plan.PlanService;
 import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.plan.config.PlanAttachment;
 import fr.iolabs.leaf.payment.stripe.StripeSubcriptionService;
@@ -22,7 +22,7 @@ public class PaymentCustomer_OrganizationCorporateProfileUpdateEventListener2
 	private StripeSubcriptionService stripeSubcriptionService;
 
 	@Autowired
-	private PlanService planService;
+	private LeafCustomerService customerService;
 
 	@Autowired
 	private LeafPaymentConfig paymentConfig;
@@ -31,7 +31,7 @@ public class PaymentCustomer_OrganizationCorporateProfileUpdateEventListener2
 	public void onApplicationEvent(OrganizationProfileUpdateEvent event) {
 		if (this.paymentConfig.getPlanAttachment() == PlanAttachment.ORGANIZATION && this.paymentConfig.isCollectTaxId()) {
 			LeafOrganization organization = event.getOrganization();
-			PaymentCustomerModule customer = this.planService.getPaymentCustomerModule(organization);
+			PaymentCustomerModule customer = this.customerService.getPaymentCustomerModule(organization);
 			try {
 				if (organization.getProfile().isCorporate()) {
 					this.stripeSubcriptionService.updateCustomerBillingDetails(organization, customer,

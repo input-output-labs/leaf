@@ -20,16 +20,20 @@ import fr.iolabs.leaf.payment.plan.PlanService;
 public class InvoicesController {
 	@Autowired
 	private PlanService planService;
-	
+	@Autowired
+	private InvoicesService invoicesService;
+
 	@PermitAll
 	@CrossOrigin
 	@GetMapping
 	public List<LeafInvoice> fetchInvoices(@RequestParam String type) {
-		switch(type) {
-			case "plan":
-				return this.planService.fetchInvoices();
-			default:
-				throw new BadRequestException("Invalid invoices type: " + type);
+		switch (type) {
+		case "plan":
+			return this.planService.fetchInvoices();
+		case "account":
+			return this.invoicesService.fetchMyInvoices();
+		default:
+			throw new BadRequestException("Invalid invoices type: " + type);
 		}
 	}
 }
