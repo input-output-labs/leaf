@@ -26,10 +26,12 @@ import com.stripe.model.checkout.Session;
 import com.stripe.param.CustomerListPaymentMethodsParams;
 
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
+import fr.iolabs.leaf.payment.customer.LeafCustomerService;
 import fr.iolabs.leaf.payment.models.LeafPaymentResultEvent;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransaction;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransactionRepository;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransactionStatusEnum;
+import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
 import fr.iolabs.leaf.payment.models.PaymentMethod;
 import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.stripe.models.PaymentCheckoutCreationAction;
@@ -50,6 +52,9 @@ public class StripeService {
 
 	@Autowired
 	private LeafPaymentConfig paymentConfig;
+
+	@Autowired
+	private LeafCustomerService customerService;
 
 	public Map<String, String> createPaymentLink(PaymentLinkCreationAction paymentLinkCreationAction)
 			throws StripeException {
@@ -83,6 +88,11 @@ public class StripeService {
 		if (paymentCheckoutCreationAction.getCustomerId() != null) {
 			// TODO RETRIEVE customer ID?
 			params.put("customer", paymentCheckoutCreationAction.getCustomerId());
+		}
+		if (paymentCheckoutCreationAction.isUseCurrentAccount()) {
+			PaymentCustomerModule customer = this.customerService.getMyPaymentCustomerModule();
+			Customer stripeCustomer = this.customerService.checkStripeCustomer(customer);
+			params.put("customer", stripeCustomer.getId());
 		}
 
 		if (paymentCheckoutCreationAction.getPaymentIntentData() != null) {

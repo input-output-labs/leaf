@@ -1,9 +1,15 @@
 package fr.iolabs.leaf.payment.customer;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.annotation.Resource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.stripe.exception.StripeException;
+import com.stripe.model.Customer;
 
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
@@ -38,5 +44,19 @@ public class LeafCustomerService {
 			return this.getPaymentCustomerModule(account);
 		}
 		return null;
+	}
+
+	public Customer checkStripeCustomer(PaymentCustomerModule customer) throws StripeException {
+		// Customer
+		if (customer.getStripeId() != null) {
+			// if here : verify it
+			return Customer.retrieve(customer.getStripeId());
+		} else {
+			// if missing, create it
+			Map<String, Object> creationParams = new HashMap<>();
+			Customer stripeCustomer = Customer.create(creationParams);
+			customer.setStripeId(stripeCustomer.getId());
+			return stripeCustomer;
+		}
 	}
 }

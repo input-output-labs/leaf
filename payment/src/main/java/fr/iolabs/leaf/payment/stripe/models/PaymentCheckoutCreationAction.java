@@ -12,6 +12,7 @@ public class PaymentCheckoutCreationAction {
 	private String customText;
 	private StripePaymentModeEnum mode;
 	private String customerId;
+	private boolean useCurrentAccount;
 	private boolean allowPromotionCodes;
 	private Map<String, Object> metadata;
 
@@ -61,6 +62,14 @@ public class PaymentCheckoutCreationAction {
 
 	public void setMetadata(Map<String, Object> metadata) {
 		this.metadata = metadata;
+	}
+
+	public boolean isUseCurrentAccount() {
+		return useCurrentAccount;
+	}
+
+	public void setUseCurrentAccount(boolean useCurrentAccount) {
+		this.useCurrentAccount = useCurrentAccount;
 	}
 
 	public boolean isAllowPromotionCodes() {

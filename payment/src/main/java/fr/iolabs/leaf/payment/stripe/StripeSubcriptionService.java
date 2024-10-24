@@ -24,6 +24,7 @@ import com.stripe.param.UsageRecordCreateOnSubscriptionItemParams;
 
 import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.common.ILeafModular;
+import fr.iolabs.leaf.payment.customer.LeafCustomerService;
 import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
 import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
@@ -40,6 +41,12 @@ public class StripeSubcriptionService implements InitializingBean {
 	@Autowired
 	private LeafPaymentConfig paymentConfig;
 
+	@Autowired
+	private StripeService stripeService;
+
+	@Autowired
+	private LeafCustomerService customerService;
+	
 	@Override
 	public void afterPropertiesSet() {
 		Stripe.apiKey = this.privateKey;
@@ -48,7 +55,7 @@ public class StripeSubcriptionService implements InitializingBean {
 	public void createSubscription(ILeafModular iModular, PaymentCustomerModule customer, LeafPaymentPlan plan)
 			throws StripeException {
 
-		this.checkStripeCustomer(customer);
+		this.customerService.checkStripeCustomer(customer);
 		
 		int freeTrialRemaining = customer.getFreeTrialRemaining();
 
@@ -84,20 +91,6 @@ public class StripeSubcriptionService implements InitializingBean {
 		}
 
 		return Subscription.create(params);
-	}
-
-	private Customer checkStripeCustomer(PaymentCustomerModule customer) throws StripeException {
-		// Customer
-		if (customer.getStripeId() != null) {
-			// if here : verify it
-			return Customer.retrieve(customer.getStripeId());
-		} else {
-			// if missing, create it
-			Map<String, Object> creationParams = new HashMap<>();
-			Customer stripeCustomer = Customer.create(creationParams);
-			customer.setStripeId(stripeCustomer.getId());
-			return stripeCustomer;
-		}
 	}
 
 	public void revokeSubscription(LeafPaymentPlan plan) throws StripeException {
@@ -165,7 +158,7 @@ public class StripeSubcriptionService implements InitializingBean {
 
 	public void updateCustomerBillingDetails(ILeafModular iModular, PaymentCustomerModule customer,
 			LeafAccountProfile profile) throws StripeException {
-		Customer stripeCustomer = this.checkStripeCustomer(customer);
+		Customer stripeCustomer = this.customerService.checkStripeCustomer(customer);
 
 		// Update billing address
 		Map<String, Object> updateParams = new HashMap<>();
