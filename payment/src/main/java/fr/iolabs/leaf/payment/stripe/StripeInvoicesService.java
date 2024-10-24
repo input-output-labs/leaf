@@ -61,11 +61,11 @@ public class StripeInvoicesService {
 		return leafInvoices;
 	}
 
-	public void generateInvoice(InvoiceCreationAction action) throws StripeException {
+	public Invoice generateInvoice(InvoiceCreationAction action) throws StripeException {
 		// RetrieveCustomer
 		PaymentCustomerModule customer = this.customerService.getMyPaymentCustomerModule();
 		Customer stripeCustomer = this.customerService.checkStripeCustomer(customer);
-		this.generateInvoice(stripeCustomer.getId(), action);
+		return this.generateInvoice(stripeCustomer.getId(), action);
 	}
 
 	public Invoice generateInvoice(String customerId, InvoiceCreationAction action) throws StripeException {
