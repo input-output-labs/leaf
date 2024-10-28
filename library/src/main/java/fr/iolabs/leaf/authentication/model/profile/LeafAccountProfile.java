@@ -162,4 +162,12 @@ public class LeafAccountProfile {
 			this.registrationNumber = updates.registrationNumber;
 		}
 	}
+	
+	public boolean isValid() {
+		boolean valid = true;
+		if (this.phoneNumber != null && !this.phoneNumber.matches("^\\+[1-9]\\d{1,14}$")) {
+			valid = false;
+		}
+		return valid;
+	}
 }

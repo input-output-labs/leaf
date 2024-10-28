@@ -49,7 +49,14 @@ public class LeafSmsService {
         if (phoneNumber == null || phoneNumber.isEmpty()) {
             throw new IllegalArgumentException("Phone number missing");
         }
+        if (!this.checkE164Formatting(phoneNumber)) {
+            throw new IllegalArgumentException("Phone number wrong formatting. Required E.164 format. Wrong phone number: " + phoneNumber);
+        }
         Twilio.init(twilioAccountSid, twilioAuthToken);
         Message.creator(new PhoneNumber(phoneNumber), new PhoneNumber(twilioPhoneNumber), message).create();
     }
+
+	private boolean checkE164Formatting(String phoneNumber) {
+		return phoneNumber.matches("^\\+[1-9]\\d{1,14}$");
+	}
 }
