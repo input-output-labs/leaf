@@ -50,3 +50,9 @@ leaf:
       api:
         key: "${STRIPE_API_KEY:}"
         webhook-secret: "${STRIPE_WEBHOOK_SECRET:}"
+  sms:
+    twilio:
+      api:
+        accountSid: "${TWILIO_ACCOUNT_SID:}"
+        authToken: "${TWILIO_AUTH_TOKEN:}"
+        phoneNumber: "${TWILIO_PHONE_NUMBER:}"

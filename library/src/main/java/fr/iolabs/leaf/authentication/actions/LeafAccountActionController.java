@@ -9,6 +9,7 @@ import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
 import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.authentication.privacy.LeafPrivacyService;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
+import fr.iolabs.leaf.common.errors.BadRequestException;
 import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,6 +92,9 @@ public class LeafAccountActionController {
 	@CrossOrigin
 	@PostMapping("/me/profile")
 	public LeafAccount updateProfile(@RequestBody LeafAccountProfile profile) {
+		if (!profile.isValid()) {
+			throw new BadRequestException("Invalid profile information");
+		}
 		return this.privacyHelper.protectAccount(this.accountService.updateProfile(profile));
 	}
 

@@ -11,6 +11,8 @@ import fr.iolabs.leaf.authentication.LeafAccountRepository;
 import fr.iolabs.leaf.authentication.LeafAccountService;
 import fr.iolabs.leaf.authentication.actions.RegistrationAction;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
+import fr.iolabs.leaf.notifications.LeafNotification;
+import fr.iolabs.leaf.notifications.LeafNotificationService;
 
 @Component
 public class ApplicationStartup implements ApplicationListener<ApplicationReadyEvent> {
@@ -32,6 +34,9 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
 
     @Autowired
     private LeafAccountRepository accountRepository;
+
+    @Autowired
+    private LeafNotificationService notificationService;
 
     public void onApplicationEvent(final ApplicationReadyEvent event) {
         if (this.firstUserFeatureEnabled) {
