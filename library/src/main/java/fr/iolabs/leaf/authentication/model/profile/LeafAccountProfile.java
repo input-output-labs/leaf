@@ -163,7 +163,6 @@ public class LeafAccountProfile {
 			this.registrationNumber = updates.registrationNumber;
 		}
 	}
-<<<<<<< Updated upstream
 	
 	public boolean isValid() {
 		boolean valid = true;
@@ -171,7 +170,7 @@ public class LeafAccountProfile {
 			valid = false;
 		}
 		return valid;
-=======
+	}
 
 	public String getCompanyName() {
 		return companyName;
@@ -179,6 +178,5 @@ public class LeafAccountProfile {
 
 	public void setCompanyName(String companyName) {
 		this.companyName = companyName;
->>>>>>> Stashed changes
 	}
 }
