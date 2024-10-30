@@ -14,6 +14,7 @@ public class LeafAccountProfile {
 	private String phoneNumber;
 	private LeafAddress address;
 	private Boolean corporate;
+	private String companyName;
 	private String taxId;
     private String registrationNumber;
 	
@@ -162,6 +163,7 @@ public class LeafAccountProfile {
 			this.registrationNumber = updates.registrationNumber;
 		}
 	}
+<<<<<<< Updated upstream
 	
 	public boolean isValid() {
 		boolean valid = true;
@@ -169,5 +171,14 @@ public class LeafAccountProfile {
 			valid = false;
 		}
 		return valid;
+=======
+
+	public String getCompanyName() {
+		return companyName;
+	}
+
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+>>>>>>> Stashed changes
 	}
 }
