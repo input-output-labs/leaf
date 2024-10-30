@@ -123,6 +123,7 @@ public class LeafAccountProfile {
 		object.put("firstname", this.firstname);
 		object.put("lastname", this.lastname);
 		object.put("phoneNumber", this.phoneNumber);
+		object.put("companyName", this.companyName);
 		object.put("address", this.address != null ? this.address.toMap() : null);
 		object.put("corporate", this.corporate != null ? this.corporate.booleanValue() : null);
 		object.put("taxId", this.taxId);
@@ -161,6 +162,9 @@ public class LeafAccountProfile {
 		}
 		if (updates.registrationNumber != null) {
 			this.registrationNumber = updates.registrationNumber;
+		}
+		if (updates.companyName != null) {
+			this.companyName = updates.companyName;
 		}
 	}
 	
