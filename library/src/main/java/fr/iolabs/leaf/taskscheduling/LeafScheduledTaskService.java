@@ -55,7 +55,9 @@ public class LeafScheduledTaskService {
 	}
 
 	public void delete(LeafScheduledTask task) {
-		this.scheduledTaskRepository.delete(task);
+		if (task != null && task.getId() != null && this.scheduledTaskRepository.existsById(task.getId())) {
+			this.scheduledTaskRepository.deleteById(task.getId());
+		}
 	}
 
 	@Scheduled(fixedDelay = SCHEDULED_DELAY, timeUnit = TimeUnit.MINUTES)
