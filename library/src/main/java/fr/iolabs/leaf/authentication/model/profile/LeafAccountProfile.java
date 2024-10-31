@@ -30,6 +30,7 @@ public class LeafAccountProfile {
 		this.corporate = from.corporate;
 		this.taxId = from.taxId;
 		this.registrationNumber = from.registrationNumber;
+		this.companyName = from.companyName;
 	}
 	
 	@JsonIgnore
