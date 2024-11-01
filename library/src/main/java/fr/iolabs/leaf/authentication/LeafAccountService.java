@@ -78,7 +78,7 @@ public class LeafAccountService {
 		LeafAccount registeredAccount = this.register(userRegistration);
 		logger.info("Account created with ID " + registeredAccount.getId());
 
-		String sessionToken = this.createSession(registeredAccount);
+		String sessionToken = this.createSessionAndCookie(registeredAccount);
 
 		// Re-save account to register newly created session
 		accountRepository.save(registeredAccount);
@@ -182,20 +182,31 @@ public class LeafAccountService {
 			throw new UnauthorizedException();
 		}
 
-		String sessionToken = this.createSession(fetchedAccount);
+		String sessionToken = this.createSessionAndCookie(fetchedAccount);
 		this.accountRepository.save(fetchedAccount);
 		return sessionToken;
 	}
 
-	public String createSession(LeafAccount account) {
-		String token = tokenService.createSessionJWT(account.getId());
-		account.getAuthentication().getHashedSessionTokens().add(StringHasher.hashString(token));
+	public String createSessionAndCookie(LeafAccount account) {
+		String token = this.createSession(account);
 
 		Cookie cookie = new Cookie("Authorization", token);
 		cookie.setPath("/");
 		cookie.setHttpOnly(true);
 		cookie.setSecure(true);
 		this.response.addCookie(cookie);
+		return token;
+	}
+
+	public String createSession(LeafAccount account) {
+		String token = tokenService.createSessionJWT(account.getId());
+		account.getAuthentication().getHashedSessionTokens().add(StringHasher.hashString(token));
+		return token;
+	}
+
+	public String createSessionAndSaveAccount(LeafAccount account) {
+		String token = this.createSession(account);
+		this.accountRepository.save(account);
 		return token;
 	}
 
