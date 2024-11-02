@@ -185,6 +185,9 @@ public class StripeSubcriptionService implements InitializingBean {
 		if (customerName == null && profile.getUsername() != null) {
 			customerName = profile.getUsername();
 		}
+		if (profile.isCorporate() && profile.getCompanyName() != null && !profile.getCompanyName().isBlank()) {
+			customerName = profile.getCompanyName();
+		}
 		if (customerName != null) {
 			updateParams.put("name", customerName);
 		}
@@ -199,9 +202,9 @@ public class StripeSubcriptionService implements InitializingBean {
 		params.put("expand", expandList);
 		
 		stripeCustomer = Customer.retrieve(customer.getStripeId(), params, null);
-
+		
 		// Update tax id
-		if (profile.getAddress() != null && profile.getAddress().getCountry() != null && profile.getTaxId() != null && !profile.getTaxId().isEmpty()) {
+		if (profile.isCorporate() && profile.getAddress() != null && profile.getAddress().getCountry() != null && profile.getTaxId() != null && !profile.getTaxId().isEmpty()) {
 			TaxIdCollectionCreateParams.Type taxType = TaxIdCollectionCreateParams.Type.EU_VAT;
 			switch (profile.getAddress().getCountry()) {
 			case "CH":
