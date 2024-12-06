@@ -14,6 +14,7 @@ public class PaymentCheckoutCreationAction {
 	private String customerId;
 	private boolean useCurrentAccount;
 	private boolean allowPromotionCodes;
+	private boolean embededUi;
 	private Map<String, Object> metadata;
 
 	public List<StripeProduct> getProducts() {
@@ -94,5 +95,13 @@ public class PaymentCheckoutCreationAction {
 
 	public void setCustomText(String customText) {
 		this.customText = customText;
+	}
+
+	public boolean isEmbededUi() {
+		return embededUi;
+	}
+
+	public void setEmbededUi(boolean embededUi) {
+		this.embededUi = embededUi;
 	}
 }

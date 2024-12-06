@@ -103,8 +103,14 @@ public class StripeService {
 		if (paymentCheckoutCreationAction.getCustomText() != null) {
 			params.put("custom_text", paymentCheckoutCreationAction.getCustomText());
 		}
+		
+		if (paymentCheckoutCreationAction.isEmbededUi()) {
+			params.put("ui_mode", "embedded");
+			params.put("redirect_on_completion", "never");
+		} else {
+			params.put("success_url", paymentCheckoutCreationAction.getSuccessUrl());
+		}
 
-		params.put("success_url", paymentCheckoutCreationAction.getSuccessUrl());
 		params.put("mode", paymentCheckoutCreationAction.getMode());
 
 		HashMap<String, Object> metadata = new HashMap<>();
@@ -134,6 +140,7 @@ public class StripeService {
 
 		Map<String, Object> paymentSession = new HashMap<>();
 		paymentSession.put("url", session.getUrl());
+		paymentSession.put("clientSecret", session.getClientSecret());
 		paymentSession.put("transactionId", paymentTransactionCreated.getId());
 		paymentSession.put("sessionId", session.getId());
 		if (session.getPaymentIntent() != null) {
