@@ -14,13 +14,7 @@ import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import fr.iolabs.leaf.LeafContext;
 
@@ -142,5 +136,20 @@ public class LeafAccountActionController {
 	public ResponseEntity<Void> unsubscribeFromEmail(@RequestBody MailingUnsubscriptionAction resetPasswordAction) {
 		this.accountService.unsubscribeFromEmail(resetPasswordAction);
 		return ResponseEntity.noContent().build();
+	}
+
+	@CrossOrigin
+	@PermitAll
+	@GetMapping("/email")
+	public ResponseEntity<Void> checkIfEmailExists(@RequestParam("email") String email) {
+		if (email == null || email.equals("")) {
+			throw new BadRequestException("Email must not be null or blank");
+		}
+		boolean exists = accountService.isEmailAssociated(email.toLowerCase());
+		if (exists) {
+			return ResponseEntity.ok().build();
+		} else {
+			return ResponseEntity.notFound().build();
+		}
 	}
 }

@@ -390,4 +390,8 @@ public class LeafAccountService {
 
 		return this.accountRepository.save(existingAccount);
 	}
+
+	public boolean isEmailAssociated(String email) {
+		return this.accountRepository.findAccountByEmail(email) != null;
+	}
 }
