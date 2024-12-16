@@ -60,7 +60,7 @@ public class LeafCustomerService {
 			// if missing, create it
 			Map<String, Object> creationParams = new HashMap<>();
 			if (email != null) {
-				creationParams.put("email", email);
+				creationParams.put("customer_email", email);
 			}
 			Customer stripeCustomer = Customer.create(creationParams);
 			customer.setStripeId(stripeCustomer.getId());
