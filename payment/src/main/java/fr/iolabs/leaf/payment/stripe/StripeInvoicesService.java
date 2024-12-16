@@ -5,6 +5,8 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Resource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,8 @@ import com.stripe.param.InvoiceListParams;
 import com.stripe.param.InvoicePayParams;
 import com.stripe.param.InvoiceUpcomingParams;
 
+import fr.iolabs.leaf.LeafContext;
+import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.payment.customer.LeafCustomerService;
 import fr.iolabs.leaf.payment.models.LeafInvoice;
 import fr.iolabs.leaf.payment.models.LeafPrice;
@@ -28,6 +32,8 @@ import fr.iolabs.leaf.payment.stripe.models.InvoiceItemCreationAction;
 @Service
 public class StripeInvoicesService {
 	private static final long MAX_INVOICES_LIMIT = 10L;
+	@Resource(name = "coreContext")
+	private LeafContext coreContext;
 
 	@Autowired
 	private LeafCustomerService customerService;
@@ -63,8 +69,9 @@ public class StripeInvoicesService {
 
 	public Invoice generateInvoice(InvoiceCreationAction action) throws StripeException {
 		// RetrieveCustomer
-		PaymentCustomerModule customer = this.customerService.getMyPaymentCustomerModule();
-		Customer stripeCustomer = this.customerService.checkStripeCustomer(customer);
+		LeafAccount myAccount = this.coreContext.getAccount();
+		PaymentCustomerModule customer = this.customerService.getPaymentCustomerModule(myAccount);
+		Customer stripeCustomer = this.customerService.checkStripeCustomer(customer, myAccount.getEmail());
 		return this.generateInvoice(stripeCustomer.getId(), action);
 	}
 

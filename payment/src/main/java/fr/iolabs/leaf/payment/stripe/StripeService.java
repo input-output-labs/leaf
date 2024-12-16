@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.annotation.Resource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,8 @@ import com.stripe.model.StripeObject;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.CustomerListPaymentMethodsParams;
 
+import fr.iolabs.leaf.LeafContext;
+import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 import fr.iolabs.leaf.payment.customer.LeafCustomerService;
 import fr.iolabs.leaf.payment.models.LeafPaymentResultEvent;
@@ -43,6 +47,9 @@ import fr.iolabs.leaf.payment.stripe.models.StripeProduct;
 
 @Service
 public class StripeService {
+
+	@Resource(name = "coreContext")
+	private LeafContext coreContext;
 
 	@Autowired
 	private LeafPaymentTransactionRepository leafPaymentTransactionRepository;
@@ -91,7 +98,8 @@ public class StripeService {
 		}
 		if (paymentCheckoutCreationAction.isUseCurrentAccount()) {
 			PaymentCustomerModule customer = this.customerService.getMyPaymentCustomerModule();
-			Customer stripeCustomer = this.customerService.checkStripeCustomer(customer);
+			LeafAccount account = this.coreContext.getAccount();
+			Customer stripeCustomer = this.customerService.checkStripeCustomer(customer, account.getEmail());
 			params.put("customer", stripeCustomer.getId());
 		}
 

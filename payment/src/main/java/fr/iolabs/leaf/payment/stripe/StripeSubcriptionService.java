@@ -42,9 +42,6 @@ public class StripeSubcriptionService implements InitializingBean {
 	private LeafPaymentConfig paymentConfig;
 
 	@Autowired
-	private StripeService stripeService;
-
-	@Autowired
 	private LeafCustomerService customerService;
 	
 	@Override

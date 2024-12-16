@@ -47,6 +47,11 @@ public class LeafCustomerService {
 	}
 
 	public Customer checkStripeCustomer(PaymentCustomerModule customer) throws StripeException {
+		return this.checkStripeCustomer(customer, null);
+	}
+
+
+	public Customer checkStripeCustomer(PaymentCustomerModule customer, String email) throws StripeException {
 		// Customer
 		if (customer.getStripeId() != null) {
 			// if here : verify it
@@ -54,6 +59,9 @@ public class LeafCustomerService {
 		} else {
 			// if missing, create it
 			Map<String, Object> creationParams = new HashMap<>();
+			if (email != null) {
+				creationParams.put("email", email);
+			}
 			Customer stripeCustomer = Customer.create(creationParams);
 			customer.setStripeId(stripeCustomer.getId());
 			return stripeCustomer;
