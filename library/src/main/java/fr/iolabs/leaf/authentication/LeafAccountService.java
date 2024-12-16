@@ -87,7 +87,7 @@ public class LeafAccountService {
 	}
 
 	public LeafAccount register(RegistrationAction userRegistration) {
-		return userRegistration.isTemporary() ? this.registerTemporaryAccount(userRegistration) : this.register(userRegistration, false);
+		return userRegistration.getPassword() == null ? this.registerAccountWithoutPassword(userRegistration) : this.register(userRegistration, false);
 	}
 
 	public LeafAccount register(RegistrationAction userRegistration, boolean isSystemAction) {
@@ -124,24 +124,16 @@ public class LeafAccountService {
 		return createdAccount;
 	}
 
-	public LeafAccount registerTemporaryAccount(RegistrationAction userRegistration) {
+	public LeafAccount registerAccountWithoutPassword(RegistrationAction userRegistration) {
 		LeafAccount instantiatedAccount = new LeafAccount();
 		instantiatedAccount.setMetadata(ResourceMetadata.create());
-		instantiatedAccount.setIsTemporary(true);
 		this.mergeRegistrationActionInLeafAccount(instantiatedAccount, userRegistration);
-		LeafAccount accountSaved = accountRepository.save(instantiatedAccount);
-		String domainName = TemporaryAccountHelper.extractDomainName(this.appDomain);
-		if(domainName == null) {
-			domainName = DEFAULT_DOMAIN_NAME;
-		}
-		String tempEmail = accountSaved.getId() + "@" + domainName;
-		accountSaved.setEmail(tempEmail);
 		LeafAccountAuthentication authentication = new LeafAccountAuthentication();
-		String pwd = TemporaryAccountHelper.generateComplexPassword(GENERATED_PASSWORD_LENGTH);
+		String pwd = LeafAccountHelper.generateComplexPassword(GENERATED_PASSWORD_LENGTH);
 		authentication.setPassword(pwd);
 		authentication.hashPassword();
-		accountSaved.setAuthentication(authentication);
-		return this.accountRepository.save(accountSaved);
+		instantiatedAccount.setAuthentication(authentication);
+		return this.accountRepository.save(instantiatedAccount);
 	}
 
 
@@ -170,7 +162,6 @@ public class LeafAccountService {
 		if (Strings.isBlank(account.getProfile().getUsername())) {
 			account.getProfile().setUsername(action.getEmail());
 		}
-		account.setIsTemporary(action.isTemporary());
 	}
 
 	public String login(LoginAction accountLogin) {

@@ -4,7 +4,7 @@ import java.security.SecureRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TemporaryAccountHelper {
+public class LeafAccountHelper {
 
     private static final String CHAR_LOWER = "abcdefghijklmnopqrstuvwxyz";
     private static final String CHAR_UPPER = CHAR_LOWER.toUpperCase();
@@ -27,14 +27,4 @@ public class TemporaryAccountHelper {
         return sb.toString();
     }
 
-    public static String extractDomainName(String urlString) {
-        String regex = "(?:http[s]?://)?(?:www\\.)?(?<domain>[^./]+\\.[^:/]+)";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(urlString);
-
-        if (matcher.find()) {
-            return matcher.group("domain");
-        }
-        return null;
-    }
 }
