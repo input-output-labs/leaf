@@ -128,6 +128,7 @@ public class LeafAccountService {
 		LeafAccount instantiatedAccount = new LeafAccount();
 		instantiatedAccount.setMetadata(ResourceMetadata.create());
 		this.mergeRegistrationActionInLeafAccount(instantiatedAccount, userRegistration);
+		instantiatedAccount.setIsPartial(true);
 		LeafAccountAuthentication authentication = new LeafAccountAuthentication();
 		String pwd = LeafAccountHelper.generateComplexPassword(GENERATED_PASSWORD_LENGTH);
 		authentication.setPassword(pwd);
@@ -377,6 +378,7 @@ public class LeafAccountService {
 			existingAccount.setAccountVerification(account.getAccountVerification());
 		}
 		existingAccount.setIsTemporary(account.isTemporary());
+		existingAccount.setIsPartial(account.isPartial());
 		existingAccount.setAdmin(account.isAdmin());
 
 		return this.accountRepository.save(existingAccount);

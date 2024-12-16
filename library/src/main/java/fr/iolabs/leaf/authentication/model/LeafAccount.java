@@ -34,7 +34,10 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 	protected Map<String, Object> modules;
 	protected ResourceMetadata metadata;
 
+	@Deprecated
 	protected boolean isTemporary;
+
+	protected boolean isPartial;
 
 	protected boolean admin;
 
@@ -63,6 +66,7 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 		this.organizationIds = from.organizationIds;
 		this.accountVerification = from.accountVerification;
 		this.isTemporary = from.isTemporary;
+		this.isPartial = from.isPartial;
 	}
 
 	public LeafAccountAuthentication getAuthentication() {
@@ -199,12 +203,22 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 		return object;
 	}
 
+	@Deprecated
 	public boolean isTemporary() {
 		return this.isTemporary;
 	}
 
+	@Deprecated
 	public void setIsTemporary(boolean isTemporary) {
 		this.isTemporary = isTemporary;
+	}
+
+	public boolean isPartial() {
+		return this.isPartial;
+	}
+
+	public void setIsPartial(boolean isPartial) {
+		this.isPartial = isPartial;
 	}
 
 
