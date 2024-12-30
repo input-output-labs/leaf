@@ -70,8 +70,13 @@ public class StripeInvoicesService {
 	public Invoice generateInvoice(InvoiceCreationAction action) throws StripeException {
 		// RetrieveCustomer
 		LeafAccount myAccount = this.coreContext.getAccount();
-		PaymentCustomerModule customer = this.customerService.getPaymentCustomerModule(myAccount);
-		Customer stripeCustomer = this.customerService.checkStripeCustomer(customer, myAccount.getEmail());
+		return this.generateInvoiceForAccount(action, myAccount);
+	}
+
+	public Invoice generateInvoiceForAccount(InvoiceCreationAction action, LeafAccount account) throws StripeException {
+		// RetrieveCustomer
+		PaymentCustomerModule customer = this.customerService.getPaymentCustomerModule(account);
+		Customer stripeCustomer = this.customerService.checkStripeCustomer(customer, account.getEmail());
 		return this.generateInvoice(stripeCustomer.getId(), action);
 	}
 

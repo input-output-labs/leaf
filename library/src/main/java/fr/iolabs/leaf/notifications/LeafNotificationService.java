@@ -2,6 +2,8 @@ package fr.iolabs.leaf.notifications;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import fr.iolabs.leaf.common.sms.LeafSmsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,11 +78,26 @@ public class LeafNotificationService {
 		// Nothing to do
 	}
 
+    public boolean isValidEmail(String email) {
+        String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+
+        Pattern pattern = Pattern.compile(emailRegex);
+
+        if (email == null) {
+            return false;
+        }
+
+        Matcher matcher = pattern.matcher(email);
+        return matcher.matches();
+    }
+
 	private void emitOnEmail(LeafNotification notification, String config, LeafAccount targetAccount) {
 		String targetAccountEmail = targetAccount.getEmail();
-		this.leafSendgridEmailService.sendEmailWithTemplate(targetAccountEmail, config, notification.getPayload());
-		notification.getChannelSendingStatus().put(LeafNotificationChannel.EMAIL,
-				LeafNotificationChannelSendingStatus.EMAIL_SENT);
+		if (this.isValidEmail(targetAccountEmail)) {
+			this.leafSendgridEmailService.sendEmailWithTemplate(targetAccountEmail, config, notification.getPayload());
+			notification.getChannelSendingStatus().put(LeafNotificationChannel.EMAIL,
+					LeafNotificationChannelSendingStatus.EMAIL_SENT);
+		}
 	}
 
 	private void emitOnWebsocket(LeafNotification notification, String config, LeafAccount targetAccount) {

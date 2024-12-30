@@ -80,8 +80,9 @@ public class LeafScheduledTaskService {
 			// Second control, in addition to DB query
 			boolean isUnlocked = task.getLockedAt() == null || task.getLockedAt().isBefore(unlockTime);
 			boolean isNotDone = task.getDoneAt() == null;
+			boolean isNotFailed = task.getFailedAt() == null;
 			boolean shouldExecute = task.getExecuteAt() == null || task.getExecuteAt().isBefore(now);
-			if (shouldExecute && isNotDone && isUnlocked) {
+			if (shouldExecute && isNotDone && isUnlocked && isNotFailed) {
 				System.out.println(" - to be executed");
 				Query query = new Query();
 				query.addCriteria(Criteria.where("id").is(task.getId()));
@@ -111,13 +112,18 @@ public class LeafScheduledTaskService {
 
 	public void executeTask(LeafScheduledTask task) {
 		LeafScheduledTaskEvent event = new LeafScheduledTaskEvent(this, task.getType(), task.getPayload());
-		this.applicationEventPublisher.publishEvent(event);
-
-		if (event.isDone()) {
-			task.setDoneAt(ZonedDateTime.now());
+		try {
+			this.applicationEventPublisher.publishEvent(event);
+			if (event.isDone()) {
+				task.setDoneAt(ZonedDateTime.now());
+				this.scheduledTaskRepository.save(task);
+			} else {
+				System.err.println("/!\\ Task cannot be done /!\\");
+			}
+		} catch (Exception e) {
+			task.setFailedAt(ZonedDateTime.now());
 			this.scheduledTaskRepository.save(task);
-		} else {
-			System.err.println("/!\\ Task cannot be done /!\\");
 		}
+
 	}
 }

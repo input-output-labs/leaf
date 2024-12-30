@@ -12,6 +12,7 @@ public class LeafScheduledTask {
 	private ZonedDateTime executeAt;
 	private ZonedDateTime lockedAt;
 	private ZonedDateTime doneAt;
+	private ZonedDateTime failedAt;
 	private Map<String, Object> payload;
 
 	public String getId() {
@@ -52,6 +53,14 @@ public class LeafScheduledTask {
 
 	public void setDoneAt(ZonedDateTime doneAt) {
 		this.doneAt = doneAt;
+	}
+
+	public ZonedDateTime getFailedAt() {
+		return failedAt;
+	}
+
+	public void setFailedAt(ZonedDateTime failedAt) {
+		this.failedAt = failedAt;
 	}
 
 	public Map<String, Object> getPayload() {
