@@ -10,6 +10,16 @@ public class AccountVerification {
 	private boolean mobileVerified;
 	private String hashedMobileVerificationCode;
 
+	public AccountVerification() {
+	}
+
+	public AccountVerification(AccountVerification from) {
+		this.emailVerified = from.emailVerified;
+		this.hashedEmailVerificationCode = from.hashedEmailVerificationCode;
+		this.mobileVerified = from.mobileVerified;
+		this.hashedMobileVerificationCode = from.hashedMobileVerificationCode;
+	}
+
 	public boolean isEmailVerified() {
 		return emailVerified;
 	}
@@ -52,13 +62,15 @@ public class AccountVerification {
 		this.hashedMobileVerificationCode = null;
 	}
 
-	public void validateEmailVerificationCode(String verificationCode) {
+	public boolean validateEmailVerificationCode(String verificationCode) {
 		String hashedVerificationCode = StringHasher.hashString(verificationCode);
 		if (this.hashedEmailVerificationCode != null
 				&& this.hashedEmailVerificationCode.equals(hashedVerificationCode)) {
 			this.emailVerified = true;
 			this.hashedEmailVerificationCode = null;
+			return true;
 		}
+		return false;
 	}
 
 	public String generateMobileVerificationCode() {
@@ -67,13 +79,15 @@ public class AccountVerification {
 		return verificationCode;
 	}
 
-	public void validateMobileVerificationCode(String verificationCode) {
+	public boolean validateMobileVerificationCode(String verificationCode) {
 		String hashedVerificationCode = StringHasher.hashString(verificationCode);
 		if (this.hashedMobileVerificationCode != null
 				&& this.hashedMobileVerificationCode.equals(hashedVerificationCode)) {
 			this.mobileVerified = true;
 			this.hashedMobileVerificationCode = null;
+			return true;
 		}
+		return false;
 	}
 
 	public String generateEmailVerificationCode() {

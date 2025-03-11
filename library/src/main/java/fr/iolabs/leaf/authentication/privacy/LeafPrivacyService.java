@@ -10,6 +10,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import fr.iolabs.leaf.authentication.model.LeafAccount;
+import fr.iolabs.leaf.authentication.model.AccountVerification;
 import fr.iolabs.leaf.authentication.model.authentication.LeafAccountAuthentication;
 import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
 import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
@@ -26,6 +27,7 @@ public class LeafPrivacyService {
 	public LeafAccount protectAccount(LeafAccount account) {
 		LeafAccount result = new LeafAccount(account);
 		result.setAuthentication(this.protectAuthentication(result.getAuthentication()));
+		result.setAccountVerification(this.protectAccountVerification(result.getAccountVerification()));
 		result.setPassword(null);
 		result.setResetPasswordKey(null);
 		result.setHashedSessionTokens(null);
@@ -44,6 +46,13 @@ public class LeafPrivacyService {
 		result.setResetPasswordKey(null);
 		result.setHashedSessionTokens(null);
 		result.setPrivateTokens(result.getPrivateTokens().stream().map(this::protectPrivateToken).collect(Collectors.toSet()));
+		return result;
+	}
+	
+	private AccountVerification protectAccountVerification(AccountVerification accountVerification) {
+		AccountVerification result = new AccountVerification(accountVerification);
+		result.setHashedEmailVerificationCode(null);
+		result.setHashedMobileVerificationCode(null);
 		return result;
 	}
 

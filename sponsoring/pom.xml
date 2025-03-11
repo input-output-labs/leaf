@@ -4,15 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf-sponsoring</artifactId>
-	<version>1.114-SNAPSHOT</version>
+	<version>1.115-SNAPSHOT</version>
 	<name>leaf-sponsoring</name>
 
 	<properties>
-		<java.version>1.8</java.version>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
+		<java.version>17</java.version>
+		<maven.compiler.release>17</maven.compiler.release>
 		<spring.version>2.6.8</spring.version>
-		<leaf.version>1.114-SNAPSHOT</leaf.version>
+		<leaf.version>1.115-SNAPSHOT</leaf.version>
 	</properties>
 
 	<dependencies>

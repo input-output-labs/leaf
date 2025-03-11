@@ -337,9 +337,15 @@ public class LeafAccountService {
 	public LeafAccount accountVerification(AccountVerification accountVerification) {
 		LeafAccount me = this.coreContext.getAccount();
 		if ("email".equalsIgnoreCase(accountVerification.getType())) {
-			me.getAccountVerification().validateEmailVerificationCode(accountVerification.getCode());
+			if (!me.getAccountVerification().validateEmailVerificationCode(accountVerification.getCode())) {
+				throw new BadRequestException("Wrong account verification code");
+			}
 		} else if ("mobile".equalsIgnoreCase(accountVerification.getType())) {
-			me.getAccountVerification().validateMobileVerificationCode(accountVerification.getCode());
+			if (!me.getAccountVerification().validateMobileVerificationCode(accountVerification.getCode())) {
+				throw new BadRequestException("Wrong account verification code");
+			}
+		} else {
+			throw new BadRequestException("Invalid account verification type: " + accountVerification.getType());
 		}
 		return this.accountRepository.save(me);
 	}
