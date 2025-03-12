@@ -4,11 +4,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf</artifactId>
-	<version>1.115-SNAPSHOT</version>
+	<version>1.116-SNAPSHOT</version>
 	<name>leaf</name>
 
 	<properties>
 		<java.version>17</java.version>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
 		<maven.compiler.release>17</maven.compiler.release>
 		<spring.version>2.6.8</spring.version>
 	</properties>

@@ -16,6 +16,7 @@ import com.stripe.model.SetupIntent;
 import com.stripe.model.StripeObject;
 import com.stripe.param.CustomerUpdateParams;
 
+import fr.iolabs.leaf.payment.customer.LeafCustomerService;
 import fr.iolabs.leaf.payment.models.LeafPaymentResultEvent;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransaction;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransactionRepository;
@@ -34,6 +35,9 @@ public class StripeHookService {
 
 	@Autowired
 	private PlanService planService;
+
+	@Autowired
+	private LeafCustomerService customerService;
 
 	public void handleCheckoutSessionCompleted(Event event) throws StripeException {
 		// Deserialize the nested object inside the event
@@ -67,8 +71,9 @@ public class StripeHookService {
 		SetupIntent setupIntent = SetupIntent.retrieve(setupIntentId);
 
 		switch (setupIntent.getMetadata().get("goal")) {
-		case "setPlanSubscriptionPaymentMethod":
+		case "setupCustomerDefaultPaymentMethod":
 			String innerId = setupIntent.getMetadata().get("innerId");
+			String innerType = setupIntent.getMetadata().get("innerType");
 			String customerId = setupIntent.getCustomer();
 			String paymentMethodId = setupIntent.getPaymentMethod();
 			Customer customer = Customer.retrieve(customerId);
@@ -90,7 +95,7 @@ public class StripeHookService {
 			pm.setFunding(stripePaymentMethod.getCard().getFunding());
 			pm.setLast4(stripePaymentMethod.getCard().getLast4());
 			
-			this.planService.setCustomerPaymentMethod(innerId, pm);
+			this.customerService.setCustomerPaymentMethod(innerType, innerId, pm);
 			break;
 		}
 	}

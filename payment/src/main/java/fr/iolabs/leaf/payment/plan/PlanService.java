@@ -29,7 +29,6 @@ import fr.iolabs.leaf.organization.model.OrganizationMembership;
 import fr.iolabs.leaf.payment.customer.LeafCustomerService;
 import fr.iolabs.leaf.payment.models.LeafInvoice;
 import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
-import fr.iolabs.leaf.payment.models.PaymentMethod;
 import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.plan.config.PlanAttachment;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
@@ -304,21 +303,12 @@ public class PlanService {
 		ILeafModular iModular = this.getPlanAttachement();
 
 		PaymentCustomerModule customer = this.getPaymentCustomerModule();
-
+		PlanAttachment planAttachment = this.paymentConfig.getPlanAttachment();
 		try {
-			return this.stripeSubcriptionService.checkoutPaymentMethod(customer, iModular.getId());
+			return this.customerService.checkoutPaymentMethod(customer, iModular.getId(), planAttachment.getValue());
 		} catch (StripeException e) {
 			throw new InternalServerErrorException("Cannot perform plan checkout");
 		}
-	}
-
-	public void setCustomerPaymentMethod(String iModularId, PaymentMethod pm) {
-		ILeafModular planAttachment = this.getPlanAttachement(iModularId);
-		PaymentCustomerModule customer = this.customerService.getPaymentCustomerModule(planAttachment);
-		customer.setDefaultPaymentMethod(pm);
-		customer.getMetadata().updateLastModification();
-
-		this.savePlanAttachment(planAttachment);
 	}
 
 	public LeafPaymentPlan getSelectedOrDefaultPlan() {

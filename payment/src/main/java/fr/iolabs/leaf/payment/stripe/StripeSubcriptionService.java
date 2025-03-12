@@ -35,12 +35,6 @@ public class StripeSubcriptionService implements InitializingBean {
 	@Value("${leaf.payment.stripe.api.key}")
 	private String privateKey;
 
-	@Value("${leaf.appDomain}")
-	String protocol_hostname;
-
-	@Autowired
-	private LeafPaymentConfig paymentConfig;
-
 	@Autowired
 	private LeafCustomerService customerService;
 	
@@ -104,39 +98,6 @@ public class StripeSubcriptionService implements InitializingBean {
 		} catch (StripeException e) {
 			e.printStackTrace();
 		}
-	}
-
-	public Map<String, String> checkoutPaymentMethod(PaymentCustomerModule customer, String iModularId)
-			throws StripeException {
-		// Verify customer
-		Customer.retrieve(customer.getStripeId());
-
-		// Following instruction from:
-		// https://stripe.com/docs/payments/checkout/subscriptions/update-payment-details#retrieve-checkout-session
-
-		// Create checkout session
-		Map<String, Object> metadata = new HashMap<>();
-		metadata.put("goal", "setPlanSubscriptionPaymentMethod");
-		metadata.put("innerId", iModularId);
-		metadata.put("customer_id", customer.getStripeId());
-		Map<String, Object> setup_intent_data = new HashMap<>();
-		setup_intent_data.put("metadata", metadata);
-
-		Map<String, Object> params = new HashMap<>();
-		params.put("success_url", this.protocol_hostname + paymentConfig.getRedirect().get("checkout_success"));
-		params.put("cancel_url", this.protocol_hostname + paymentConfig.getRedirect().get("checkout_cancel"));
-		params.put("payment_method_types", List.of("card"));
-
-		params.put("mode", "setup");
-		params.put("setup_intent_data", setup_intent_data);
-
-		params.put("customer", customer.getStripeId());
-
-		Session session = Session.create(params);
-
-		Map<String, String> checkoutData = new HashMap<>();
-		checkoutData.put("checkout_url", session.getUrl());
-		return checkoutData;
 	}
 
 	public void sendUsageMetrics(String stripeSubscriptionId, String stripePriceId, long quantity)
