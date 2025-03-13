@@ -82,7 +82,7 @@ public class StripeInvoicesService {
 
 	public Invoice generateInvoice(String customerId, InvoiceCreationAction action) throws StripeException {
 		// RetrieveCustomer
-		InvoiceCreateParams invoiceParams = InvoiceCreateParams.builder().setCustomer(customerId).setDescription(action.getDescription()).setAutoAdvance(false)
+		InvoiceCreateParams invoiceParams = InvoiceCreateParams.builder().setCustomer(customerId).setDescription(action.getDescription()).setAutoAdvance(action.isAutoAdvance())
 				.build();
 		Invoice invoice = Invoice.create(invoiceParams);
 		

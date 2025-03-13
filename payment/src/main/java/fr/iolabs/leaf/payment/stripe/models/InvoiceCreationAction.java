@@ -4,6 +4,7 @@ import java.util.List;
 
 public class InvoiceCreationAction {
 	private String description;
+	private boolean autoAdvance;
 	private List<InvoiceItemCreationAction> items;
 
 	public String getDescription() {
@@ -12,6 +13,14 @@ public class InvoiceCreationAction {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public boolean isAutoAdvance() {
+		return autoAdvance;
+	}
+
+	public void setAutoAdvance(boolean autoAdvance) {
+		this.autoAdvance = autoAdvance;
 	}
 
 	public List<InvoiceItemCreationAction> getItems() {

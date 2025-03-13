@@ -68,9 +68,7 @@ public class LeafCustomerService {
 		LeafAccount account = this.coreContext.getAccount();
 		if (account != null) {
 			PaymentCustomerModule paymentCustomerModule = this.getPaymentCustomerModule(account);
-			System.out.println("Stripe id: " + paymentCustomerModule.getStripeId());
 			if (paymentCustomerModule.getStripeId() == null || paymentCustomerModule.getStripeId().isBlank()) {
-				System.out.println("Missing stripe id !");
 				try {
 					this.checkStripeCustomer(paymentCustomerModule, account.getEmail());
 					this.coreContext.setAccount(this.accountRepository.save(account));

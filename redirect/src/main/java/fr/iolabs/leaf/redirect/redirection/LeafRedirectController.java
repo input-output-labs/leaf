@@ -125,7 +125,6 @@ public class LeafRedirectController {
 	public LeafRedirection updateById(@PathVariable(name = "redirectionId") String redirectionId,
 			@RequestParam(name = "hex", defaultValue = "true") boolean hex, @RequestBody LeafRedirection updates) {
 		LeafRedirection redirection = this.findById(redirectionId, hex);
-		System.out.println("new url: " + updates.getRedirectUrl());
 		redirection.setRedirectUrl(updates.getRedirectUrl());
 		return this.redirectionRepository.save(redirection);
 	}
