@@ -10,9 +10,11 @@ import javax.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.iolabs.leaf.common.annotations.AdminOnly;
@@ -20,6 +22,7 @@ import fr.iolabs.leaf.common.errors.NotFoundException;
 import fr.iolabs.leaf.organization.LeafOrganizationRepository;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
+import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlanFeature;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlanInfo;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlanTierSelection;
 
@@ -36,6 +39,13 @@ public class PlanController {
 	@GetMapping
 	public List<LeafPaymentPlan> fetchPlans() {
 		return this.planService.fetchPlans().stream().filter((plan) -> plan.isAvailable()).map(plan -> plan.clone()).collect(Collectors.toList());
+	}
+
+	@AdminOnly
+	@CrossOrigin
+	@GetMapping("/all")
+	public List<LeafPaymentPlan> fetchAllPlans() {
+		return this.planService.fetchPlans();
 	}
 
 	@CrossOrigin
@@ -59,6 +69,20 @@ public class PlanController {
 	@GetMapping("/selected")
 	public LeafPaymentPlanInfo getSelectedPlan() {
 		return this.planService.getSelectedPlan();
+	}
+
+	@CrossOrigin
+	@AdminOnly
+	@GetMapping("/selected/{id}")
+	public LeafPaymentPlanInfo getSelectedPlanById(@PathVariable("id") String id) {
+		return this.planService.getSelectedPlanById(id);
+	}
+
+	@CrossOrigin
+	@AdminOnly
+	@PostMapping("/selected/{id}/features")
+	public LeafPaymentPlan updateSelectedPlanFeaturesById(@PathVariable("id") String id, @RequestBody List<LeafPaymentPlanFeature> updatedFeatures) {
+		return this.planService.updateSelectedPlanFeaturesById(id, updatedFeatures);
 	}
 
 	@CrossOrigin

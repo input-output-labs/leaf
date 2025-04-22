@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import com.stripe.exception.StripeException;
 
@@ -32,6 +34,7 @@ import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
 import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.plan.config.PlanAttachment;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
+import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlanFeature;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlanInfo;
 import fr.iolabs.leaf.payment.plan.models.SelectedPlanModule;
 import fr.iolabs.leaf.payment.stripe.StripeInvoicesService;
@@ -287,6 +290,42 @@ public class PlanService {
 
 		LeafPaymentPlan selectedPlan = this.getSelectedOrDefaultPlan();
 		PaymentCustomerModule paymentCustomer = this.getPaymentCustomerModule();
+
+		if (selectedPlan != null) {
+			paymentPlanInfo.setPlan(selectedPlan);
+		}
+
+		if (paymentCustomer != null) {
+			paymentPlanInfo.setPaymentMethod(paymentCustomer.getDefaultPaymentMethod());
+		}
+
+		return paymentPlanInfo;
+	}
+	
+	public LeafPaymentPlan updateSelectedPlanFeaturesById(String id, List<LeafPaymentPlanFeature> updatedFeatures) {
+		ILeafModular iModular = this.getPlanAttachement(id);
+
+		LeafPaymentPlan selectedPlan = this.getSelectedPlanModule(iModular).getSelectedPlan();
+		
+		for (LeafPaymentPlanFeature updatedFeature: updatedFeatures) {
+			for (LeafPaymentPlanFeature existingFeature: selectedPlan.getFeatures()) {
+				if (existingFeature.getName().equals(updatedFeature.getName())) {
+					existingFeature.setValue(updatedFeature.getValue());
+				}
+			}
+		}
+		
+		this.savePlanAttachment(iModular);
+
+		return selectedPlan;
+	}
+	
+	public LeafPaymentPlanInfo getSelectedPlanById(String id) {
+		ILeafModular iModular = this.getPlanAttachement(id);
+		LeafPaymentPlanInfo paymentPlanInfo = new LeafPaymentPlanInfo();
+
+		LeafPaymentPlan selectedPlan = this.getSelectedPlanModule(iModular).getSelectedPlan();
+		PaymentCustomerModule paymentCustomer = this.customerService.getPaymentCustomerModule(iModular);
 
 		if (selectedPlan != null) {
 			paymentPlanInfo.setPlan(selectedPlan);
