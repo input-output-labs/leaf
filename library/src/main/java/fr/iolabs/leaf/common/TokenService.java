@@ -96,7 +96,7 @@ public class TokenService {
 				token.withClaim(claim.getKey(), claim.getValue());
 			}
 			return token.sign(algorithm);
-		} catch (UnsupportedEncodingException | JWTCreationException exception) {
+		} catch (JWTCreationException exception) {
 			logger.error(exception.getMessage());
 		}
 		return null;
@@ -111,7 +111,7 @@ public class TokenService {
 			for(Map.Entry<String, Claim> claim: jwt.getClaims().entrySet()) {
 				claims.put(claim.getKey(), claim.getValue().asString());
 			}
-		} catch (UnsupportedEncodingException | JWTVerificationException exception) {
+		} catch (JWTVerificationException exception) {
 			logger.error(exception.getMessage());
 		}
 		return claims;
