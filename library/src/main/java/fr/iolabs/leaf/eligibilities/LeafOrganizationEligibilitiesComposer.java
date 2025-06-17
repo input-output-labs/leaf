@@ -31,8 +31,8 @@ public class LeafOrganizationEligibilitiesComposer implements ApplicationListene
 
 	@Override
 	public void onApplicationEvent(LeafEligibilitiesEvent event) {
-		LeafAccount account = coreContext.getAccount();
-		LeafOrganization organization = coreContext.getOrganization();
+		LeafAccount account = event.getAccount();
+		LeafOrganization organization = event.getOrganization();
 		
 		if (account == null || organization == null) {
 			for(String policyName: organizationConfig.getPolicies().keySet()) {

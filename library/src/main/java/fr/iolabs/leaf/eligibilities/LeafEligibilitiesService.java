@@ -5,14 +5,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.annotation.Resource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import fr.iolabs.leaf.LeafContext;
+import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.common.LeafPolicy;
+import fr.iolabs.leaf.organization.model.LeafOrganization;
 
 @Service
 public class LeafEligibilitiesService {
+
+	@Resource(name = "coreContext")
+	private LeafContext coreContext;
 	@Autowired
 	private ApplicationEventPublisher applicationEventPublisher;
 
@@ -21,14 +29,26 @@ public class LeafEligibilitiesService {
 	}
 
 	public Map<String, LeafEligibility> getEligibilities(List<String> eligibilityKeys) {
+		LeafOrganization organization = this.coreContext.getOrganization();
+		LeafAccount account = this.coreContext.getAccount();
+		return this.getEligibilities(organization, account, eligibilityKeys);
+	}
+
+	public Map<String, LeafEligibility> getEligibilities(LeafOrganization organization, LeafAccount account, List<String> eligibilityKeys) {
 		Map<String, LeafEligibility> eligibilities = new HashMap<>();
-		this.applicationEventPublisher.publishEvent(new LeafEligibilitiesEvent(this, eligibilities, eligibilityKeys));
+		this.applicationEventPublisher.publishEvent(new LeafEligibilitiesEvent(this, eligibilities, account, organization, eligibilityKeys));
 		return eligibilities;
 	}
 
 	public LeafEligibility getEligibility(String eligibilityKey) {
+		LeafOrganization organization = this.coreContext.getOrganization();
+		LeafAccount account = this.coreContext.getAccount();
+		return this.getEligibility(organization, account, eligibilityKey);
+	}
+
+	public LeafEligibility getEligibility(LeafOrganization organization, LeafAccount account, String eligibilityKey) {
 		Map<String, LeafEligibility> eligibilities = new HashMap<>();
-		this.applicationEventPublisher.publishEvent(new LeafEligibilitiesEvent(this, eligibilities, List.of(eligibilityKey)));
+		this.applicationEventPublisher.publishEvent(new LeafEligibilitiesEvent(this, eligibilities, account, organization, List.of(eligibilityKey)));
 		return eligibilities.get(eligibilityKey);
 	}
 
