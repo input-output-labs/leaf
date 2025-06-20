@@ -138,15 +138,22 @@ public class LeafOrganizationMembershipService {
 		return accounts.stream().filter(account -> organizationMembersId.contains(account.getId()))
 				.collect(Collectors.toList());
 	}
-
-	@Transactional
+	
 	public LeafOrganization inviteUserToOrganization(String email) {
-		if (email == null || email.isBlank()) {
-			throw new BadRequestException("Email must not be blank");
-		}
 		LeafOrganization organization = this.coreContext.getOrganization();
 		if (organization == null) {
 			throw new NotFoundException("Organization must be provided in Organization header");
+		}
+		return this.inviteUserToOrganization(organization, email);
+	}
+
+	@Transactional
+	public LeafOrganization inviteUserToOrganization(LeafOrganization organization, String email) {
+		if (email == null || email.isBlank()) {
+			throw new BadRequestException("Email must not be blank");
+		}
+		if (organization == null) {
+			throw new NotFoundException("Organization must not be null");
 		}
 		this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
 
