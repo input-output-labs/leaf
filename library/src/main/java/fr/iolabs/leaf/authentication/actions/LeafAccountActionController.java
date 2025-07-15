@@ -1,8 +1,13 @@
 package fr.iolabs.leaf.authentication.actions;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 
+import fr.iolabs.leaf.authentication.LeafAccountRepository;
 import fr.iolabs.leaf.authentication.LeafAccountService;
 import fr.iolabs.leaf.authentication.model.*;
 import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
@@ -10,6 +15,7 @@ import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.authentication.privacy.LeafPrivacyService;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
 import fr.iolabs.leaf.common.errors.BadRequestException;
+import fr.iolabs.leaf.common.errors.NotFoundException;
 import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +33,9 @@ public class LeafAccountActionController {
 
 	@Autowired
 	private LeafAccountService accountService;
+
+	@Autowired
+	private LeafAccountRepository accountRepository;
 
 	@Autowired
 	private LeafPrivacyService privacyHelper;
@@ -151,5 +160,26 @@ public class LeafAccountActionController {
 		} else {
 			return ResponseEntity.notFound().build();
 		}
+	}
+
+	@CrossOrigin
+	@AdminOnly
+	@PostMapping("/{accountId}/genericData")
+	public LeafAccount updateGenericData(@PathVariable String accountId, @RequestBody Map<String, String> genericData) {
+		Optional<LeafAccount> optAccount = this.accountRepository.findById(accountId);
+		if (optAccount.isEmpty()) {
+			throw new NotFoundException("No existing account with id=" + accountId);
+		}
+		LeafAccount account = optAccount.get();
+
+		if (account.getGenericData() == null) {
+			account.setGenericData(new HashMap<>());
+		}
+
+		for(Map.Entry<String, String> entry : genericData.entrySet()) {
+			account.getGenericData().put(entry.getKey(), entry.getValue());
+		}
+
+		return this.privacyHelper.protectAccount(this.accountRepository.save(account));
 	}
 }

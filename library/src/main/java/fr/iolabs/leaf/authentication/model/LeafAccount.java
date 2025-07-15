@@ -32,6 +32,7 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 	protected CommunicationAgreement communication = new CommunicationAgreement();
 	protected AccountVerification accountVerification;
 	protected Map<String, Object> modules;
+	protected Map<String, String> genericData;
 	protected ResourceMetadata metadata;
 
 	@Deprecated
@@ -48,6 +49,7 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 		this.hashedSessionTokens = new HashSet<>();
 		this.profile = new LeafAccountProfile();
 		this.modules = new HashMap<>();
+		this.genericData = new HashMap<>();
 		this.organizationIds = new HashSet<>();
 		this.accountVerification = new AccountVerification();
 	}
@@ -62,6 +64,7 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 		this.profile = from.profile;
 		this.communication = from.communication;
 		this.modules = from.modules;
+		this.genericData = from.genericData;
 		this.metadata = from.metadata;
 		this.organizationIds = from.organizationIds;
 		this.accountVerification = from.accountVerification;
@@ -159,6 +162,14 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 
 	public void setModules(Map<String, Object> modules) {
 		this.modules = modules;
+	}
+
+	public Map<String, String> getGenericData() {
+		return genericData;
+	}
+
+	public void setGenericData(Map<String, String> genericData) {
+		this.genericData = genericData;
 	}
 
 	public CommunicationAgreement getCommunication() {

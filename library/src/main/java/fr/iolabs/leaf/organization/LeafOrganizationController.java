@@ -1,6 +1,7 @@
 package fr.iolabs.leaf.organization;
 
 import fr.iolabs.leaf.LeafContext;
+import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
 import fr.iolabs.leaf.common.errors.NotFoundException;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -53,6 +55,10 @@ public class LeafOrganizationController {
 		return this.organizationService.create(action);
 	}
 
+	public LeafOrganization protectOrganization(LeafOrganization organization) {
+		return this.protectOrganizations(List.of(organization)).get(0);
+	}
+
 	public List<LeafOrganization> protectOrganizations(Iterable<LeafOrganization> organizations) {
 		List<LeafOrganization> organizationList = StreamSupport.stream(organizations.spliterator(), false)
 				.collect(Collectors.toList());
@@ -71,6 +77,10 @@ public class LeafOrganizationController {
 			if (!eligibilities.get("seePolicies").eligible) {
 				organization.setPolicies(null);
 			}
+			
+			if (coreContext.getAccount() == null || !coreContext.getAccount().isAdmin()) {
+				organization.setGenericData(null);
+			}
 		}
 		return organizationList;
 	}
@@ -85,20 +95,35 @@ public class LeafOrganizationController {
 	@CrossOrigin
 	@GetMapping("/{organizationId}")
 	public LeafOrganization getOrganizationById(@PathVariable String organizationId) {
-		return this
-				.protectOrganizations(
-						List.of(this.organizationService.getById(organizationId).orElseThrow(NotFoundException::new)))
-				.get(0);
+		return this.protectOrganization(this.organizationService.getById(organizationId).orElseThrow(NotFoundException::new));
 	}
 
 	@CrossOrigin
 	@PostMapping("/{organizationId}/profile")
 	public LeafOrganization updateProfile(@PathVariable String organizationId,
 			@RequestBody LeafAccountProfile profile) {
-		return this
-				.protectOrganizations(
-						List.of(this.organizationService.updateProfile(organizationId, profile)))
-				.get(0);
+		return this.protectOrganization(this.organizationService.updateProfile(organizationId, profile));
+	}
+
+	@CrossOrigin
+	@AdminOnly
+	@PostMapping("/{organizationId}/genericData")
+	public LeafOrganization updateGenericData(@PathVariable String organizationId, @RequestBody Map<String, String> genericData) {
+		Optional<LeafOrganization> optOrganization = this.organizationRepository.findById(organizationId);
+		if (optOrganization.isEmpty()) {
+			throw new NotFoundException("No existing organization with id=" + organizationId);
+		}
+
+		LeafOrganization organization = optOrganization.get();
+		if (organization.getGenericData() == null) {
+			organization.setGenericData(new HashMap<>());
+		}
+
+		for(Map.Entry<String, String> entry : genericData.entrySet()) {
+			organization.getGenericData().put(entry.getKey(), entry.getValue());
+		}
+
+		return this.protectOrganization(this.organizationRepository.save(organization));
 	}
 
 	@CrossOrigin

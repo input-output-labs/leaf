@@ -13,7 +13,7 @@
 
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf-demo</artifactId>
-	<version>1.121-SNAPSHOT</version>
+	<version>1.122-SNAPSHOT</version>
 	<name>Leaf - demo</name>
 
 	<properties>
@@ -22,7 +22,7 @@
 		<maven.compiler.target>17</maven.compiler.target>
 		<maven.compiler.release>17</maven.compiler.release>
 		<spring.version>2.7.18</spring.version>
-		<leaf.version>1.121-SNAPSHOT</leaf.version>
+		<leaf.version>1.122-SNAPSHOT</leaf.version>
 	</properties>
 
 	<dependencies>
@@ -49,6 +49,10 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 			<optional>true</optional>
+		</dependency>
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-messaging</artifactId>
 		</dependency>
 
 		<!-- Leaf dependencies -->

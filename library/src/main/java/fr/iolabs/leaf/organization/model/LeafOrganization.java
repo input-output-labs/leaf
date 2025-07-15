@@ -23,6 +23,8 @@ public class LeafOrganization implements ILeafModular {
 
 	protected Map<String, Object> modules;
 
+	protected Map<String, String> genericData;
+
 	protected List<OrganizationMembership> members;
 
 	protected List<OrganizationInvitation> invitations;
@@ -33,6 +35,7 @@ public class LeafOrganization implements ILeafModular {
 
 	public LeafOrganization() {
 		this.modules = new HashMap<>();
+		this.genericData = new HashMap<>();
 		this.members = new ArrayList<>();
 		this.invitations = new ArrayList<>();
 	}
@@ -86,6 +89,14 @@ public class LeafOrganization implements ILeafModular {
 
 	public void setModules(Map<String, Object> modules) {
 		this.modules = modules;
+	}
+
+	public Map<String, String> getGenericData() {
+		return genericData;
+	}
+
+	public void setGenericData(Map<String, String> genericData) {
+		this.genericData = genericData;
 	}
 
 	public List<OrganizationInvitation> getInvitations() {
