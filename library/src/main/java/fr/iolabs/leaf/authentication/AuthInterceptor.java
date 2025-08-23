@@ -1,7 +1,6 @@
 package fr.iolabs.leaf.authentication;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -20,6 +19,7 @@ import fr.iolabs.leaf.organization.model.LeafOrganization;
 import fr.iolabs.leaf.organization.model.OrganizationMembership;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -29,6 +29,8 @@ import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
 import fr.iolabs.leaf.common.annotations.LeafEligibilityCheck;
 import fr.iolabs.leaf.common.annotations.MandatoryOrganization;
+import fr.iolabs.leaf.common.annotations.PermitWithXApiKey;
+import fr.iolabs.leaf.common.errors.BadRequestException;
 import fr.iolabs.leaf.common.errors.UnauthorizedException;
 
 public class AuthInterceptor extends HandlerInterceptorAdapter {
@@ -51,6 +53,11 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 	@Autowired
 	private LeafEligibilitiesService eligibilitiesService;
 
+	@Value("${x_api_key}")
+	private String xApiKey;
+
+	private static final String API_KEY_HEADER_NAME = "X-API-KEY";
+
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
 		this.findConnectedAccount(request);
@@ -60,32 +67,45 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 
 			boolean permitAll = method.hasMethodAnnotation(PermitAll.class);
 			boolean adminOnly = method.hasMethodAnnotation(AdminOnly.class);
+			boolean permitWithXApiKey = method.hasMethodAnnotation(PermitWithXApiKey.class);
 			boolean mandatoryOrganization = method.hasMethodAnnotation(MandatoryOrganization.class);
 			boolean leafEligibilityCheck = method.hasMethodAnnotation(LeafEligibilityCheck.class);
 
 			if (!permitAll) {
-				boolean connected = this.coreContext.getAccount() != null;
-				if (!connected) {
-					throw new UnauthorizedException();
-				}
+				if (permitWithXApiKey) {
+				      boolean noGloballyDefinedAPIKey = this.xApiKey == null || this.xApiKey.isBlank();
+				      if (!noGloballyDefinedAPIKey) {
+				    	  String requestXApiKey = request.getHeader(API_KEY_HEADER_NAME);
+				          boolean requestAccepted = this.xApiKey.toLowerCase().equals(requestXApiKey);
 
-				boolean isAdmin = this.coreContext.getAccount().isAdmin();
-				if (adminOnly && !isAdmin) {
-					throw new UnauthorizedException();
-				}
-				boolean isOrganizationMember = this.isOrganizationMember();
-				if (mandatoryOrganization && !isOrganizationMember) {
-					throw new UnauthorizedException();
-				}
-				if (leafEligibilityCheck) {
-					String[] eligibilityKeys = method.getMethodAnnotation(LeafEligibilityCheck.class).value();
-					Map<String, LeafEligibility> eligibilities = this.eligibilitiesService
-							.getEligibilities(Arrays.asList(eligibilityKeys));
+				          if (!requestAccepted) {
+				            throw new BadRequestException("Wrong x-api-key");
+				          }
+				      }
+				} else {
+					boolean connected = this.coreContext.getAccount() != null;
+					if (!connected) {
+						throw new UnauthorizedException();
+					}
 
-					for (String eligibilityKey : eligibilities.keySet()) {
-						LeafEligibility eligibility = eligibilities.get(eligibilityKey);
-						if (eligibility == null || !eligibility.eligible) {
-							throw new UnauthorizedException("eligibility check is false for " + eligibilityKey);
+					boolean isAdmin = this.coreContext.getAccount().isAdmin();
+					if (adminOnly && !isAdmin) {
+						throw new UnauthorizedException();
+					}
+					boolean isOrganizationMember = this.isOrganizationMember();
+					if (mandatoryOrganization && !isOrganizationMember) {
+						throw new UnauthorizedException();
+					}
+					if (leafEligibilityCheck) {
+						String[] eligibilityKeys = method.getMethodAnnotation(LeafEligibilityCheck.class).value();
+						Map<String, LeafEligibility> eligibilities = this.eligibilitiesService
+								.getEligibilities(Arrays.asList(eligibilityKeys));
+
+						for (String eligibilityKey : eligibilities.keySet()) {
+							LeafEligibility eligibility = eligibilities.get(eligibilityKey);
+							if (eligibility == null || !eligibility.eligible) {
+								throw new UnauthorizedException("eligibility check is false for " + eligibilityKey);
+							}
 						}
 					}
 				}

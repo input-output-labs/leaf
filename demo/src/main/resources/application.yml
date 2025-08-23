@@ -56,3 +56,4 @@ leaf:
         accountSid: "${TWILIO_ACCOUNT_SID:}"
         authToken: "${TWILIO_AUTH_TOKEN:}"
         phoneNumber: "${TWILIO_PHONE_NUMBER:}"
+x_api_key: "${X_API_KEY:}"
