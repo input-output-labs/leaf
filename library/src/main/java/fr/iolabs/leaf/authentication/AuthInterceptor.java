@@ -76,7 +76,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 				      boolean noGloballyDefinedAPIKey = this.xApiKey == null || this.xApiKey.isBlank();
 				      if (!noGloballyDefinedAPIKey) {
 				    	  String requestXApiKey = request.getHeader(API_KEY_HEADER_NAME);
-				          boolean requestAccepted = this.xApiKey.toLowerCase().equals(requestXApiKey);
+				          boolean requestAccepted = this.xApiKey.toLowerCase().equalsIgnoreCase(requestXApiKey);
 
 				          if (!requestAccepted) {
 				            throw new BadRequestException("Wrong x-api-key");
