@@ -71,7 +71,7 @@ public class LeafScheduledTaskService {
 				Criteria.where("lockedAt").lt(unlockTime)));
 		searchQuery.addCriteria(Criteria.where("executeAt").lt(now));
 		List<LeafScheduledTask> tasks = this.mongoTemplate.find(searchQuery, LeafScheduledTask.class);
-		System.out.println("Scheduled tasks found : " + tasks.size());
+		System.out.println("[LeafScheduledTask] Scheduled tasks found : " + tasks.size());
 
 		for (LeafScheduledTask task : tasks) {
 			System.out.print("[LeafScheduledTask] " + task.getId() + " (" + task.getType() + ") lockedAt="
@@ -121,6 +121,7 @@ public class LeafScheduledTaskService {
 				System.err.println("/!\\ Task cannot be done /!\\");
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			task.setFailedAt(ZonedDateTime.now());
 			this.scheduledTaskRepository.save(task);
 		}

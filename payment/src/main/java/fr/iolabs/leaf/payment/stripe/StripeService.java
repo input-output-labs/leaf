@@ -23,9 +23,11 @@ import com.stripe.model.PaymentLink;
 import com.stripe.model.PaymentMethodCollection;
 import com.stripe.model.Price;
 import com.stripe.model.Product;
+import com.stripe.model.Refund;
 import com.stripe.model.StripeObject;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.CustomerListPaymentMethodsParams;
+import com.stripe.param.RefundCreateParams;
 
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
@@ -42,6 +44,7 @@ import fr.iolabs.leaf.payment.stripe.models.PaymentCheckoutCreationAction;
 import fr.iolabs.leaf.payment.stripe.models.PaymentIntentCaptureAction;
 import fr.iolabs.leaf.payment.stripe.models.PaymentIntentCreationAction;
 import fr.iolabs.leaf.payment.stripe.models.PaymentIntentData;
+import fr.iolabs.leaf.payment.stripe.models.PaymentIntentRefundAction;
 import fr.iolabs.leaf.payment.stripe.models.PaymentLinkCreationAction;
 import fr.iolabs.leaf.payment.stripe.models.StripeProduct;
 
@@ -186,6 +189,19 @@ public class StripeService {
 
 		PaymentIntent capturedPayment = paymentIntent.capture(params);
 		return capturedPayment;
+	}
+
+	public Refund refundPayment(PaymentIntentRefundAction paymentIntentRefundAction) throws StripeException {
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentRefundAction.getIntentId());
+		
+		RefundCreateParams params = RefundCreateParams.builder()
+	            .setPaymentIntent(paymentIntent.getId())
+	            .setAmount(paymentIntentRefundAction.getRefundedAmount())
+	            .build();
+
+	    Refund refund = Refund.create(params);
+	    
+		return refund;
 	}
 
 	public String retrievePaymentIntentFromCheckoutSessionId(String checkoutSessionId) throws StripeException {
