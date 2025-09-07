@@ -41,6 +41,7 @@ import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
 import fr.iolabs.leaf.payment.models.PaymentMethod;
 import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.stripe.models.PaymentCheckoutCreationAction;
+import fr.iolabs.leaf.payment.stripe.models.PaymentIntentCancelAction;
 import fr.iolabs.leaf.payment.stripe.models.PaymentIntentCaptureAction;
 import fr.iolabs.leaf.payment.stripe.models.PaymentIntentCreationAction;
 import fr.iolabs.leaf.payment.stripe.models.PaymentIntentData;
@@ -202,6 +203,14 @@ public class StripeService {
 	    Refund refund = Refund.create(params);
 	    
 		return refund;
+	}
+
+	public PaymentIntent cancelPayment(PaymentIntentCancelAction paymentIntentCancelAction) throws StripeException {
+		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentCancelAction.getIntentId());
+		
+		PaymentIntent cancelledPaymentIntent = paymentIntent.cancel();
+	    
+		return cancelledPaymentIntent;
 	}
 
 	public String retrievePaymentIntentFromCheckoutSessionId(String checkoutSessionId) throws StripeException {
