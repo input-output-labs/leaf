@@ -3,6 +3,7 @@ package fr.iolabs.leaf.organization.model;
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.common.ILeafModular;
+import fr.iolabs.leaf.organization.model.candidature.CandidatureManagement;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -29,6 +30,16 @@ public class LeafOrganization implements ILeafModular {
 
 	protected List<OrganizationInvitation> invitations;
 	
+	protected CandidatureManagement candidatureManagement;
+	
+	public CandidatureManagement getCandidatureManagement() {
+		return candidatureManagement;
+	}
+
+	public void setCandidatureManagement(CandidatureManagement candidatureManagement) {
+		this.candidatureManagement = candidatureManagement;
+	}
+
 	protected OrganizationPolicies policies;
 
 	protected ResourceMetadata metadata;
@@ -38,6 +49,7 @@ public class LeafOrganization implements ILeafModular {
 		this.genericData = new HashMap<>();
 		this.members = new ArrayList<>();
 		this.invitations = new ArrayList<>();
+		this.candidatureManagement = new CandidatureManagement();
 	}
 
 	public LeafOrganization(LeafOrganization from) {
@@ -45,6 +57,7 @@ public class LeafOrganization implements ILeafModular {
 		this.id = from.id;
 		this.name = from.name;
 		this.profile = from.profile;
+		this.candidatureManagement = from.candidatureManagement;
 		this.metadata = from.metadata;
 	}
 

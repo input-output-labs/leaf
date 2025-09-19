@@ -16,6 +16,11 @@ import fr.iolabs.leaf.organization.model.LeafOrganization;
 import fr.iolabs.leaf.organization.model.OrganizationInvitation;
 import fr.iolabs.leaf.organization.model.OrganizationInvitationStatus;
 import fr.iolabs.leaf.organization.model.OrganizationMembership;
+import fr.iolabs.leaf.organization.model.OrganizationRole;
+import fr.iolabs.leaf.organization.model.candidature.OrganizationCandidature;
+import fr.iolabs.leaf.organization.model.candidature.OrganizationCandidatureStatus;
+import fr.iolabs.leaf.organization.model.dto.OrganizationCandidatureData;
+import fr.iolabs.leaf.organization.model.dto.OrganizationCandidatureData.OrganizationCandidatureDataError;
 import fr.iolabs.leaf.organization.model.dto.OrganizationInvitationData;
 import fr.iolabs.leaf.organization.policies.LeafOrganizationPoliciesService;
 
@@ -27,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -238,6 +244,15 @@ public class LeafOrganizationMembershipService {
 		throw new NotFoundException("No invitation found");
 	}
 
+	public OrganizationCandidature findCandidature(LeafOrganization organization, String email) {
+		for (OrganizationCandidature candidature : organization.getCandidatureManagement().getCandidatures()) {
+			if (email.equalsIgnoreCase(candidature.getEmail())) {
+				return candidature;
+			}
+		}
+		throw new NotFoundException("No candidature found");
+	}
+
 	public OrganizationInvitationData getInvitationData(String organizationId, String email) {
 		LeafOrganization organization = this.organizationRepository.findById(organizationId)
 				.orElseThrow(() -> new NotFoundException("Organization not found"));
@@ -309,6 +324,127 @@ public class LeafOrganizationMembershipService {
 		invitation.setAccountId(coreContext.getAccount().getId());
 		invitation.setStatus(OrganizationInvitationStatus.CANCELLED);
 		invitation.getMetadata().updateLastModification();
+
+		this.organizationRepository.save(organization);
+	}
+
+	public LeafOrganization enableCandidatureManagement(boolean enable) {
+		LeafOrganization organization = this.coreContext.getOrganization();
+		if (organization == null) {
+			throw new NotFoundException("Organization must be provided in Organization header");
+		}
+		this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
+		organization.getCandidatureManagement().setEnabled(enable);
+		return this.organizationRepository.save(organization);
+	}
+	
+	public OrganizationCandidatureData getOrganizationCandidatureData(String organizationId, String role) {
+		OrganizationCandidatureData data = new OrganizationCandidatureData();
+		Optional<LeafOrganization> optOrganization = this.organizationRepository.findById(organizationId);
+		if (optOrganization.isEmpty()) {
+			data.setError(OrganizationCandidatureDataError.MISSING_ORGANIZATION);
+			return data;
+		}
+		LeafOrganization organization = optOrganization.get();
+		data.setOrganizationName(organization.getName());
+		if (!organization.getCandidatureManagement().isEnabled()) {
+			data.setError(OrganizationCandidatureDataError.CANDIDATURE_DISABLED);
+			return data;
+		}
+		String existingRoleName = null;
+		for (OrganizationRole existingRole :organization.getPolicies().getRoles()) {
+			if (existingRole.getName().equalsIgnoreCase(role)) {
+				existingRoleName = existingRole.getName();
+			}
+		}
+		if (existingRoleName == null) {
+			data.setError(OrganizationCandidatureDataError.INVALID_ROLE);
+			return data;
+		}
+
+		return data;
+	}
+
+	public void candidateToOrganization(String organizationId, String role) {
+		LeafAccount me = this.coreContext.getAccount();
+		Optional<LeafOrganization> optOrganization = this.organizationRepository.findById(organizationId);
+		if (optOrganization.isEmpty()) {
+			throw new NotFoundException("No organization found with id " + organizationId);
+		}
+		LeafOrganization organization = optOrganization.get();
+		if (!organization.getCandidatureManagement().isEnabled()) {
+			throw new BadRequestException("Cannot candidate to this organization");
+		}
+		String existingRoleName = null;
+		for (OrganizationRole existingRole :organization.getPolicies().getRoles()) {
+			if (existingRole.getName().equalsIgnoreCase(role)) {
+				existingRoleName = existingRole.getName();
+			}
+		}
+		if (existingRoleName == null) {
+			throw new BadRequestException("Requested role does not exists");
+		}
+		OrganizationCandidature candidature = new OrganizationCandidature();
+		candidature.setAccountId(me.getId());
+		candidature.setEmail(me.getEmail());
+		candidature.setRole(existingRoleName);
+		candidature.getMetadata();
+		candidature.setStatus(OrganizationCandidatureStatus.CANDIDATED);
+		organization.getCandidatureManagement().getCandidatures().add(candidature);
+		this.organizationRepository.save(organization);
+	}
+
+	@Transactional
+	public void acceptCandidature(String email) {
+		LeafOrganization organization = this.coreContext.getOrganization();
+		
+		if (!organization.getCandidatureManagement().isEnabled()) {
+			throw new BadRequestException("Organization does not accept candidatures.");
+		}
+
+
+		OrganizationCandidature candidature = this.findCandidature(organization, email);
+		if (candidature.getStatus() != OrganizationCandidatureStatus.CANDIDATED) {
+			throw new BadRequestException("This invitation cannot be accepted anymore.");
+		}
+
+		Optional<LeafAccount> optCandidateAccount = this.accountRepository.findById(candidature.getAccountId());
+		if (optCandidateAccount.isEmpty()) {
+			throw new BadRequestException("Candidate account does not exists anymore.");
+		}
+		LeafAccount candidateAccount = optCandidateAccount.get();
+
+		for (OrganizationMembership member : organization.getMembers()) {
+			if (member.getAccountId().equals(candidature.getAccountId())) {
+				throw new BadRequestException("Already a member of this organization.");
+			}
+		}
+		candidature.setStatus(OrganizationCandidatureStatus.ACCEPTED);
+		candidature.getMetadata().updateLastModification();
+
+		OrganizationMembership newMember = new OrganizationMembership();
+		newMember.setAccountId(candidature.getAccountId());
+		newMember.setRole(candidature.getRole());
+		newMember.getMetadata();
+
+		organization.getMembers().add(newMember);
+
+		
+		candidateAccount.getOrganizationIds().add(organization.getId());
+		this.accountRepository.save(candidateAccount);
+
+		this.organizationRepository.save(organization);
+	}
+
+	@Transactional
+	public void declineCandidature(String email) {
+		LeafOrganization organization = this.coreContext.getOrganization();
+		OrganizationCandidature candidature = this.findCandidature(organization, email);
+		if (candidature.getStatus() != OrganizationCandidatureStatus.CANDIDATED) {
+			throw new BadRequestException("This invitation cannot be accepted anymore.");
+		}
+		candidature.setStatus(OrganizationCandidatureStatus.DECLINED);
+		candidature.getMetadata().updateLastModification();
 
 		this.organizationRepository.save(organization);
 	}

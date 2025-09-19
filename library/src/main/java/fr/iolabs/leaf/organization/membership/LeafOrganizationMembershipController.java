@@ -4,11 +4,13 @@ import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.privacy.LeafPrivacyService;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
 import fr.iolabs.leaf.common.annotations.LeafEligibilityCheck;
+import fr.iolabs.leaf.common.annotations.MandatoryOrganization;
 import fr.iolabs.leaf.common.errors.BadRequestException;
 import fr.iolabs.leaf.organization.actions.SetMemberRoleAction;
 import fr.iolabs.leaf.organization.membership.actions.AddUserToOrganizationAction;
 import fr.iolabs.leaf.organization.membership.actions.InviteUserToOrganizationAction;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
+import fr.iolabs.leaf.organization.model.dto.OrganizationCandidatureData;
 import fr.iolabs.leaf.organization.model.dto.OrganizationInvitationData;
 
 import java.util.List;
@@ -104,4 +106,43 @@ public class LeafOrganizationMembershipController {
 		}
 		this.organizationMembershipService.declineInvitation(organizationId, email);
 	}
+
+	@CrossOrigin
+	@MandatoryOrganization
+	@PostMapping("/selected/candidature-management/enable")
+	public LeafOrganization enableCandidatureManagement(@RequestBody boolean enable) {
+		return this.organizationMembershipService.enableCandidatureManagement(enable);
+	}
+
+	@CrossOrigin
+	@PostMapping("/{organizationId}/candidature-management/candidate")
+	public void candidateToOrganization(@PathVariable String organizationId, @RequestBody String role) {
+		this.organizationMembershipService.candidateToOrganization(organizationId, role);
+	}
+
+	@CrossOrigin
+	@GetMapping("/{organizationId}/candidature-management/{role}")
+	public OrganizationCandidatureData getOrganizationCandidatureData(@PathVariable String organizationId, @PathVariable String role) {
+		return this.organizationMembershipService.getOrganizationCandidatureData(organizationId, role);
+	}
+
+	@CrossOrigin
+	@MandatoryOrganization
+	@PostMapping("/selected/candidature-management/candidatures/{email}/accept")
+	public void acceptCandidature(@PathVariable String email) {
+		if (email == null || email.isBlank()) {
+			throw new BadRequestException("Email must not be empty");
+		}
+		this.organizationMembershipService.acceptCandidature(email);
+	}
+
+	@CrossOrigin
+	@PostMapping("/selected/candidature-management/candidatures/{email}/decline")
+	public void declineCandidature(@PathVariable String email) {
+		if (email == null || email.isBlank()) {
+			throw new BadRequestException("Email must not be empty");
+		}
+		this.organizationMembershipService.declineCandidature(email);
+	}
+
 }
