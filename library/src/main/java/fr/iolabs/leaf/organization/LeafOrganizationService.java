@@ -2,8 +2,10 @@ package fr.iolabs.leaf.organization;
 
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.authentication.LeafAccountRepository;
+import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
+import fr.iolabs.leaf.common.errors.InternalServerErrorException;
 import fr.iolabs.leaf.common.errors.NotFoundException;
 import fr.iolabs.leaf.organization.actions.CreateOrganizationAction;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
@@ -89,5 +91,26 @@ public class LeafOrganizationService {
 		this.applicationEventPublisher.publishEvent(new OrganizationProfileUpdateEvent(this, organization));
 
 		return this.organizationRepository.save(organization);
+	}
+
+	public boolean isMemberOfOrganization() {
+		LeafOrganization organization = this.coreContext.getOrganization();
+		if (organization == null) {
+			throw new InternalServerErrorException("Cannot invoke this function without @MandatoryOrganization");
+		}
+		return this.isMemberOfOrganization(organization);
+	}
+
+	public boolean isMemberOfOrganization(LeafOrganization organization) {
+		LeafAccount account = this.coreContext.getAccount();
+		if (!account.getOrganizationIds().contains(organization.getId())) {
+			return false;
+		}
+		for(OrganizationMembership member : organization.getMembers()) {
+			if (account.getId().equals(member.getAccountId())) {
+				return true;
+			}
+		}
+        return false;
 	}
 }

@@ -1,6 +1,7 @@
 package fr.iolabs.leaf.payment.services;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Resource;
 
@@ -19,6 +20,12 @@ import org.springframework.web.bind.annotation.RestController;
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
 import fr.iolabs.leaf.common.annotations.MandatoryOrganization;
+import fr.iolabs.leaf.common.errors.BadRequestException;
+import fr.iolabs.leaf.common.errors.NotFoundException;
+import fr.iolabs.leaf.eligibilities.LeafEligibilitiesService;
+import fr.iolabs.leaf.organization.LeafOrganizationRepository;
+import fr.iolabs.leaf.organization.LeafOrganizationService;
+import fr.iolabs.leaf.organization.model.LeafOrganization;
 import fr.iolabs.leaf.payment.plan.config.PlanAttachment;
 
 @RestController
@@ -30,6 +37,12 @@ public class LeafServiceController {
 
     @Autowired
     private LeafServiceService leafServiceService;
+    
+    @Autowired
+    private LeafOrganizationService leafOrganizationService;
+    
+    @Autowired
+    private LeafOrganizationRepository leafOrganizationRepository;
 
     /**
      * Create a new service
@@ -74,21 +87,20 @@ public class LeafServiceController {
     /**
      * Get all services for a specific organization
      */
-    @AdminOnly
     @CrossOrigin
     @GetMapping("/organization/{organizationId}")
     public List<LeafService> getServicesByOrganization(@PathVariable String organizationId) {
+    	Optional<LeafOrganization> optOrganization = this.leafOrganizationRepository.findById(organizationId);
+    	if (optOrganization.isEmpty()) {
+    		throw new NotFoundException("No organization with id " + organizationId);
+    	}
+    	
+    	LeafOrganization organization = optOrganization.get();
+    	if (!this.leafOrganizationService.isMemberOfOrganization(organization)) {
+    		throw new BadRequestException("Not allowed to perform this operation");
+    	}
+    	
         return leafServiceService.getServicesByAttachment(PlanAttachment.ORGANIZATION, organizationId);
-    }
-
-    /**
-     * Get all services for a specific account
-     */
-    @AdminOnly
-    @CrossOrigin
-    @GetMapping("/account/{accountId}")
-    public List<LeafService> getServicesByAccount(@PathVariable String accountId) {
-        return leafServiceService.getServicesByAttachment(PlanAttachment.USER, accountId);
     }
 
     /**
