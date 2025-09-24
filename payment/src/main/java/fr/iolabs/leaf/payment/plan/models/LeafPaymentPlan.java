@@ -6,6 +6,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class LeafPaymentPlan implements Cloneable {
+	// For configuration file only
+	private String parentName;
+	// For configuration file only
+	private boolean isParent;
 	private String name;
 	private String color;
 	private String stripePriceId;
@@ -24,6 +28,8 @@ public class LeafPaymentPlan implements Cloneable {
 	
 	public LeafPaymentPlan clone() {
 		LeafPaymentPlan clone = new LeafPaymentPlan();
+		clone.isParent = this.isParent;
+		clone.parentName = this.parentName;
 		clone.name = this.name;
 		clone.color = this.color;
 		clone.stripePriceId = this.stripePriceId;
@@ -45,6 +51,49 @@ public class LeafPaymentPlan implements Cloneable {
 		clone.inTrial = this.inTrial;
 		clone.stripeSubscriptionId = this.stripeSubscriptionId;
 		return clone;
+	}
+
+	public LeafPaymentPlan enrichedCloning(LeafPaymentPlan parent) {
+		LeafPaymentPlan clone = new LeafPaymentPlan();
+		clone.isParent = this.isParent;
+		clone.parentName = this.parentName;
+		clone.name = this.name;
+		clone.available = this.available;
+		clone.defaultPlan = this.defaultPlan;
+		clone.color = this.color == null ? this.color : parent.color;
+		clone.stripePriceId = this.stripePriceId == null ? this.stripePriceId : parent.stripePriceId;
+		clone.descriptions = this.descriptions == null ? this.descriptions : parent.descriptions;
+		if (this.features != null) {
+			clone.features = (this.features == null ? this.features : parent.features).stream().map(feature -> feature.clone()).collect(Collectors.toList());
+		}
+		if (this.pricing != null) {
+			clone.pricing = (this.pricing == null ? this.pricing : parent.pricing).clone();
+		}
+		clone.suspended = this.suspended;
+		if (this.suspensionBackupPlan != null) {
+			clone.suspensionBackupPlan = this.suspensionBackupPlan.clone();	
+		}
+		clone.trialDuration = this.trialDuration;
+		clone.startedAt = this.startedAt;
+		clone.inTrial = this.inTrial;
+		clone.stripeSubscriptionId = this.stripeSubscriptionId;
+		return clone;
+	}
+
+	public String getParentName() {
+		return parentName;
+	}
+
+	public void setParentName(String parentName) {
+		this.parentName = parentName;
+	}
+
+	public boolean getIsParent() {
+		return isParent;
+	}
+
+	public void setIsParent(boolean isParent) {
+		this.isParent = isParent;
 	}
 
 	public String getName() {

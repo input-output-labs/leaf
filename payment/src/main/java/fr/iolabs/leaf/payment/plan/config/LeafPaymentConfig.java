@@ -44,7 +44,9 @@ public class LeafPaymentConfig {
 	}
 
 	public List<LeafPaymentPlan> getPlans() {
-		return plans.stream().map(plan -> plan.clone()).collect(Collectors.toList());
+		Map<String, LeafPaymentPlan> allParentsPlans = plans.stream().filter(plan -> plan.getIsParent()).collect(Collectors.toMap(p -> p.getName(), p -> p));
+		List<LeafPaymentPlan> nonAbstractPlans = plans.stream().filter(p -> p.getParentName() != null && allParentsPlans.get(p.getParentName()) != null).toList();
+		return nonAbstractPlans.stream().map(p -> p.enrichedCloning(allParentsPlans.get(p.getParentName()))).toList();
 	}
 
 	public void setPlans(List<LeafPaymentPlan> plans) {
