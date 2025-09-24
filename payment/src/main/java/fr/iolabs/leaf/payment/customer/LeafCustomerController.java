@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.stripe.exception.StripeException;
 
 import fr.iolabs.leaf.LeafContext;
-import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
+import fr.iolabs.leaf.payment.PaymentModule;
 
 @RestController
 @RequestMapping("/api/payment/customer")
@@ -27,7 +27,7 @@ public class LeafCustomerController {
 	@CrossOrigin
 	@PostMapping("/paymentmethod")
 	public Map<String, String> checkoutPaymentMethod() throws StripeException {
-		PaymentCustomerModule customerModule = this.customerService.getMyPaymentCustomerModule(true);
-		return this.customerService.checkoutPaymentMethod(customerModule, this.coreContext.getAccount().getId(), "USER");
+		PaymentModule paymentModule = this.customerService.getMyPaymentModule(true);
+		return this.customerService.checkoutPaymentMethod(paymentModule, this.coreContext.getAccount().getId(), "USER");
 	}
 }

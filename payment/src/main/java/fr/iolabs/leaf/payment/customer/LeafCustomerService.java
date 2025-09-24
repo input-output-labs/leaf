@@ -23,10 +23,9 @@ import fr.iolabs.leaf.common.LeafModuleService;
 import fr.iolabs.leaf.common.errors.BadRequestException;
 import fr.iolabs.leaf.organization.LeafOrganizationRepository;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
-import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
+import fr.iolabs.leaf.payment.PaymentModule;
 import fr.iolabs.leaf.payment.models.PaymentMethod;
 import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
-import fr.iolabs.leaf.payment.plan.config.PlanAttachment;
 
 @Service
 public class LeafCustomerService {
@@ -49,47 +48,47 @@ public class LeafCustomerService {
 	@Autowired
 	private LeafOrganizationRepository organizationRepository;
 
-	public PaymentCustomerModule getPaymentCustomerModule(ILeafModular planOwnerTarget) {
+	public PaymentModule getPaymentModule(ILeafModular planOwnerTarget) {
 		if (planOwnerTarget == null) {
 			throw new BadRequestException("No recipiant for payment customer module");
 		}
-		PaymentCustomerModule paymentCustomerModule = this.moduleService.get(PaymentCustomerModule.class, planOwnerTarget);
-		if (paymentCustomerModule.getFreeTrialRemaining() == -1) {
-			paymentCustomerModule.setFreeTrialRemaining(1);
+		PaymentModule paymentModule = this.moduleService.get(PaymentModule.class, planOwnerTarget);
+		if (paymentModule.getFreeTrialRemaining() == -1) {
+			paymentModule.setFreeTrialRemaining(1);
 		}
-		return paymentCustomerModule;
+		return paymentModule;
 	}
 
-	public PaymentCustomerModule getMyPaymentCustomerModule() {
-		return this.getMyPaymentCustomerModule(false);
+	public PaymentModule getMyPaymentModule() {
+		return this.getMyPaymentModule(false);
 	}
 
-	public PaymentCustomerModule getMyPaymentCustomerModule(boolean checkStripeCustomer) {
+	public PaymentModule getMyPaymentModule(boolean checkStripeCustomer) {
 		LeafAccount account = this.coreContext.getAccount();
 		if (account != null) {
-			PaymentCustomerModule paymentCustomerModule = this.getPaymentCustomerModule(account);
-			if (paymentCustomerModule.getStripeId() == null || paymentCustomerModule.getStripeId().isBlank()) {
+			PaymentModule paymentModule = this.getPaymentModule(account);
+			if (paymentModule.getStripeCustomerId() == null || paymentModule.getStripeCustomerId().isBlank()) {
 				try {
-					this.checkStripeCustomer(paymentCustomerModule, account.getEmail());
+					this.checkStripeCustomer(paymentModule, account.getEmail());
 					this.coreContext.setAccount(this.accountRepository.save(account));
 				} catch (StripeException e) {
 					e.printStackTrace();
 				}
 			}
-			return paymentCustomerModule;
+			return paymentModule;
 		}
 		return null;
 	}
 
-	public Customer checkStripeCustomer(PaymentCustomerModule customer) throws StripeException {
-		return this.checkStripeCustomer(customer, null);
+	public Customer checkStripeCustomer(PaymentModule paymentModule) throws StripeException {
+		return this.checkStripeCustomer(paymentModule, null);
 	}
 
-	public Customer checkStripeCustomer(PaymentCustomerModule customer, String email) throws StripeException {
+	public Customer checkStripeCustomer(PaymentModule paymentModule, String email) throws StripeException {
 		// Customer
-		if (customer.getStripeId() != null) {
+		if (paymentModule.getStripeCustomerId() != null) {
 			// if here : verify it
-			return Customer.retrieve(customer.getStripeId());
+			return Customer.retrieve(paymentModule.getStripeCustomerId());
 		} else {
 			// if missing, create it
 			Map<String, Object> creationParams = new HashMap<>();
@@ -97,16 +96,16 @@ public class LeafCustomerService {
 				creationParams.put("email", email);
 			}
 			Customer stripeCustomer = Customer.create(creationParams);
-			customer.setStripeId(stripeCustomer.getId());
+			paymentModule.setStripeCustomerId(stripeCustomer.getId());
 			return stripeCustomer;
 		}
 	}
 
 
-	public Map<String, String> checkoutPaymentMethod(PaymentCustomerModule customer, String iModularId, String innerType)
+	public Map<String, String> checkoutPaymentMethod(PaymentModule paymentModule, String iModularId, String innerType)
 			throws StripeException {
 		// Verify customer
-		Customer.retrieve(customer.getStripeId());
+		Customer.retrieve(paymentModule.getStripeCustomerId());
 
 		// Following instruction from:
 		// https://stripe.com/docs/payments/checkout/subscriptions/update-payment-details#retrieve-checkout-session
@@ -116,7 +115,7 @@ public class LeafCustomerService {
 		metadata.put("goal", "setupCustomerDefaultPaymentMethod");
 		metadata.put("innerId", iModularId);
 		metadata.put("innerType", innerType);
-		metadata.put("customer_id", customer.getStripeId());
+		metadata.put("customer_id", paymentModule.getStripeCustomerId());
 		Map<String, Object> setup_intent_data = new HashMap<>();
 		setup_intent_data.put("metadata", metadata);
 
@@ -128,7 +127,7 @@ public class LeafCustomerService {
 		params.put("mode", "setup");
 		params.put("setup_intent_data", setup_intent_data);
 
-		params.put("customer", customer.getStripeId());
+		params.put("customer", paymentModule.getStripeCustomerId());
 
 		Session session = Session.create(params);
 
@@ -139,7 +138,6 @@ public class LeafCustomerService {
 
 
 	public ILeafModular getLeafModular(String innerType, String iModularId) {
-		PlanAttachment planAttachment = this.paymentConfig.getPlanAttachment();
 		ILeafModular iModular = null;
 		switch (innerType) {
 		case "USER":
@@ -171,9 +169,9 @@ public class LeafCustomerService {
 
 	public void setCustomerPaymentMethod(String innerType, String iModularId, PaymentMethod pm) {
 		ILeafModular iModular = this.getLeafModular(innerType, iModularId);
-		PaymentCustomerModule customer = this.getPaymentCustomerModule(iModular);
-		customer.setDefaultPaymentMethod(pm);
-		customer.getMetadata().updateLastModification();
+		PaymentModule payment = this.getPaymentModule(iModular);
+		payment.setDefaultPaymentMethod(pm);
+		payment.getMetadata().updateLastModification();
 		this.saveLeafModular(iModular);
 	}
 }

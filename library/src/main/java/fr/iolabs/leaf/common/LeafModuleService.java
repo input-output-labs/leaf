@@ -35,10 +35,14 @@ public class LeafModuleService {
 		return this.get(clazz, organization);
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T> T get(Class<T> clazz, ILeafModular account) {
+		return this.get(clazz, account, true);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T get(Class<T> clazz, ILeafModular account, boolean instanciateIfMissing) {
 		Object module = account.getModules().get(this.getModuleKey(clazz));
-		return module != null && clazz.isInstance(module) ? (T) module : this.instanciate(account, clazz);
+		return module != null && clazz.isInstance(module) ? (T) module : (instanciateIfMissing ? this.instanciate(account, clazz) : null);
 	}
 
 	private <T> T instanciate(ILeafModular account, Class<T> clazz) {

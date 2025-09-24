@@ -32,12 +32,12 @@ import com.stripe.param.RefundCreateParams;
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
+import fr.iolabs.leaf.payment.PaymentModule;
 import fr.iolabs.leaf.payment.customer.LeafCustomerService;
 import fr.iolabs.leaf.payment.models.LeafPaymentResultEvent;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransaction;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransactionRepository;
 import fr.iolabs.leaf.payment.models.LeafPaymentTransactionStatusEnum;
-import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
 import fr.iolabs.leaf.payment.models.PaymentMethod;
 import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.stripe.models.PaymentCheckoutCreationAction;
@@ -101,9 +101,9 @@ public class StripeService {
 			params.put("customer", paymentCheckoutCreationAction.getCustomerId());
 		}
 		if (paymentCheckoutCreationAction.isUseCurrentAccount()) {
-			PaymentCustomerModule customer = this.customerService.getMyPaymentCustomerModule();
+			PaymentModule paymentModule = this.customerService.getMyPaymentModule();
 			LeafAccount account = this.coreContext.getAccount();
-			Customer stripeCustomer = this.customerService.checkStripeCustomer(customer, account.getEmail());
+			Customer stripeCustomer = this.customerService.checkStripeCustomer(paymentModule, account.getEmail());
 			params.put("customer", stripeCustomer.getId());
 		}
 

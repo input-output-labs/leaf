@@ -2,6 +2,7 @@ package fr.iolabs.leaf.payment.plan.models;
 
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 
+@Deprecated
 public class SelectedPlanModule {
 	private LeafPaymentPlan selectedPlan;
 	private ResourceMetadata metadata;

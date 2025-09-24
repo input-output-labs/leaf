@@ -11,9 +11,9 @@ import com.stripe.exception.StripeException;
 
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.common.errors.InternalServerErrorException;
+import fr.iolabs.leaf.payment.PaymentModule;
 import fr.iolabs.leaf.payment.customer.LeafCustomerService;
 import fr.iolabs.leaf.payment.models.LeafInvoice;
-import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
 import fr.iolabs.leaf.payment.stripe.StripeInvoicesService;
 
 @Service
@@ -29,9 +29,9 @@ public class InvoicesService {
 	private LeafCustomerService customerService;
 
 	public List<LeafInvoice> fetchMyInvoices() {
-		PaymentCustomerModule customer = this.customerService.getMyPaymentCustomerModule();
+		PaymentModule paymentModule = this.customerService.getMyPaymentModule();
 		try {
-			return this.stripeInvoicesService.getCustomerInvoices(customer);
+			return this.stripeInvoicesService.getCustomerInvoices(paymentModule);
 		} catch (StripeException e) {
 			e.printStackTrace();
 			throw new InternalServerErrorException("Cannot retrieve my invoices");

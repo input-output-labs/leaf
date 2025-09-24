@@ -124,6 +124,12 @@ plans:
     free: false
     price: 69.99
     period: year
+services:
+  -
+    key: sim-100-mb
+    icon: sim_card
+    defaultPrice: 400
+    stripeProductId: product_ppp
 redirect:
   checkout_success: "/leaf-labs/payment"
   checkout_cancel: "/leaf-labs/payment"

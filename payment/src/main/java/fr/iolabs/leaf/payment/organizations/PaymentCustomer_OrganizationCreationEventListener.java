@@ -6,8 +6,8 @@ import org.springframework.stereotype.Component;
 
 import fr.iolabs.leaf.organization.OrganizationCreationEvent;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
+import fr.iolabs.leaf.payment.PaymentModule;
 import fr.iolabs.leaf.payment.customer.LeafCustomerService;
-import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
 import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.plan.config.PlanAttachment;
 
@@ -24,8 +24,8 @@ public class PaymentCustomer_OrganizationCreationEventListener
 	public void onApplicationEvent(OrganizationCreationEvent event) {
 		if (this.paymentConfig.getPlanAttachment() == PlanAttachment.ORGANIZATION) {
 			LeafOrganization organization = event.getOrganization();
-			PaymentCustomerModule customer = this.customerService.getPaymentCustomerModule(organization);
-			customer.setFreeTrialRemaining(this.paymentConfig.getDefaultFreeTrialRemaining());
+			PaymentModule paymentModule = this.customerService.getPaymentModule(organization);
+			paymentModule.setFreeTrialRemaining(this.paymentConfig.getDefaultFreeTrialRemaining());
 		}
 	}
 }

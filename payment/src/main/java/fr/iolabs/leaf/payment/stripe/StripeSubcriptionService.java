@@ -17,16 +17,15 @@ import com.stripe.model.Subscription;
 import com.stripe.model.SubscriptionItem;
 import com.stripe.model.TaxId;
 import com.stripe.model.UsageRecord;
-import com.stripe.model.checkout.Session;
 import com.stripe.net.RequestOptions;
+import com.stripe.param.SubscriptionUpdateParams;
 import com.stripe.param.TaxIdCollectionCreateParams;
 import com.stripe.param.UsageRecordCreateOnSubscriptionItemParams;
 
 import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.common.ILeafModular;
+import fr.iolabs.leaf.payment.PaymentModule;
 import fr.iolabs.leaf.payment.customer.LeafCustomerService;
-import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
-import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
 
 @Service
@@ -43,18 +42,30 @@ public class StripeSubcriptionService implements InitializingBean {
 		Stripe.apiKey = this.privateKey;
 	}
 
-	public void createSubscription(ILeafModular iModular, PaymentCustomerModule customer, LeafPaymentPlan plan)
+	public void createSubscription(ILeafModular iModular, PaymentModule paymentModule, LeafPaymentPlan newPlan, LeafPaymentPlan previousPlan)
 			throws StripeException {
 
-		this.customerService.checkStripeCustomer(customer);
+		this.customerService.checkStripeCustomer(paymentModule);
 		
-		int freeTrialRemaining = customer.getFreeTrialRemaining();
+		String existingSubscriptionId = null;
+		if (previousPlan != null && previousPlan.getStripeSubscriptionId() != null) {
+			existingSubscriptionId = previousPlan.getStripeSubscriptionId();
+		}
+		
+		Subscription stripeSubscription = null;
+		if (existingSubscriptionId != null) {
+			// Update
+			stripeSubscription = updateSubscription(existingSubscriptionId, newPlan, previousPlan);
+		}
+		if (existingSubscriptionId == null) {
+			// Create
+			stripeSubscription = createSubscription(iModular.getId(), paymentModule.getStripeCustomerId(), newPlan, paymentModule.getFreeTrialRemaining() > 0);
+		}
 
 		// Subscription
-		Subscription stripeSubscription = createSubscription(iModular.getId(), customer.getStripeId(), plan, freeTrialRemaining > 0);
-		plan.setStripeSubscriptionId(stripeSubscription.getId());
-		plan.setSuspended(false);
-		customer.decreaseFreeTrialRemaining();
+		newPlan.setStripeSubscriptionId(stripeSubscription.getId());
+		newPlan.setSuspended(false);
+		paymentModule.decreaseFreeTrialRemaining();
 	}
 
 	private Subscription createSubscription(String innerId, String stripeCustomerId, LeafPaymentPlan plan, boolean trialAllowed)
@@ -84,20 +95,41 @@ public class StripeSubcriptionService implements InitializingBean {
 		return Subscription.create(params);
 	}
 
-	public void revokeSubscription(LeafPaymentPlan plan) throws StripeException {
+	public Subscription updateSubscription(String stripeSubscriptionId, LeafPaymentPlan newPlan, LeafPaymentPlan previousPlan) throws StripeException {
 		try {
-			Subscription stripeSubscription = Subscription.retrieve(plan.getStripeSubscriptionId());
+			Subscription stripeSubscription = Subscription.retrieve(stripeSubscriptionId);
 			if (stripeSubscription != null && !"canceled".equals(stripeSubscription.getStatus())) {
-				Map<String, Object> params = new HashMap<>();
-				params.put("invoice_now", true);
-				params.put("prorate", true);
+				List<SubscriptionUpdateParams.Item> items = new ArrayList<>();
 
-				stripeSubscription.cancel(params);
-				plan.setSuspended(true);
+		        // Remove the previous price if provided
+		        if (previousPlan != null && !previousPlan.getPricing().isFree() && previousPlan.getStripePriceId() != null) {
+		            items.add(
+		                SubscriptionUpdateParams.Item.builder()
+		                        .setPrice(previousPlan.getStripePriceId())
+		                        .setDeleted(true)
+		                        .build()
+		            );
+		        }
+
+		        // Add the new price if provided
+		        if (newPlan != null && !newPlan.getPricing().isFree() && newPlan.getStripePriceId() != null) {
+		            items.add(
+		                SubscriptionUpdateParams.Item.builder()
+		                        .setPrice(newPlan.getStripePriceId())
+		                        .build()
+		            );
+		        }
+
+		        SubscriptionUpdateParams params = SubscriptionUpdateParams.builder()
+		                .addAllItem(items)
+		                .build();
+		        
+		        return stripeSubscription.update(params);
 			}
 		} catch (StripeException e) {
 			e.printStackTrace();
 		}
+		return null;
 	}
 
 	public void sendUsageMetrics(String stripeSubscriptionId, String stripePriceId, long quantity)
@@ -114,9 +146,9 @@ public class StripeSubcriptionService implements InitializingBean {
 		}
 	}
 
-	public void updateCustomerBillingDetails(ILeafModular iModular, PaymentCustomerModule customer,
+	public void updateCustomerBillingDetails(ILeafModular iModular, PaymentModule paymentModule,
 			LeafAccountProfile profile) throws StripeException {
-		Customer stripeCustomer = this.customerService.checkStripeCustomer(customer);
+		Customer stripeCustomer = this.customerService.checkStripeCustomer(paymentModule);
 
 		// Update billing address
 		Map<String, Object> updateParams = new HashMap<>();
@@ -159,7 +191,7 @@ public class StripeSubcriptionService implements InitializingBean {
 		Map<String, Object> params = new HashMap<>();
 		params.put("expand", expandList);
 		
-		stripeCustomer = Customer.retrieve(customer.getStripeId(), params, null);
+		stripeCustomer = Customer.retrieve(paymentModule.getStripeCustomerId(), params, null);
 		
 		// Update tax id
 		if (profile.isCorporate() && profile.getAddress() != null && profile.getAddress().getCountry() != null && profile.getTaxId() != null && !profile.getTaxId().isEmpty()) {

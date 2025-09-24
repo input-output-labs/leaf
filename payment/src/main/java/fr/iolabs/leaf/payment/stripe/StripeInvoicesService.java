@@ -22,10 +22,10 @@ import com.stripe.param.InvoiceUpcomingParams;
 
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
+import fr.iolabs.leaf.payment.PaymentModule;
 import fr.iolabs.leaf.payment.customer.LeafCustomerService;
 import fr.iolabs.leaf.payment.models.LeafInvoice;
 import fr.iolabs.leaf.payment.models.LeafPrice;
-import fr.iolabs.leaf.payment.models.PaymentCustomerModule;
 import fr.iolabs.leaf.payment.stripe.models.InvoiceCreationAction;
 import fr.iolabs.leaf.payment.stripe.models.InvoiceItemCreationAction;
 
@@ -38,9 +38,9 @@ public class StripeInvoicesService {
 	@Autowired
 	private LeafCustomerService customerService;
 
-	public List<LeafInvoice> getCustomerInvoices(PaymentCustomerModule customer) throws StripeException {
+	public List<LeafInvoice> getCustomerInvoices(PaymentModule paymentModule) throws StripeException {
 		InvoiceUpcomingParams upcomingInvoiceParams = InvoiceUpcomingParams.builder()
-				.setCustomer(customer.getStripeId()).build();
+				.setCustomer(paymentModule.getStripeCustomerId()).build();
 		Invoice upcomingInvoice = null;
 		try {
 			upcomingInvoice = Invoice.upcoming(upcomingInvoiceParams);
@@ -48,7 +48,7 @@ public class StripeInvoicesService {
 
 		}
 
-		InvoiceListParams invoicesParams = InvoiceListParams.builder().setCustomer(customer.getStripeId())
+		InvoiceListParams invoicesParams = InvoiceListParams.builder().setCustomer(paymentModule.getStripeCustomerId())
 				.setLimit(MAX_INVOICES_LIMIT).build();
 		List<Invoice> invoices = Invoice.list(invoicesParams).getData();
 
@@ -75,8 +75,8 @@ public class StripeInvoicesService {
 
 	public Invoice generateInvoiceForAccount(InvoiceCreationAction action, LeafAccount account) throws StripeException {
 		// RetrieveCustomer
-		PaymentCustomerModule customer = this.customerService.getPaymentCustomerModule(account);
-		Customer stripeCustomer = this.customerService.checkStripeCustomer(customer, account.getEmail());
+		PaymentModule paymentModule = this.customerService.getPaymentModule(account);
+		Customer stripeCustomer = this.customerService.checkStripeCustomer(paymentModule, account.getEmail());
 		return this.generateInvoice(stripeCustomer.getId(), action);
 	}
 

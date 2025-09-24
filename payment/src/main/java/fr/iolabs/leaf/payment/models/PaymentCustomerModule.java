@@ -2,6 +2,7 @@ package fr.iolabs.leaf.payment.models;
 
 import fr.iolabs.leaf.authentication.model.ResourceMetadata;
 
+@Deprecated
 public class PaymentCustomerModule {
 	private String stripeId;
 	private PaymentMethod defaultPaymentMethod;
@@ -37,7 +38,9 @@ public class PaymentCustomerModule {
 	}
 
 	public void decreaseFreeTrialRemaining() {
-		this.freeTrialRemaining--;
+		if (this.freeTrialRemaining > 0) {
+			this.freeTrialRemaining--;
+		}
 	}
 
 	public PaymentMethod getDefaultPaymentMethod() {
