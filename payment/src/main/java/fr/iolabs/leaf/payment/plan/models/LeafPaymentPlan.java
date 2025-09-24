@@ -64,10 +64,14 @@ public class LeafPaymentPlan implements Cloneable {
 		clone.stripePriceId = this.stripePriceId != null ? this.stripePriceId : parent.stripePriceId;
 		clone.descriptions = this.descriptions != null ? this.descriptions : parent.descriptions;
 		if (this.features != null) {
-			clone.features = (this.features != null ? this.features : parent.features).stream().map(feature -> feature.clone()).collect(Collectors.toList());
+			clone.features = this.features.stream().map(feature -> feature.clone()).collect(Collectors.toList());
+		} else if (parent.features != null) {
+			clone.features = parent.features.stream().map(feature -> feature.clone()).collect(Collectors.toList());
 		}
-		if (this.pricing != null) {
-			clone.pricing = (this.pricing != null ? this.pricing : parent.pricing).clone();
+		if (this.pricing != null || parent.pricing != null) {
+			clone.pricing = this.pricing.clone();
+		} else if (parent.pricing != null) {
+			clone.pricing = parent.pricing.clone();
 		}
 		clone.suspended = this.suspended;
 		if (this.suspensionBackupPlan != null) {
