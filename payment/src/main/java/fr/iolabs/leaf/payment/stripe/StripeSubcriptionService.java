@@ -13,20 +13,26 @@ import org.springframework.stereotype.Service;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
+import com.stripe.model.Price;
 import com.stripe.model.Subscription;
 import com.stripe.model.SubscriptionItem;
 import com.stripe.model.TaxId;
 import com.stripe.model.UsageRecord;
 import com.stripe.net.RequestOptions;
+import com.stripe.param.PriceCreateParams;
+import com.stripe.param.SubscriptionCreateParams;
 import com.stripe.param.SubscriptionUpdateParams;
+import com.stripe.param.SubscriptionUpdateParams.CollectionMethod;
 import com.stripe.param.TaxIdCollectionCreateParams;
 import com.stripe.param.UsageRecordCreateOnSubscriptionItemParams;
 
 import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.common.ILeafModular;
 import fr.iolabs.leaf.payment.PaymentModule;
+import fr.iolabs.leaf.payment.PaymentModule.ExtraServicePrice;
 import fr.iolabs.leaf.payment.customer.LeafCustomerService;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
+import fr.iolabs.leaf.payment.services.LeafServiceSubscriptionSynchronization.LeafServiceSubscriptionSynchronizationAction;
 
 @Service
 public class StripeSubcriptionService implements InitializingBean {
@@ -55,7 +61,7 @@ public class StripeSubcriptionService implements InitializingBean {
 		Subscription stripeSubscription = null;
 		if (existingSubscriptionId != null) {
 			// Update
-			stripeSubscription = updateSubscription(existingSubscriptionId, newPlan, previousPlan);
+			stripeSubscription = updateSubscription(paymentModule, existingSubscriptionId, newPlan, previousPlan);
 		}
 		if (existingSubscriptionId == null) {
 			// Create
@@ -82,20 +88,27 @@ public class StripeSubcriptionService implements InitializingBean {
 		Map<String, Object> metadata = new HashMap<>();
 		metadata.put("innerId", innerId);
 		params.put("metadata", metadata);
+		params.put("collectionMethod", metadata);
+		
+		if ("send_invoice".equals(plan.getPaymentMode())) {
+			params.put("collection_method", "send_invoice");
+			params.put("days_until_due", 90);
+		} else {
+			params.put("collection_method", "charge_automatically");
 
-		if (trialAllowed) {
-			params.put("trial_period_days", plan.getTrialDuration());
-			Map<String, Object> trial_settings = new HashMap<>();
-			Map<String, Object> end_behavior = new HashMap<>();
-			end_behavior.put("missing_payment_method", "cancel");
-			trial_settings.put("end_behavior", end_behavior);
-			params.put("trial_settings", trial_settings);
+			if (trialAllowed && plan.getTrialDuration() > 0) {
+				params.put("trial_period_days", plan.getTrialDuration());
+				Map<String, Object> trial_settings = new HashMap<>();
+				Map<String, Object> end_behavior = new HashMap<>();
+				trial_settings.put("end_behavior", end_behavior);
+				params.put("trial_settings", trial_settings);
+			}
 		}
 
 		return Subscription.create(params);
 	}
 
-	public Subscription updateSubscription(String stripeSubscriptionId, LeafPaymentPlan newPlan, LeafPaymentPlan previousPlan) throws StripeException {
+	public Subscription updateSubscription(PaymentModule paymentModule, String stripeSubscriptionId, LeafPaymentPlan newPlan, LeafPaymentPlan previousPlan) throws StripeException {
 		try {
 			Subscription stripeSubscription = Subscription.retrieve(stripeSubscriptionId);
 			if (stripeSubscription != null && !"canceled".equals(stripeSubscription.getStatus())) {
@@ -103,26 +116,59 @@ public class StripeSubcriptionService implements InitializingBean {
 
 		        // Remove the previous price if provided
 		        if (previousPlan != null && !previousPlan.getPricing().isFree() && previousPlan.getStripePriceId() != null) {
-		            items.add(
-		                SubscriptionUpdateParams.Item.builder()
-		                        .setPrice(previousPlan.getStripePriceId())
-		                        .setDeleted(true)
-		                        .build()
-		            );
+		    		String subscriptionItemId = null;
+		    		for(SubscriptionItem item : stripeSubscription.getItems().autoPagingIterable()) {
+		    			if (item.getPrice().getId().equals(previousPlan.getStripePriceId())) {
+		    				subscriptionItemId = item.getId();
+		    			}
+		    		}
+		    		if (subscriptionItemId != null) {
+		    			items.add(SubscriptionUpdateParams.Item.builder()
+		    		            .setId(subscriptionItemId)
+		    		            .setDeleted(true)
+		    		            .build());
+		    		}
 		        }
 
 		        // Add the new price if provided
+				String newPeriod = null;
 		        if (newPlan != null && !newPlan.getPricing().isFree() && newPlan.getStripePriceId() != null) {
 		            items.add(
 		                SubscriptionUpdateParams.Item.builder()
 		                        .setPrice(newPlan.getStripePriceId())
 		                        .build()
 		            );
+		            newPeriod = newPlan.getPricing().getPeriod();
 		        }
 
-		        SubscriptionUpdateParams params = SubscriptionUpdateParams.builder()
-		                .addAllItem(items)
-		                .build();
+		        if (newPeriod != null) {
+		        	for(ExtraServicePrice extraServicePrice : paymentModule.getExtraServicePrices()) {
+		        		if (!newPeriod.equals(extraServicePrice.period)) {
+							SubscriptionUpdateParams.Item removedItem = removeSubscriptionItemFrom(stripeSubscription,
+									extraServicePrice);
+							if (removedItem != null) {
+					            items.add(removedItem);
+							}
+		        			// Add new
+		        			extraServicePrice.period = newPeriod;
+							SubscriptionUpdateParams.Item addedItem = createSubscriptionItemFrom(extraServicePrice);
+				            items.add(addedItem);
+		        		}
+		        	}
+		        }
+
+		        SubscriptionUpdateParams.Builder builder = SubscriptionUpdateParams.builder().addAllItem(items);
+		        
+		        if (newPlan != null) {
+					if ("send_invoice".equals(newPlan.getPaymentMode())) {
+						builder.setCollectionMethod(CollectionMethod.SEND_INVOICE);
+						builder.setDaysUntilDue(90L);
+					} else {
+						builder.setCollectionMethod(CollectionMethod.CHARGE_AUTOMATICALLY);
+					}
+		        }
+
+		        SubscriptionUpdateParams params = builder.build();
 		        
 		        return stripeSubscription.update(params);
 			}
@@ -226,5 +272,140 @@ public class StripeSubcriptionService implements InitializingBean {
 				stripeCustomer.getTaxIds().create(taxIdParams);
 			}
 		}
+	}
+
+	public void applyServiceDiffOnSubscription(PaymentModule paymentModule,
+			LeafServiceSubscriptionSynchronizationAction action, String stripeSubscriptionId) {
+		try {
+			Subscription stripeSubscription = Subscription.retrieve(stripeSubscriptionId);
+			if (stripeSubscription != null && !"canceled".equals(stripeSubscription.getStatus())) {
+				List<SubscriptionUpdateParams.Item> items = new ArrayList<>();
+
+				int subscriptionUpdateCount = 0;
+		        // Remove the previous price if provided
+		        for (ExtraServicePrice extraServicePrice : action.extraServicePriceToRemove) {
+					SubscriptionUpdateParams.Item item = removeSubscriptionItemFrom(stripeSubscription,
+							extraServicePrice);
+					if (item != null) {
+			            items.add(item);
+			            subscriptionUpdateCount++;
+					}
+		            paymentModule.removeExtraServicePrice(extraServicePrice);
+				}
+
+		        // Update the previous price if provided
+		        for (ExtraServicePrice extraServicePrice : action.extraServicePriceToUpdate) {					
+					boolean found = false;
+					String subscriptionItemId = null;
+					for(SubscriptionItem item : stripeSubscription.getItems().autoPagingIterable()) {
+						if (item.getPrice().getId().equals(extraServicePrice.stripePriceId)) {
+							found = true;
+							subscriptionItemId = item.getId();
+						}
+					}
+					
+					if (found && subscriptionItemId != null) {
+						SubscriptionUpdateParams.Item.Builder builder = SubscriptionUpdateParams.Item.builder().setId(subscriptionItemId);
+						builder.setQuantity((long) extraServicePrice.service.getQuantity());
+                        
+			            items.add(builder.build());
+			            subscriptionUpdateCount++;
+					}
+		            paymentModule.removeExtraServicePrice(extraServicePrice);
+				}
+
+		        // Add the new price if provided
+				for (ExtraServicePrice extraServicePrice : action.extraServicePriceToAdd) {
+					SubscriptionUpdateParams.Item item = createSubscriptionItemFrom(extraServicePrice);
+		            items.add(item);
+		            subscriptionUpdateCount++;
+		            paymentModule.addExtraServicePrice(extraServicePrice);
+				}
+
+		        
+		        if(subscriptionUpdateCount > 0) {
+			        SubscriptionUpdateParams params = SubscriptionUpdateParams.builder()
+			                .addAllItem(items)
+			                .build();
+			        stripeSubscription.update(params);
+		        } else {
+		        	System.out.println("There is no update - skipping update of the subscription");
+		        }
+			}
+		} catch (StripeException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private SubscriptionUpdateParams.Item removeSubscriptionItemFrom(Subscription stripeSubscription,
+			ExtraServicePrice extraServicePrice) {
+		String subscriptionItemId = null;
+		for(SubscriptionItem item : stripeSubscription.getItems().autoPagingIterable()) {
+			if (item.getPrice().getId().equals(extraServicePrice.stripePriceId)) {
+				subscriptionItemId = item.getId();
+			}
+		}
+		SubscriptionUpdateParams.Item item = null;
+		if (subscriptionItemId != null) {
+			SubscriptionUpdateParams.Item.Builder builder = SubscriptionUpdateParams.Item.builder()
+		            .setId(subscriptionItemId)
+		            .setDeleted(true);
+			if (extraServicePrice.service.isAutomaticQuantities()) {
+				builder.setClearUsage(true);
+			}
+			item = builder.build();
+		}
+		return item;
+	}
+
+	private SubscriptionUpdateParams.Item createSubscriptionItemFrom(ExtraServicePrice extraServicePrice)
+			throws StripeException {
+		Price newPrice = this.createPriceFrom(extraServicePrice);
+		SubscriptionUpdateParams.Item.Builder builder = SubscriptionUpdateParams.Item.builder().setPrice(newPrice.getId());
+		if (!extraServicePrice.service.isAutomaticQuantities()) {
+			builder.setQuantity((long) extraServicePrice.service.getQuantity());
+		}
+		SubscriptionUpdateParams.Item item = builder.build();
+		return item;
+	}
+
+	private Price createPriceFrom(ExtraServicePrice extraServicePrice) throws StripeException {
+		PriceCreateParams.Recurring.Interval recurranceInterval = extraServicePrice.period.equals("year") ? PriceCreateParams.Recurring.Interval.YEAR : PriceCreateParams.Recurring.Interval.MONTH;
+		
+		PriceCreateParams.Builder builder = PriceCreateParams.builder()
+	            .setCurrency("eur")
+	            .setProductData(
+	                PriceCreateParams.ProductData.builder()
+	                    .setName(extraServicePrice.service.getKey())
+	                    .build()
+	            );
+		
+		long unitAmount = extraServicePrice.service.getUnitPrice();
+		if (recurranceInterval == PriceCreateParams.Recurring.Interval.YEAR) {
+			unitAmount *= 12;
+		}
+		builder.setUnitAmount(unitAmount);
+
+		if (extraServicePrice.service.isAutomaticQuantities()) {
+			builder.setRecurring(
+	                PriceCreateParams.Recurring.builder()
+                    .setInterval(recurranceInterval)
+                    .setUsageType(PriceCreateParams.Recurring.UsageType.METERED)
+                    .build()
+            );
+		} else {
+			builder.setRecurring(
+	                PriceCreateParams.Recurring.builder()
+                    .setInterval(recurranceInterval)
+                    .build()
+            );
+		}
+		
+		
+		PriceCreateParams params = builder.build();
+
+	    Price price = Price.create(params);
+	    extraServicePrice.stripePriceId = price.getId();
+	    return price;
 	}
 }

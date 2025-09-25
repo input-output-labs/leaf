@@ -14,23 +14,15 @@ public class LeafService {
     private PlanAttachment attachmentType;
     private String attachedTo;
     private String key;
+    private String stripeProductId;
     private String icon;
     private long unitPrice; // in cents
     private int quantity;
+    private boolean automaticQuantities;
+    private boolean useSubscription;
     private ResourceMetadata metadata;
 
     public LeafService() {
-        this.metadata = ResourceMetadata.create();
-    }
-
-    public LeafService(String id, PlanAttachment attachmentType, String attachedTo, String key, String icon, long unitPrice, int quantity) {
-        this.id = id;
-        this.attachmentType = attachmentType;
-        this.attachedTo = attachedTo;
-        this.key = key;
-        this.icon = icon;
-        this.unitPrice = unitPrice;
-        this.quantity = quantity;
         this.metadata = ResourceMetadata.create();
     }
 
@@ -98,4 +90,28 @@ public class LeafService {
     public void setMetadata(ResourceMetadata metadata) {
         this.metadata = metadata;
     }
+
+    public boolean isAutomaticQuantities() {
+        return automaticQuantities;
+    }
+
+    public void setAutomaticQuantities(boolean automaticQuantities) {
+        this.automaticQuantities = automaticQuantities;
+    }
+
+    public boolean isUseSubscription() {
+        return useSubscription;
+    }
+
+    public void setUseSubscription(boolean useSubscription) {
+        this.useSubscription = useSubscription;
+    }
+
+	public String getStripeProductId() {
+		return stripeProductId;
+	}
+
+	public void setStripeProductId(String stripeProductId) {
+		this.stripeProductId = stripeProductId;
+	}
 }

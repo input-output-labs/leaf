@@ -9,13 +9,24 @@ import org.springframework.transaction.annotation.Transactional;
 
 import fr.iolabs.leaf.common.errors.BadRequestException;
 import fr.iolabs.leaf.common.errors.NotFoundException;
+import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.plan.config.PlanAttachment;
 
 @Service
 public class LeafServiceService {
 
+	@Autowired
+	private LeafPaymentConfig paymentConfig;
+
     @Autowired
     private LeafServiceRepository leafServiceRepository;
+
+    @Autowired
+    private LeafServiceSubscriptionSynchronization leafServiceSubscriptionSynchronization;
+    
+	public List<LeafService> fetchAvailableServices() {
+		return this.paymentConfig.getServices();
+	}
 
     /**
      * Create a new service
@@ -40,8 +51,10 @@ public class LeafServiceService {
         if (leafService.getQuantity() < 0) {
             throw new BadRequestException("Quantity cannot be negative");
         }
-
-        return leafServiceRepository.save(leafService);
+        
+        LeafService service = leafServiceRepository.save(leafService);
+        this.leafServiceSubscriptionSynchronization.synchronizeServicesFor(service.getAttachmentType(), service.getAttachedTo());
+        return service;
     }
 
     /**
@@ -93,6 +106,7 @@ public class LeafServiceService {
         if (updatedService.getQuantity() >= 0) {
             existingService.setQuantity(updatedService.getQuantity());
         }
+        // Update new boolean fields
         if (updatedService.getMetadata() != null) {
             existingService.setMetadata(updatedService.getMetadata());
         }
@@ -100,7 +114,9 @@ public class LeafServiceService {
         // Update last modification timestamp
         existingService.getMetadata().updateLastModification();
 
-        return leafServiceRepository.save(existingService);
+        LeafService service = leafServiceRepository.save(existingService);
+        this.leafServiceSubscriptionSynchronization.synchronizeServicesFor(service.getAttachmentType(), service.getAttachedTo());
+        return service;
     }
 
     /**
@@ -114,6 +130,7 @@ public class LeafServiceService {
 
         LeafService service = getServiceById(id);
         leafServiceRepository.delete(service);
+        this.leafServiceSubscriptionSynchronization.synchronizeServicesFor(service.getAttachmentType(), service.getAttachedTo());
     }
 
     /**

@@ -34,10 +34,11 @@ plans:
  -
   name: basic
   color: lightblue
+  paymentMode: send_invoice
   defaultPlan: false
   available: true
-  stripePriceId: price_1OHtXkC2crD6qr6LinwkrpNS
-  trialDuration: 30
+  stripePriceId: price_1SBB1yAEfEbCcg48bL11uGIh
+  trialDuration: 0
   metadata:
     hello: "world"
   features:
@@ -61,8 +62,41 @@ plans:
     - services
   pricing:
     free: false
-    price: 4.99
+    price: 0
     period: month
+ -
+  name: basic_year
+  color: lightblue
+  defaultPlan: false
+  available: true
+  paymentMode: send_invoice
+  stripePriceId: price_1SBDEdAEfEbCcg48Qy8c9iHU
+  trialDuration: 0
+  metadata:
+    hello: "world"
+  features:
+    -
+      name: userCount
+      type: number
+      value: 5
+    -
+      name: cardCount
+      type: number
+      value: 5
+    -
+      name: reporting
+      type: boolean
+      value: false
+  descriptions:
+    - allFromFree
+    - description
+    - products
+    - gallery
+    - services
+  pricing:
+    free: false
+    price: 0
+    period: year
  -
   name: specialbasic
   color: lightblue
@@ -128,8 +162,23 @@ services:
   -
     key: sim-100-mb
     icon: sim_card
-    defaultPrice: 400
+    unitPrice: 400
+    automaticQuantities: false
+    useSubscription: false
+  -
+    key: premium-support
+    icon: home
+    unitPrice: 300
     stripeProductId: product_ppp
+    automaticQuantities: false
+    useSubscription: true
+  -
+    key: plugs
+    icon: home
+    unitPrice: 300
+    stripeProductId: product_ppp
+    automaticQuantities: true
+    useSubscription: true
 redirect:
   checkout_success: "/leaf-labs/payment"
   checkout_cancel: "/leaf-labs/payment"

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import fr.iolabs.leaf.notifications.YamlPropertySourceFactory;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
+import fr.iolabs.leaf.payment.services.LeafService;
 
 @Component
 @Configuration
@@ -24,6 +25,7 @@ public class LeafPaymentConfig {
 	private boolean collectTaxId;
 	private PlanAttachment planAttachment;
 	private List<LeafPaymentPlan> plans;
+	private List<LeafService> services;
 	private Map<String, String> redirect;
 	private int defaultFreeTrialRemaining;
 
@@ -76,5 +78,13 @@ public class LeafPaymentConfig {
 
 	public void setDefaultFreeTrialRemaining(int defaultFreeTrialRemaining) {
 		this.defaultFreeTrialRemaining = defaultFreeTrialRemaining;
+	}
+
+	public List<LeafService> getServices() {
+		return services;
+	}
+
+	public void setServices(List<LeafService> services) {
+		this.services = services;
 	}
 }

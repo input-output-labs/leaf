@@ -22,7 +22,6 @@ import fr.iolabs.leaf.common.annotations.AdminOnly;
 import fr.iolabs.leaf.common.annotations.MandatoryOrganization;
 import fr.iolabs.leaf.common.errors.BadRequestException;
 import fr.iolabs.leaf.common.errors.NotFoundException;
-import fr.iolabs.leaf.eligibilities.LeafEligibilitiesService;
 import fr.iolabs.leaf.organization.LeafOrganizationRepository;
 import fr.iolabs.leaf.organization.LeafOrganizationService;
 import fr.iolabs.leaf.organization.model.LeafOrganization;
@@ -52,6 +51,12 @@ public class LeafServiceController {
     @PostMapping
     public LeafService createService(@RequestBody LeafService leafService) {
         return leafServiceService.createService(leafService);
+    }
+    
+    @CrossOrigin
+    @GetMapping("/options")
+    public List<LeafService> listAvailableServices() {
+        return leafServiceService.fetchAvailableServices();
     }
 
     /**

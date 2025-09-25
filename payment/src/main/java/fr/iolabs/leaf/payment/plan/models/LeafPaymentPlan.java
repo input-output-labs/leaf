@@ -15,6 +15,8 @@ public class LeafPaymentPlan implements Cloneable {
 	private String stripePriceId;
 	private boolean available;
 	private boolean defaultPlan;
+	// "send_invoice" or "customer_default", if null, will return "customer_default"
+	private String paymentMode;
 	private List<LeafPaymentPlanFeature> features;
 	private LeafPaymentPlanPricing pricing;
 	private boolean suspended;
@@ -36,6 +38,7 @@ public class LeafPaymentPlan implements Cloneable {
 		clone.available = this.available;
 		clone.defaultPlan = this.defaultPlan;
 		clone.descriptions = this.descriptions;
+		clone.paymentMode = this.paymentMode;
 		if (this.features != null) {
 			clone.features = this.features.stream().map(feature -> feature.clone()).collect(Collectors.toList());
 		}
@@ -60,6 +63,7 @@ public class LeafPaymentPlan implements Cloneable {
 		clone.name = this.name;
 		clone.available = this.available;
 		clone.defaultPlan = this.defaultPlan;
+		clone.paymentMode = this.paymentMode;
 		clone.color = this.color != null ? this.color : parent.color;
 		clone.stripePriceId = this.stripePriceId != null ? this.stripePriceId : parent.stripePriceId;
 		clone.descriptions = this.descriptions != null ? this.descriptions : parent.descriptions;
@@ -218,5 +222,16 @@ public class LeafPaymentPlan implements Cloneable {
 
 	public void setMetadata(Map<String, String> metadata) {
 		this.metadata = metadata;
+	}
+
+	public String getPaymentMode() {
+		if (paymentMode == null || paymentMode.isBlank()) {
+			return "customer_default";
+		}
+		return paymentMode;
+	}
+
+	public void setPaymentMode(String paymentMode) {
+		this.paymentMode = paymentMode;
 	}
 }
