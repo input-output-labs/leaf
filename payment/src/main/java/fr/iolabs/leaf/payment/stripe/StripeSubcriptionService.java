@@ -88,7 +88,6 @@ public class StripeSubcriptionService implements InitializingBean {
 		Map<String, Object> metadata = new HashMap<>();
 		metadata.put("innerId", innerId);
 		params.put("metadata", metadata);
-		params.put("collectionMethod", metadata);
 		
 		if ("send_invoice".equals(plan.getPaymentMode())) {
 			params.put("collection_method", "send_invoice");
@@ -372,13 +371,16 @@ public class StripeSubcriptionService implements InitializingBean {
 	private Price createPriceFrom(ExtraServicePrice extraServicePrice) throws StripeException {
 		PriceCreateParams.Recurring.Interval recurranceInterval = extraServicePrice.period.equals("year") ? PriceCreateParams.Recurring.Interval.YEAR : PriceCreateParams.Recurring.Interval.MONTH;
 		
-		PriceCreateParams.Builder builder = PriceCreateParams.builder()
-	            .setCurrency("eur")
-	            .setProductData(
+		PriceCreateParams.Builder builder = PriceCreateParams.builder().setCurrency("eur");
+		if (extraServicePrice.service.getStripeProductId() != null) {
+			builder.setProduct(extraServicePrice.service.getStripeProductId());
+		} else {
+			builder.setProductData(
 	                PriceCreateParams.ProductData.builder()
-	                    .setName(extraServicePrice.service.getKey())
-	                    .build()
-	            );
+                    .setName(extraServicePrice.service.getKey())
+                    .build()
+            );
+		}
 		
 		long unitAmount = extraServicePrice.service.getUnitPrice();
 		if (recurranceInterval == PriceCreateParams.Recurring.Interval.YEAR) {
