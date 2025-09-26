@@ -17,7 +17,8 @@ public class LeafAccountProfile {
 	private String companyName;
 	private String taxId;
     private String registrationNumber;
-	
+    private String billingEmail;
+
 	public LeafAccountProfile() {}
 	
 	public LeafAccountProfile(LeafAccountProfile from) {
@@ -31,6 +32,7 @@ public class LeafAccountProfile {
 		this.taxId = from.taxId;
 		this.registrationNumber = from.registrationNumber;
 		this.companyName = from.companyName;
+		this.billingEmail = from.billingEmail;
 	}
 	
 	@JsonIgnore
@@ -129,6 +131,7 @@ public class LeafAccountProfile {
 		object.put("corporate", this.corporate != null ? this.corporate.booleanValue() : null);
 		object.put("taxId", this.taxId);
 		object.put("registrationNumber", this.registrationNumber);
+		object.put("billingEmail", this.billingEmail);
 		return object;
 	}
 
@@ -167,6 +170,9 @@ public class LeafAccountProfile {
 		if (updates.companyName != null) {
 			this.companyName = updates.companyName;
 		}
+		if (updates.billingEmail != null) {
+			this.billingEmail = updates.billingEmail;
+		}
 	}
 	
 	public boolean isValid() {
@@ -183,5 +189,13 @@ public class LeafAccountProfile {
 
 	public void setCompanyName(String companyName) {
 		this.companyName = companyName;
+	}
+	
+	public String getBillingEmail() {
+		return billingEmail;
+	}
+
+	public void setBillingEmail(String billingEmail) {
+		this.billingEmail = billingEmail;
 	}
 }

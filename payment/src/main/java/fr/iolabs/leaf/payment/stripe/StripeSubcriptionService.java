@@ -19,8 +19,8 @@ import com.stripe.model.SubscriptionItem;
 import com.stripe.model.TaxId;
 import com.stripe.model.UsageRecord;
 import com.stripe.net.RequestOptions;
+import com.stripe.param.CustomerUpdateParams;
 import com.stripe.param.PriceCreateParams;
-import com.stripe.param.SubscriptionCreateParams;
 import com.stripe.param.SubscriptionUpdateParams;
 import com.stripe.param.SubscriptionUpdateParams.CollectionMethod;
 import com.stripe.param.TaxIdCollectionCreateParams;
@@ -31,6 +31,7 @@ import fr.iolabs.leaf.common.ILeafModular;
 import fr.iolabs.leaf.payment.PaymentModule;
 import fr.iolabs.leaf.payment.PaymentModule.ExtraServicePrice;
 import fr.iolabs.leaf.payment.customer.LeafCustomerService;
+import fr.iolabs.leaf.payment.plan.config.LeafPaymentConfig;
 import fr.iolabs.leaf.payment.plan.models.LeafPaymentPlan;
 import fr.iolabs.leaf.payment.services.LeafServiceSubscriptionSynchronization.LeafServiceSubscriptionSynchronizationAction;
 
@@ -42,6 +43,9 @@ public class StripeSubcriptionService implements InitializingBean {
 
 	@Autowired
 	private LeafCustomerService customerService;
+
+	@Autowired
+	private LeafPaymentConfig paymentConfig;
 	
 	@Override
 	public void afterPropertiesSet() {
@@ -193,7 +197,7 @@ public class StripeSubcriptionService implements InitializingBean {
 
 	public void updateCustomerBillingDetails(ILeafModular iModular, PaymentModule paymentModule,
 			LeafAccountProfile profile) throws StripeException {
-		Customer stripeCustomer = this.customerService.checkStripeCustomer(paymentModule);
+		Customer stripeCustomer = this.customerService.checkStripeCustomer(paymentModule, profile.getBillingEmail());
 
 		// Update billing address
 		Map<String, Object> updateParams = new HashMap<>();
@@ -231,45 +235,54 @@ public class StripeSubcriptionService implements InitializingBean {
 		}
 		
 
-		List<String> expandList = new ArrayList<>();
-		expandList.add("tax_ids");
-		Map<String, Object> params = new HashMap<>();
-		params.put("expand", expandList);
-		
-		stripeCustomer = Customer.retrieve(paymentModule.getStripeCustomerId(), params, null);
-		
-		// Update tax id
-		if (profile.isCorporate() && profile.getAddress() != null && profile.getAddress().getCountry() != null && profile.getTaxId() != null && !profile.getTaxId().isEmpty()) {
-			TaxIdCollectionCreateParams.Type taxType = TaxIdCollectionCreateParams.Type.EU_VAT;
-			switch (profile.getAddress().getCountry()) {
-			case "CH":
-				taxType = TaxIdCollectionCreateParams.Type.CH_VAT;
-				break;
-			case "FR":
-			case "BE":
-			case "LU":
-			default:
-				taxType = TaxIdCollectionCreateParams.Type.EU_VAT;
-				break;
-			}
-			TaxIdCollectionCreateParams taxIdParams = TaxIdCollectionCreateParams.builder().setType(taxType)
-					.setValue(profile.getTaxId()).build();
-			TaxId existingTaxIdForType = null;
-			for(TaxId tax : stripeCustomer.getTaxIds().getData()) {
-				if (tax.getType().equals(taxType.getValue())) {
-					existingTaxIdForType = tax;
+		if (this.paymentConfig.isCollectTaxId() && profile.isCorporate()) {
+			List<String> expandList = new ArrayList<>();
+			expandList.add("tax_ids");
+			Map<String, Object> params = new HashMap<>();
+			params.put("expand", expandList);
+			
+			stripeCustomer = Customer.retrieve(paymentModule.getStripeCustomerId(), params, null);
+			
+			// Update tax id
+			if (profile.isCorporate() && profile.getAddress() != null && profile.getAddress().getCountry() != null && profile.getTaxId() != null && !profile.getTaxId().isEmpty()) {
+				TaxIdCollectionCreateParams.Type taxType = TaxIdCollectionCreateParams.Type.EU_VAT;
+				switch (profile.getAddress().getCountry()) {
+				case "CH":
+					taxType = TaxIdCollectionCreateParams.Type.CH_VAT;
+					break;
+				case "FR":
+				case "BE":
+				case "LU":
+				default:
+					taxType = TaxIdCollectionCreateParams.Type.EU_VAT;
 					break;
 				}
-			}
-			
-			if (existingTaxIdForType != null) {
-				if (!existingTaxIdForType.getValue().equals(profile.getTaxId())) {
-					existingTaxIdForType.delete();
+				TaxIdCollectionCreateParams taxIdParams = TaxIdCollectionCreateParams.builder().setType(taxType)
+						.setValue(profile.getTaxId()).build();
+				TaxId existingTaxIdForType = null;
+				for(TaxId tax : stripeCustomer.getTaxIds().getData()) {
+					if (tax.getType().equals(taxType.getValue())) {
+						existingTaxIdForType = tax;
+						break;
+					}
+				}
+				
+				if (existingTaxIdForType != null) {
+					if (!existingTaxIdForType.getValue().equals(profile.getTaxId())) {
+						existingTaxIdForType.delete();
+						stripeCustomer.getTaxIds().create(taxIdParams);
+					}
+				} else {
 					stripeCustomer.getTaxIds().create(taxIdParams);
 				}
-			} else {
-				stripeCustomer.getTaxIds().create(taxIdParams);
 			}
+		}
+		
+		if (profile.getBillingEmail() != null && !profile.getBillingEmail().equalsIgnoreCase(stripeCustomer.getEmail())) {
+			CustomerUpdateParams emailUpdateParams = CustomerUpdateParams.builder()
+	                .setEmail(profile.getBillingEmail())
+	                .build();
+			stripeCustomer = stripeCustomer.update(emailUpdateParams);
 		}
 	}
 

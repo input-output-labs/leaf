@@ -33,10 +33,8 @@ public class PaymentCustomer_OrganizationCorporateProfileUpdateEventListener2
 			LeafOrganization organization = event.getOrganization();
 			PaymentModule paymentModule = this.customerService.getPaymentModule(organization);
 			try {
-				if (organization.getProfile().isCorporate()) {
-					this.stripeSubcriptionService.updateCustomerBillingDetails(organization, paymentModule,
-							organization.getProfile());
-				}
+				this.stripeSubcriptionService.updateCustomerBillingDetails(organization, paymentModule,
+						organization.getProfile());
 			} catch (StripeException e) {
 				e.printStackTrace();
 				throw new InternalServerErrorException("Cannot update customer billing details");

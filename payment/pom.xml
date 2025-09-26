@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf-payment</artifactId>
-	<version>1.136-SNAPSHOT</version>
+	<version>1.137-SNAPSHOT</version>
 	<name>leaf-payment</name>
 
 	<properties>
@@ -13,7 +13,7 @@
 		<maven.compiler.target>17</maven.compiler.target>
 		<maven.compiler.release>17</maven.compiler.release>
 		<spring.version>2.7.18</spring.version>
-		<leaf.version>1.136-SNAPSHOT</leaf.version>
+		<leaf.version>1.137-SNAPSHOT</leaf.version>
 	</properties>
 
 	<dependencies>
