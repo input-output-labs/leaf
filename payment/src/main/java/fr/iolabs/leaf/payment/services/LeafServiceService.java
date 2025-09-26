@@ -73,11 +73,15 @@ public class LeafServiceService {
         return service.get();
     }
 
+    public LeafService updateService(String id, LeafService updatedService) {
+    	return this.updateService(id, updatedService, true);
+    }
+
     /**
      * Update an existing service
      */
     @Transactional
-    public LeafService updateService(String id, LeafService updatedService) {
+    public LeafService updateService(String id, LeafService updatedService, boolean synchronize) {
         if (id == null || id.trim().isEmpty()) {
             throw new BadRequestException("Service ID cannot be null or empty");
         }
@@ -115,7 +119,9 @@ public class LeafServiceService {
         existingService.getMetadata().updateLastModification();
 
         LeafService service = leafServiceRepository.save(existingService);
-        this.leafServiceSubscriptionSynchronization.synchronizeServicesFor(service.getAttachmentType(), service.getAttachedTo());
+        if (synchronize) {
+            this.leafServiceSubscriptionSynchronization.synchronizeServicesFor(service.getAttachmentType(), service.getAttachedTo());
+        }
         return service;
     }
 
