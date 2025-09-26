@@ -29,7 +29,7 @@ public class PaymentCustomer_OrganizationCorporateProfileUpdateEventListener2
 
 	@Override
 	public void onApplicationEvent(OrganizationProfileUpdateEvent event) {
-		if (this.paymentConfig.getPlanAttachment() == PlanAttachment.ORGANIZATION && this.paymentConfig.isCollectTaxId()) {
+		if (this.paymentConfig.getPlanAttachment() == PlanAttachment.ORGANIZATION) {
 			LeafOrganization organization = event.getOrganization();
 			PaymentModule paymentModule = this.customerService.getPaymentModule(organization);
 			try {
