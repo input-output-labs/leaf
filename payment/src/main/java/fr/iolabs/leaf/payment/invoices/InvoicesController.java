@@ -30,6 +30,8 @@ public class InvoicesController {
 		switch (type) {
 		case "plan":
 			return this.planService.fetchInvoices();
+		case "organization":
+			return this.invoicesService.fetchMyOrganizationInvoices();
 		case "account":
 			return this.invoicesService.fetchMyInvoices();
 		default:

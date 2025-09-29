@@ -80,6 +80,23 @@ public class LeafCustomerService {
 		return null;
 	}
 
+	public PaymentModule getMyOrganizationPaymentModule() {
+		LeafOrganization organization = this.coreContext.getOrganization();
+		if (organization != null) {
+			PaymentModule paymentModule = this.getPaymentModule(organization);
+			if (paymentModule.getStripeCustomerId() == null || paymentModule.getStripeCustomerId().isBlank()) {
+				try {
+					this.checkStripeCustomer(paymentModule);
+					this.coreContext.setOrganization(this.organizationRepository.save(organization));
+				} catch (StripeException e) {
+					e.printStackTrace();
+				}
+			}
+			return paymentModule;
+		}
+		return null;
+	}
+
 	public Customer checkStripeCustomer(PaymentModule paymentModule) throws StripeException {
 		return this.checkStripeCustomer(paymentModule, null);
 	}

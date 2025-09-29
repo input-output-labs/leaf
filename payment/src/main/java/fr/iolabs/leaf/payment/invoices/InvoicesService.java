@@ -37,4 +37,14 @@ public class InvoicesService {
 			throw new InternalServerErrorException("Cannot retrieve my invoices");
 		}
 	}
+	
+	public List<LeafInvoice> fetchMyOrganizationInvoices() {
+		PaymentModule paymentModule = this.customerService.getMyOrganizationPaymentModule();
+		try {
+			return this.stripeInvoicesService.getCustomerInvoices(paymentModule);
+		} catch (StripeException e) {
+			e.printStackTrace();
+			throw new InternalServerErrorException("Cannot retrieve my invoices");
+		}
+	}
 }

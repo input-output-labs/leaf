@@ -44,6 +44,7 @@ public class LeafServiceSubscriptionSynchronization {
 
 	@Autowired
 	private LeafModuleService leafModuleService;
+	
 	@Async
 	public void synchronizeServicesFor(PlanAttachment attachmentType, String attachedTo) {
 		System.out.println("[LeafServiceSubscriptionSynchronization] synchronizeServicesFor called !");
