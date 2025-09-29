@@ -323,7 +323,6 @@ public class StripeSubcriptionService implements InitializingBean {
 			            items.add(builder.build());
 			            subscriptionUpdateCount++;
 					}
-		            paymentModule.removeExtraServicePrice(extraServicePrice);
 				}
 
 		        // Add the new price if provided
