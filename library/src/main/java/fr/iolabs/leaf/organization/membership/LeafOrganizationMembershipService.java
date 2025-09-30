@@ -23,9 +23,11 @@ import fr.iolabs.leaf.organization.model.dto.OrganizationCandidatureData;
 import fr.iolabs.leaf.organization.model.dto.OrganizationCandidatureData.OrganizationCandidatureDataError;
 import fr.iolabs.leaf.organization.model.dto.OrganizationInvitationData;
 import fr.iolabs.leaf.organization.policies.LeafOrganizationPoliciesService;
+import fr.iolabs.leaf.statistics.LeafStatisticGatheringEvent;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,6 +69,9 @@ public class LeafOrganizationMembershipService {
 
 	@Autowired
 	private LeafOrganizationAuthorizationsService organizationAuthorizationsService;
+	
+	@Autowired
+	private ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	public void addUsersToOrganization(String organizationId, Set<String> accountIds) {
@@ -335,9 +340,11 @@ public class LeafOrganizationMembershipService {
 		}
 		this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
 		organization.getCandidatureManagement().setEnabled(enable);
+
+		this.applicationEventPublisher.publishEvent(new LeafOrganizationCandidatureEnableEvent(this, organization, enable));
 		return this.organizationRepository.save(organization);
 	}
-	
+
 	public OrganizationCandidatureData getOrganizationCandidatureData(String organizationId, String role) {
 		OrganizationCandidatureData data = new OrganizationCandidatureData();
 		Optional<LeafOrganization> optOrganization = this.organizationRepository.findById(organizationId);
