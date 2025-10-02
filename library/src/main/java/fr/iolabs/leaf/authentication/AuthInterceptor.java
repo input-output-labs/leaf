@@ -134,11 +134,11 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 		if (token != null && !token.isEmpty()) {
 			String accountId = tokenService.getAccountIdFromJWT(token);
 			if (accountId == null) {
-				throw new UnauthorizedException();
+				return;
 			}
 			Optional<LeafAccount> account = this.accountRepository.findById(accountId);
 			if (!account.isPresent()) {
-				throw new UnauthorizedException();
+				return;
 			}
 
 			if (tokenService.isSessionJWT(token)) {
@@ -147,7 +147,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 						.anyMatch(hashedToken::equals);
 
 				if (!oneSessionTokenIsMatching) {
-					throw new UnauthorizedException();
+					return;
 				}
 			} else if (tokenService.isPrivateTokenJWT(token)) {
 				PrivateToken privateToken = tokenService.getPrivateTokenFromPrivateTokenJWT(token);
@@ -156,7 +156,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 						.anyMatch(aToken -> hashSecretKey.equals(aToken.getSecretKey()));
 
 				if (!oneAccountTokenIsMatching) {
-					throw new UnauthorizedException();
+					return;
 				}
 			}
 
