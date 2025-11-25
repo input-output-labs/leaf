@@ -19,6 +19,7 @@ import fr.iolabs.leaf.organization.model.OrganizationMembership;
 import fr.iolabs.leaf.organization.model.OrganizationRole;
 import fr.iolabs.leaf.organization.model.candidature.OrganizationCandidature;
 import fr.iolabs.leaf.organization.model.candidature.OrganizationCandidatureStatus;
+import fr.iolabs.leaf.organization.model.config.LeafOrganizationConfig;
 import fr.iolabs.leaf.organization.model.dto.OrganizationCandidatureData;
 import fr.iolabs.leaf.organization.model.dto.OrganizationCandidatureData.OrganizationCandidatureDataError;
 import fr.iolabs.leaf.organization.model.dto.OrganizationInvitationData;
@@ -72,6 +73,9 @@ public class LeafOrganizationMembershipService {
 	
 	@Autowired
 	private ApplicationEventPublisher applicationEventPublisher;
+	
+	@Autowired
+	private LeafOrganizationConfig organizationConfig;
 
 	@Transactional
 	public void addUsersToOrganization(String organizationId, Set<String> accountIds) {
@@ -113,6 +117,19 @@ public class LeafOrganizationMembershipService {
 
 		organization.setMembers(organization.getMembers().stream()
 				.filter(member -> !member.getAccountId().equals(account.getId())).collect(Collectors.toList()));
+		
+		int adminCount = 0;
+		String creatorRole = organizationConfig.getCreatorDefaultName();
+		for (OrganizationMembership member : organization.getMembers()) {
+			String memberRole = member.getRole();
+			if (memberRole != null && memberRole.equals(creatorRole)) {
+				adminCount++;
+			}
+		}
+		if (adminCount == 0) {
+			throw new BadRequestException("Cannot remove last " + creatorRole + " of the organization");
+		}
+		
 		account.getOrganizationIds().remove(organization.getId());
 
 		accountRepository.save(account);
