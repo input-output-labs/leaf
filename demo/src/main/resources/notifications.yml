@@ -15,6 +15,10 @@ notifications:
     ui: yes
     email: d-6725411ee4224cf2b542755ddbe024d0
     ws: yes
+  LEAF_ORGANIZATION_CANDIDATURE_RECEIVED:
+    ui: yes
+    email: d-3d714360a4b7417ea1371f41ee31650f
+    ws: yes
   LEAF_PAYMENT_PLAN_TRIAL_ENDING_SOON:
     ui: yes
     email: d-c7d99cff524a43fd8708de94214db477

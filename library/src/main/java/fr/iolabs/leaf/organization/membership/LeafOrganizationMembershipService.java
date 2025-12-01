@@ -416,6 +416,26 @@ public class LeafOrganizationMembershipService {
 		candidature.setStatus(OrganizationCandidatureStatus.CANDIDATED);
 		organization.getCandidatureManagement().getCandidatures().add(candidature);
 		this.organizationRepository.save(organization);
+		
+		String creatorDefault = "admin";
+		for(OrganizationRole orgRole : organization.getPolicies().getRoles()) {
+			if (orgRole.isCreatorDefault()) {
+				creatorDefault = orgRole.getName();
+			}
+		}
+		final String filterByRole = creatorDefault;
+		List<OrganizationMembership> membersToNotify = organization.getMembers().stream().filter(member -> {
+			return filterByRole != null && filterByRole.equalsIgnoreCase(member.getRole());
+		}).toList();
+		
+		Map<String, Object> notificationPayload = new HashMap<>();
+		notificationPayload.put("organizationId", organizationId);
+		notificationPayload.put("organizationName", organization.getName());
+		notificationPayload.put("candidateEmail", me.getEmail());
+		
+		for (OrganizationMembership memberToNotify: membersToNotify) {
+			this.leafNotificationService.emit(LeafNotification.of("LEAF_ORGANIZATION_CANDIDATURE_RECEIVED", memberToNotify.getAccountId(), notificationPayload));
+		}
 	}
 
 	@Transactional

@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf-sponsoring</artifactId>
-	<version>1.143-SNAPSHOT</version>
+	<version>1.144-SNAPSHOT</version>
 	<name>leaf-sponsoring</name>
 
 	<properties>
@@ -13,7 +13,7 @@
 		<maven.compiler.target>17</maven.compiler.target>
 		<maven.compiler.release>17</maven.compiler.release>
 		<spring.version>2.7.18</spring.version>
-		<leaf.version>1.143-SNAPSHOT</leaf.version>
+		<leaf.version>1.144-SNAPSHOT</leaf.version>
 	</properties>
 
 	<dependencies>
