@@ -268,7 +268,7 @@ public class LeafOrganizationMembershipService {
 
 	public OrganizationCandidature findCandidature(LeafOrganization organization, String email) {
 		for (OrganizationCandidature candidature : organization.getCandidatureManagement().getCandidatures()) {
-			if (email.equalsIgnoreCase(candidature.getEmail())) {
+			if (OrganizationCandidatureStatus.CANDIDATED == candidature.getStatus() && email.equalsIgnoreCase(candidature.getEmail())) {
 				return candidature;
 			}
 		}
@@ -408,13 +408,25 @@ public class LeafOrganizationMembershipService {
 		if (existingRoleName == null) {
 			throw new BadRequestException("Requested role does not exists");
 		}
-		OrganizationCandidature candidature = new OrganizationCandidature();
-		candidature.setAccountId(me.getId());
-		candidature.setEmail(me.getEmail());
+		
+		OrganizationCandidature candidature = null;
+		for (OrganizationCandidature existingCandidature : organization.getCandidatureManagement().getCandidatures()) {
+			boolean validStatus = OrganizationCandidatureStatus.CANDIDATED == existingCandidature.getStatus();
+			boolean sameEmail = me.getEmail().equals(existingCandidature.getEmail());
+			if (validStatus && sameEmail) {
+				candidature = existingCandidature;
+			}
+		}
+		
+		if (candidature == null) {
+			candidature = new OrganizationCandidature();
+			candidature.setAccountId(me.getId());
+			candidature.setEmail(me.getEmail());
+			candidature.setStatus(OrganizationCandidatureStatus.CANDIDATED);
+			organization.getCandidatureManagement().getCandidatures().add(candidature);
+		}
 		candidature.setRole(existingRoleName);
-		candidature.getMetadata();
-		candidature.setStatus(OrganizationCandidatureStatus.CANDIDATED);
-		organization.getCandidatureManagement().getCandidatures().add(candidature);
+		candidature.getMetadata().updateLastModification();
 		this.organizationRepository.save(organization);
 		
 		String creatorDefault = "admin";
