@@ -14,6 +14,7 @@ import fr.iolabs.leaf.organization.policies.LeafOrganizationPoliciesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,7 @@ public class LeafOrganizationController {
 	public List<LeafOrganization> protectOrganizations(Iterable<LeafOrganization> organizations) {
 		List<LeafOrganization> organizationList = StreamSupport.stream(organizations.spliterator(), false)
 				.collect(Collectors.toList());
+		List<LeafOrganization> organizationsReturned = new ArrayList<>();
 		for (LeafOrganization organization : organizationList) {
 			Map<String, LeafEligibility> eligibilities = new HashMap<>();
 			this.organizationEligibilitiesService.getEligibilities(this.coreContext.getAccount(), organization,
@@ -81,8 +83,11 @@ public class LeafOrganizationController {
 			if (coreContext.getAccount() == null || !coreContext.getAccount().isAdmin()) {
 				organization.setGenericData(null);
 			}
+			if (eligibilities.get("seeOrganization").eligible) {
+				organizationsReturned.add(organization);
+			}
 		}
-		return organizationList;
+		return organizationsReturned;
 	}
 
 	@CrossOrigin
