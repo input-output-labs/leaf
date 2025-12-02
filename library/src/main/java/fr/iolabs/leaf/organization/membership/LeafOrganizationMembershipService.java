@@ -24,7 +24,6 @@ import fr.iolabs.leaf.organization.model.dto.OrganizationCandidatureData;
 import fr.iolabs.leaf.organization.model.dto.OrganizationCandidatureData.OrganizationCandidatureDataError;
 import fr.iolabs.leaf.organization.model.dto.OrganizationInvitationData;
 import fr.iolabs.leaf.organization.policies.LeafOrganizationPoliciesService;
-import fr.iolabs.leaf.statistics.LeafStatisticGatheringEvent;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -385,6 +384,14 @@ public class LeafOrganizationMembershipService {
 			data.setError(OrganizationCandidatureDataError.INVALID_ROLE);
 			return data;
 		}
+		
+		LeafAccount me = this.coreContext.getAccount();
+		for(OrganizationMembership member : organization.getMembers()) {
+			if (me.getId().equals(member.getAccountId())) {
+				data.setError(OrganizationCandidatureDataError.ALREADY_MEMBER_OF_ORGANIZATION);
+				return data;
+			}
+		}
 
 		return data;
 	}
@@ -398,6 +405,11 @@ public class LeafOrganizationMembershipService {
 		LeafOrganization organization = optOrganization.get();
 		if (!organization.getCandidatureManagement().isEnabled()) {
 			throw new BadRequestException("Cannot candidate to this organization");
+		}
+		for (OrganizationMembership member : organization.getMembers()) {
+			if (member.getAccountId().equals(me.getId())) {
+				throw new BadRequestException("Already a member of the organization");
+			}
 		}
 		String existingRoleName = null;
 		for (OrganizationRole existingRole :organization.getPolicies().getRoles()) {

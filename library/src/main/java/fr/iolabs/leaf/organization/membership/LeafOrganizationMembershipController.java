@@ -121,7 +121,7 @@ public class LeafOrganizationMembershipController {
 	}
 
 	@CrossOrigin
-	@GetMapping("/{organizationId}/candidature-management/{role}")
+	@GetMapping("/{organizationId}/candidature-management/{email}/{role}")
 	public OrganizationCandidatureData getOrganizationCandidatureData(@PathVariable String organizationId, @PathVariable String role) {
 		return this.organizationMembershipService.getOrganizationCandidatureData(organizationId, role);
 	}

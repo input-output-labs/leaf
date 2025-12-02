@@ -4,7 +4,8 @@ public class OrganizationCandidatureData {
 	public static enum OrganizationCandidatureDataError {
 		MISSING_ORGANIZATION,
 		CANDIDATURE_DISABLED,
-		INVALID_ROLE
+		INVALID_ROLE,
+		ALREADY_MEMBER_OF_ORGANIZATION
 	}
 	private String organizationName;
 	private OrganizationCandidatureDataError error;
