@@ -240,7 +240,7 @@ public class LeafAccountService {
 				fetchedAccount.getAuthentication().getResetPasswordKey(), wasTemporaryAccount);
 	}
 
-	public void resetPassword(ResetPasswordAction resetPasswordAction) {
+	public String resetPassword(ResetPasswordAction resetPasswordAction) {
 		LeafAccount fetchedAccount = this.accountRepository.findAccountByResetPasswordKey(resetPasswordAction.getKey());
 
 		if (fetchedAccount == null) {
@@ -251,7 +251,11 @@ public class LeafAccountService {
 		fetchedAccount.getAuthentication().setResetPasswordKey(null);
 		fetchedAccount.getAuthentication().hashPassword();
 
-		this.accountRepository.save(fetchedAccount);
+		String sessionToken = this.createSessionAndCookie(fetchedAccount);
+
+		accountRepository.save(fetchedAccount);
+
+		return sessionToken;
 	}
 
 	public LeafAccount changeName(String newName) {

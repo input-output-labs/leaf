@@ -134,9 +134,8 @@ public class LeafAccountActionController {
 	@CrossOrigin
 	@PermitAll
 	@PostMapping("/resetPassword")
-	public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordAction resetPasswordAction) {
-		this.accountService.resetPassword(resetPasswordAction);
-		return ResponseEntity.noContent().build();
+	public JWT resetPassword(@RequestBody ResetPasswordAction resetPasswordAction) {
+		return new JWT(this.accountService.resetPassword(resetPasswordAction));
 	}
 
 	@CrossOrigin
