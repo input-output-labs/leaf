@@ -1,7 +1,9 @@
 package fr.iolabs.leaf.common.emailing;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -47,6 +49,11 @@ public class LeafSendgridEmailService {
 
 	public String sendEmailWithTemplate(String to, String templateId, Map<String, Object> templateData,
 			String emailingCategoryName) {
+		return this.sendEmailWithTemplateAndAttachment(to, templateId, templateData, emailingCategoryName, null);
+	}
+
+	public String sendEmailWithTemplateAndAttachment(String to, String templateId, Map<String, Object> templateData,
+			String emailingCategoryName, List<EmailAttachment> attachments) {
 		Email from = new Email(sendgridEmailFrom);
 		Email toEmail = new Email(to);
 		Content content = new Content("text/html", "<html><body>some text here</body></html>");
@@ -79,6 +86,26 @@ public class LeafSendgridEmailService {
 			}
 		}
 
+		// Add attachments if provided
+		if (attachments != null && !attachments.isEmpty()) {
+			for (EmailAttachment attachment : attachments) {
+				if (attachment != null && attachment.getContent() != null && attachment.getFilename() != null && attachment.getContentType() != null) {
+					try {
+						Attachments sendgridAttachment = new Attachments();
+						sendgridAttachment.setContent(Base64.getEncoder().encodeToString(attachment.getContent()));
+						sendgridAttachment.setType(attachment.getContentType());
+						sendgridAttachment.setFilename(attachment.getFilename());
+						sendgridAttachment.setDisposition("attachment");
+						mail.addAttachments(sendgridAttachment);
+						logger.debug("Added attachment {} ({} bytes) to email", attachment.getFilename(), attachment.getContent().length);
+					} catch (Exception ex) {
+						logger.error("Error adding attachment {} to email: {}", attachment.getFilename(), ex.getMessage(), ex);
+						return "Error adding attachment " + attachment.getFilename() + ": " + ex.getMessage();
+					}
+				}
+			}
+		}
+
 		SendGrid sg = new SendGrid(sendgridAPIKey);
 
 		Request request = new Request();
@@ -88,8 +115,11 @@ public class LeafSendgridEmailService {
 			request.setBody(mail.build());
 			Response response = sg.api(request);
 			int statusCode = response.getStatusCode();
-			if (statusCode > 200 && statusCode < 300) {
-				logger.info("Sendgrid email sending success - ID=" + templateId);
+			if (statusCode >= 200 && statusCode < 300) {
+				String attachmentInfo = attachments != null && !attachments.isEmpty() 
+					? " - Attachments: " + attachments.size() 
+					: "";
+				logger.info("Sendgrid email sending success - ID=" + templateId + attachmentInfo);
 			} else {
 				logger.warn("Sendgrid email sending failure - ID=" + templateId + " - STATUS_CODE=" + statusCode);
 			}

@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.io-labs</groupId>
 	<artifactId>leaf-redirect</artifactId>
-	<version>1.149-SNAPSHOT</version>
+	<version>1.150-SNAPSHOT</version>
 	<name>leaf-redirect</name>
 
 	<properties>
@@ -12,7 +12,7 @@
 		<maven.compiler.target>17</maven.compiler.target>
 		<maven.compiler.release>17</maven.compiler.release>
 		<spring.version>2.7.18</spring.version>
-		<leaf.version>1.149-SNAPSHOT</leaf.version>
+		<leaf.version>1.150-SNAPSHOT</leaf.version>
 	</properties>
 
 	<dependencies>
