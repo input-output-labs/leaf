@@ -20,6 +20,7 @@ import fr.iolabs.leaf.organization.model.OrganizationMembership;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -27,6 +28,7 @@ import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
 import fr.iolabs.leaf.common.annotations.AdminOnly;
+import fr.iolabs.leaf.common.annotations.LeafCustomAuthorization;
 import fr.iolabs.leaf.common.annotations.LeafEligibilityCheck;
 import fr.iolabs.leaf.common.annotations.MandatoryOrganization;
 import fr.iolabs.leaf.common.annotations.PermitWithXApiKey;
@@ -53,6 +55,9 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 	@Autowired
 	private LeafEligibilitiesService eligibilitiesService;
 
+	@Autowired
+	private ApplicationEventPublisher applicationEventPublisher;
+
 	@Value("${x_api_key}")
 	private String xApiKey;
 
@@ -60,8 +65,6 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-		this.findConnectedAccount(request);
-
 		if (handler instanceof HandlerMethod) {
 			HandlerMethod method = (HandlerMethod) handler;
 
@@ -70,41 +73,50 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 			boolean permitWithXApiKey = method.hasMethodAnnotation(PermitWithXApiKey.class);
 			boolean mandatoryOrganization = method.hasMethodAnnotation(MandatoryOrganization.class);
 			boolean leafEligibilityCheck = method.hasMethodAnnotation(LeafEligibilityCheck.class);
+			boolean leafCustomAuthorization = method.hasMethodAnnotation(LeafCustomAuthorization.class);
+			
+			if (leafCustomAuthorization) {
+				String customAuthorization = method.getMethodAnnotation(LeafCustomAuthorization.class).value();
+				LeafCustomAuthorizationEvent event = new LeafCustomAuthorizationEvent(this, customAuthorization, method);
+				this.applicationEventPublisher.publishEvent(event);
+				return event.isAccepted();
+			} else {
+				this.findConnectedAccount(request);
+				if (!permitAll) {
+					if (permitWithXApiKey) {
+					      boolean noGloballyDefinedAPIKey = this.xApiKey == null || this.xApiKey.isBlank();
+					      if (!noGloballyDefinedAPIKey) {
+					    	  String requestXApiKey = request.getHeader(API_KEY_HEADER_NAME);
+					          boolean requestAccepted = this.xApiKey.toLowerCase().equalsIgnoreCase(requestXApiKey);
 
-			if (!permitAll) {
-				if (permitWithXApiKey) {
-				      boolean noGloballyDefinedAPIKey = this.xApiKey == null || this.xApiKey.isBlank();
-				      if (!noGloballyDefinedAPIKey) {
-				    	  String requestXApiKey = request.getHeader(API_KEY_HEADER_NAME);
-				          boolean requestAccepted = this.xApiKey.toLowerCase().equalsIgnoreCase(requestXApiKey);
+					          if (!requestAccepted) {
+					            throw new BadRequestException("Wrong x-api-key");
+					          }
+					      }
+					} else {
+						boolean connected = this.coreContext.getAccount() != null;
+						if (!connected) {
+							throw new UnauthorizedException();
+						}
 
-				          if (!requestAccepted) {
-				            throw new BadRequestException("Wrong x-api-key");
-				          }
-				      }
-				} else {
-					boolean connected = this.coreContext.getAccount() != null;
-					if (!connected) {
-						throw new UnauthorizedException();
-					}
+						boolean isAdmin = this.coreContext.getAccount().isAdmin();
+						if (adminOnly && !isAdmin) {
+							throw new UnauthorizedException();
+						}
+						boolean isOrganizationMember = this.isOrganizationMember();
+						if (mandatoryOrganization && !isOrganizationMember) {
+							throw new UnauthorizedException();
+						}
+						if (leafEligibilityCheck) {
+							String[] eligibilityKeys = method.getMethodAnnotation(LeafEligibilityCheck.class).value();
+							Map<String, LeafEligibility> eligibilities = this.eligibilitiesService
+									.getEligibilities(Arrays.asList(eligibilityKeys));
 
-					boolean isAdmin = this.coreContext.getAccount().isAdmin();
-					if (adminOnly && !isAdmin) {
-						throw new UnauthorizedException();
-					}
-					boolean isOrganizationMember = this.isOrganizationMember();
-					if (mandatoryOrganization && !isOrganizationMember) {
-						throw new UnauthorizedException();
-					}
-					if (leafEligibilityCheck) {
-						String[] eligibilityKeys = method.getMethodAnnotation(LeafEligibilityCheck.class).value();
-						Map<String, LeafEligibility> eligibilities = this.eligibilitiesService
-								.getEligibilities(Arrays.asList(eligibilityKeys));
-
-						for (String eligibilityKey : eligibilities.keySet()) {
-							LeafEligibility eligibility = eligibilities.get(eligibilityKey);
-							if (eligibility == null || !eligibility.eligible) {
-								throw new UnauthorizedException("eligibility check is false for " + eligibilityKey);
+							for (String eligibilityKey : eligibilities.keySet()) {
+								LeafEligibility eligibility = eligibilities.get(eligibilityKey);
+								if (eligibility == null || !eligibility.eligible) {
+									throw new UnauthorizedException("eligibility check is false for " + eligibilityKey);
+								}
 							}
 						}
 					}
