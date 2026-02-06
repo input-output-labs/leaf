@@ -77,9 +77,11 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 			
 			if (leafCustomAuthorization) {
 				String customAuthorization = method.getMethodAnnotation(LeafCustomAuthorization.class).value();
-				LeafCustomAuthorizationEvent event = new LeafCustomAuthorizationEvent(this, customAuthorization, method);
+				LeafCustomAuthorizationEvent event = new LeafCustomAuthorizationEvent(this, customAuthorization, request, method);
 				this.applicationEventPublisher.publishEvent(event);
-				return event.isAccepted();
+				if (event.getError() != null) {
+					throw new UnauthorizedException(event.getError());
+				}
 			} else {
 				this.findConnectedAccount(request);
 				if (!permitAll) {
