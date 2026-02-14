@@ -19,6 +19,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
+
+import org.springframework.data.domain.PageRequest;
 
 import javax.annotation.Resource;
 
@@ -39,6 +42,18 @@ public class LeafOrganizationService {
 	private LeafOrganizationPoliciesService policiesService;
 
 	public List<LeafOrganization> listAll() {
+		return organizationRepository.findAll();
+	}
+
+	public List<LeafOrganization> listAll(String nameFilter, Integer limit) {
+		String escapedFilter = nameFilter != null ? Pattern.quote(nameFilter) : null;
+		if (escapedFilter != null && limit != null) {
+			return organizationRepository.findByNameRegex(escapedFilter, PageRequest.of(0, limit));
+		} else if (escapedFilter != null) {
+			return organizationRepository.findByNameRegex(escapedFilter);
+		} else if (limit != null) {
+			return organizationRepository.findAll(PageRequest.of(0, limit)).getContent();
+		}
 		return organizationRepository.findAll();
 	}
 

@@ -45,8 +45,10 @@ public class LeafOrganizationController {
 	@CrossOrigin
 	@AdminOnly
 	@GetMapping
-	public List<LeafOrganization> listOrganizations() {
-		return this.organizationService.listAll();
+	public List<LeafOrganization> listOrganizations(
+			@RequestParam(required = false) String nameFilter,
+			@RequestParam(required = false) Integer limit) {
+		return this.organizationService.listAll(nameFilter, limit);
 	}
 
 	@CrossOrigin
