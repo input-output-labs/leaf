@@ -1,6 +1,7 @@
 package fr.iolabs.leaf.authentication.actions;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -179,6 +180,19 @@ public class LeafAccountActionController {
 			account.getGenericData().put(entry.getKey(), entry.getValue());
 		}
 
+		return this.privacyHelper.protectAccount(this.accountRepository.save(account));
+	}
+
+	@CrossOrigin
+	@AdminOnly
+	@PostMapping("/{accountId}/flags")
+	public LeafAccount updateFlags(@PathVariable String accountId, @RequestBody List<String> flags) {
+		Optional<LeafAccount> optAccount = this.accountRepository.findById(accountId);
+		if (optAccount.isEmpty()) {
+			throw new NotFoundException("No existing account with id=" + accountId);
+		}
+		LeafAccount account = optAccount.get();
+		account.setFlags(flags == null ? List.of() : flags);
 		return this.privacyHelper.protectAccount(this.accountRepository.save(account));
 	}
 }

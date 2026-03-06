@@ -387,6 +387,9 @@ public class LeafAccountService {
 		if ( account.getAccountVerification() != null) {
 			existingAccount.setAccountVerification(account.getAccountVerification());
 		}
+		if (account.getFlags() != null) {
+			existingAccount.setFlags(account.getFlags());
+		}
 		existingAccount.setIsTemporary(account.isTemporary());
 		existingAccount.setIsPartial(account.isPartial());
 		existingAccount.setAdmin(account.isAdmin());

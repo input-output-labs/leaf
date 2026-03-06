@@ -9,8 +9,11 @@ import fr.iolabs.leaf.common.ILeafModular;
 import fr.iolabs.leaf.common.utils.StringHasher;
 
 import java.util.Set;
+import java.util.List;
+import java.util.Locale;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Map;
 
 
@@ -33,6 +36,7 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 	protected AccountVerification accountVerification;
 	protected Map<String, Object> modules;
 	protected Map<String, String> genericData;
+	protected List<String> flags;
 	protected ResourceMetadata metadata;
 
 	@Deprecated
@@ -50,6 +54,7 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 		this.profile = new LeafAccountProfile();
 		this.modules = new HashMap<>();
 		this.genericData = new HashMap<>();
+		this.flags = new ArrayList<>();
 		this.organizationIds = new HashSet<>();
 		this.accountVerification = new AccountVerification();
 	}
@@ -65,6 +70,7 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 		this.communication = from.communication;
 		this.modules = from.modules;
 		this.genericData = from.genericData;
+		this.flags = from.flags;
 		this.metadata = from.metadata;
 		this.organizationIds = from.organizationIds;
 		this.accountVerification = from.accountVerification;
@@ -170,6 +176,20 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 
 	public void setGenericData(Map<String, String> genericData) {
 		this.genericData = genericData;
+	}
+
+	public List<String> getFlags() {
+		return flags;
+	}
+
+	public void setFlags(List<String> flags) {
+		this.flags = new ArrayList<>();
+		if (flags == null) {
+			return;
+		}
+		for (String flag : flags) {
+			this.flags.add(flag == null ? null : flag.trim().toLowerCase(Locale.ROOT));
+		}
 	}
 
 	public CommunicationAgreement getCommunication() {

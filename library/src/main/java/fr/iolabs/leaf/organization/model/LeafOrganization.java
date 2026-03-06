@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Document(collection = "organization")
@@ -25,6 +26,8 @@ public class LeafOrganization implements ILeafModular {
 	protected Map<String, Object> modules;
 
 	protected Map<String, String> genericData;
+	
+	protected List<String> flags;
 
 	protected List<OrganizationMembership> members;
 
@@ -47,6 +50,7 @@ public class LeafOrganization implements ILeafModular {
 	public LeafOrganization() {
 		this.modules = new HashMap<>();
 		this.genericData = new HashMap<>();
+		this.flags = new ArrayList<>();
 		this.members = new ArrayList<>();
 		this.invitations = new ArrayList<>();
 		this.candidatureManagement = new CandidatureManagement();
@@ -57,6 +61,7 @@ public class LeafOrganization implements ILeafModular {
 		this.id = from.id;
 		this.name = from.name;
 		this.profile = from.profile;
+		this.flags = from.flags;
 		this.candidatureManagement = from.candidatureManagement;
 		this.metadata = from.metadata;
 	}
@@ -110,6 +115,20 @@ public class LeafOrganization implements ILeafModular {
 
 	public void setGenericData(Map<String, String> genericData) {
 		this.genericData = genericData;
+	}
+
+	public List<String> getFlags() {
+		return flags;
+	}
+
+	public void setFlags(List<String> flags) {
+		this.flags = new ArrayList<>();
+		if (flags == null) {
+			return;
+		}
+		for (String flag : flags) {
+			this.flags.add(flag == null ? null : flag.trim().toLowerCase(Locale.ROOT));
+		}
 	}
 
 	public List<OrganizationInvitation> getInvitations() {

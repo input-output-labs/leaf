@@ -135,6 +135,20 @@ public class LeafOrganizationController {
 
 	@CrossOrigin
 	@AdminOnly
+	@PostMapping("/{organizationId}/flags")
+	public LeafOrganization updateFlags(@PathVariable String organizationId, @RequestBody List<String> flags) {
+		Optional<LeafOrganization> optOrganization = this.organizationRepository.findById(organizationId);
+		if (optOrganization.isEmpty()) {
+			throw new NotFoundException("No existing organization with id=" + organizationId);
+		}
+
+		LeafOrganization organization = optOrganization.get();
+		organization.setFlags(flags == null ? List.of() : flags);
+		return this.protectOrganization(this.organizationRepository.save(organization));
+	}
+
+	@CrossOrigin
+	@AdminOnly
 	@PostMapping("/all/policies/refresh")
 	public void refreshAllOrganizationsPolicies() {
 		List<LeafOrganization> all = this.organizationRepository.findAll();
