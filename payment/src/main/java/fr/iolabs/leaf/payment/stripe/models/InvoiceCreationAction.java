@@ -5,6 +5,7 @@ import java.util.List;
 public class InvoiceCreationAction {
 	private String description;
 	private boolean autoAdvance;
+	private boolean payOutOfBand = true;
 	private List<InvoiceItemCreationAction> items;
 
 	public String getDescription() {
@@ -29,5 +30,13 @@ public class InvoiceCreationAction {
 
 	public void setItems(List<InvoiceItemCreationAction> items) {
 		this.items = items;
+	}
+
+	public boolean isPayOutOfBand() {
+		return payOutOfBand;
+	}
+
+	public void setPayOutOfBand(boolean payOutOfBand) {
+		this.payOutOfBand = payOutOfBand;
 	}
 }

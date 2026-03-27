@@ -96,7 +96,7 @@ public class StripeInvoicesService {
 		}
 		
 		Invoice updatedInvoice = Invoice.retrieve(invoice.getId());
-		InvoicePayParams invoicePayParams = InvoicePayParams.builder().setPaidOutOfBand(true).build();
+		InvoicePayParams invoicePayParams = InvoicePayParams.builder().setPaidOutOfBand(action.isPayOutOfBand()).build();
 		Invoice paidInvoice = updatedInvoice.pay(invoicePayParams);
 		return paidInvoice;
 	}
