@@ -78,6 +78,8 @@ public class OAuthAccountService {
 
 		applicationEventPublisher.publishEvent(new AccountRegistrationEvent(this, account));
 
+		account = accountRepository.save(account);
+		// We need to create the session after saving the account to ensure the account ID is generated and available for the session creation
 		String sessionToken = accountService.createSessionAndCookie(account);
 		account = accountRepository.save(account);
 
