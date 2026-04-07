@@ -1,8 +1,6 @@
 package fr.iolabs.leaf.authentication.privacy;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -11,9 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
-import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.LeafContext;
 import fr.iolabs.leaf.authentication.model.AccountVerification;
+import fr.iolabs.leaf.authentication.model.LeafAccount;
 import fr.iolabs.leaf.authentication.model.authentication.LeafAccountAuthentication;
 import fr.iolabs.leaf.authentication.model.authentication.PrivateToken;
 import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
@@ -55,6 +53,7 @@ public class LeafPrivacyService {
 		result.setPassword(null);
 		result.setResetPasswordKey(null);
 		result.setHashedSessionTokens(null);
+		result.setOauthIdentities(null);
 		result.setPrivateTokens(result.getPrivateTokens().stream().map(this::protectPrivateToken).collect(Collectors.toSet()));
 		return result;
 	}

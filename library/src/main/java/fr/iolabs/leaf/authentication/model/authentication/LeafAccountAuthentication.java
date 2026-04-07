@@ -1,6 +1,8 @@
 package fr.iolabs.leaf.authentication.model.authentication;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import fr.iolabs.leaf.common.utils.StringHasher;
@@ -10,17 +12,20 @@ public class LeafAccountAuthentication {
 	protected String resetPasswordKey;
 	protected Set<PrivateToken> privateTokens;
 	protected Set<String> hashedSessionTokens;
-	
+	protected List<OAuthIdentity> oauthIdentities;
+
 	public LeafAccountAuthentication() {
 		this.privateTokens = new HashSet<>();
 		this.hashedSessionTokens = new HashSet<>();
+		this.oauthIdentities = new ArrayList<>();
 	}
-	
+
 	public LeafAccountAuthentication(LeafAccountAuthentication from) {
 		this.password = from.password;
 		this.resetPasswordKey = from.resetPasswordKey;
 		this.privateTokens = from.privateTokens;
 		this.hashedSessionTokens = from.hashedSessionTokens;
+		this.oauthIdentities = from.oauthIdentities;
 	}
 
 	public void hashPassword() {
@@ -63,5 +68,22 @@ public class LeafAccountAuthentication {
 
 	public void setHashedSessionTokens(Set<String> hashedSessionTokens) {
 		this.hashedSessionTokens = hashedSessionTokens;
+	}
+
+	public List<OAuthIdentity> getOauthIdentities() {
+		return oauthIdentities;
+	}
+
+	public void setOauthIdentities(List<OAuthIdentity> oauthIdentities) {
+		this.oauthIdentities = oauthIdentities;
+	}
+
+	public void addOAuthIdentityIfAbsent(OAuthIdentity identity) {
+		if (this.oauthIdentities == null) {
+			this.oauthIdentities = new ArrayList<>();
+		}
+		if (!this.oauthIdentities.contains(identity)) {
+			this.oauthIdentities.add(identity);
+		}
 	}
 }

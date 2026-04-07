@@ -17,6 +17,9 @@ public interface LeafAccountRepository extends MongoRepository<LeafAccount, Stri
 	@Query(value = "{'authentication.resetPasswordKey': {$eq: ?0}}")
 	public LeafAccount findAccountByResetPasswordKey(String resetPasswordKey);
 
+	@Query("{'authentication.oauthIdentities': {$elemMatch: {'provider': ?0, 'providerUserId': ?1}}}")
+	public LeafAccount findByOAuthIdentity(String provider, String providerUserId);
+
 	public List<LeafAccount> findByAdminTrue();
 
 	public List<LeafAccount> findByAdminTrue(Pageable pageable);

@@ -97,6 +97,20 @@
 			<version>3.19.4</version>
 		</dependency>
 
+		<!-- Apple JWKS fetching  -->
+		<dependency>
+			<groupId>com.auth0</groupId>
+			<artifactId>jwks-rsa</artifactId>
+			<version>0.22.1</version>
+		</dependency>
+
+		<!-- Google OAuth ID Token verification -->
+		<dependency>
+			<groupId>com.google.api-client</groupId>
+			<artifactId>google-api-client</artifactId>
+			<version>2.2.0</version>
+		</dependency>
+
 		<!-- IO Utils -->
 		<dependency>
 			<groupId>commons-io</groupId>
