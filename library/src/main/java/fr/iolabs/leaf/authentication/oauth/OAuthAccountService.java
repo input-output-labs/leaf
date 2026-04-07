@@ -97,18 +97,28 @@ public class OAuthAccountService {
 			account.setEmail(userInfo.getEmail().toLowerCase());
 		}
 
+		String firstname = userInfo.getFirstname();
+		String lastname = userInfo.getLastname();
+
 		// Determine display name
 		String displayName = null;
 		if (!Strings.isBlank(name)) {
 			displayName = name;
-		} else if (!Strings.isBlank(userInfo.getName())) {
-			displayName = userInfo.getName();
+		} else if (!Strings.isBlank(firstname) || !Strings.isBlank(lastname)) {
+			displayName = (!Strings.isBlank(firstname) ? firstname : "") + (!Strings.isBlank(firstname) && !Strings.isBlank(lastname) ? " " : "") + (!Strings.isBlank(lastname) ? lastname : "");
 		} else if (!Strings.isBlank(userInfo.getEmail())) {
 			displayName = userInfo.getEmail();
 		}
 		if (displayName != null) {
 			account.getProfile().setUsername(displayName);
 		}
+		if (!Strings.isBlank(firstname)) {
+			account.getProfile().setFirstname(firstname);
+		}
+		if (!Strings.isBlank(lastname)) {
+			account.getProfile().setLastname(lastname);
+		}
+
 
 		// Set avatar if provided (Google provides one)
 		if (!Strings.isBlank(userInfo.getAvatarUrl())) {

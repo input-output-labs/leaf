@@ -4,17 +4,19 @@ public class OAuthUserInfo {
 	private String provider;
 	private String providerUserId;
 	private String email;
-	private String name;
+	private String firstname;
+	private String lastname;
 	private String avatarUrl;
 
 	public OAuthUserInfo() {
 	}
 
-	public OAuthUserInfo(String provider, String providerUserId, String email, String name, String avatarUrl) {
+	public OAuthUserInfo(String provider, String providerUserId, String email, String firstname, String lastname, String avatarUrl) {
 		this.provider = provider;
 		this.providerUserId = providerUserId;
 		this.email = email;
-		this.name = name;
+		this.firstname = firstname;
+		this.lastname = lastname;
 		this.avatarUrl = avatarUrl;
 	}
 
@@ -42,12 +44,20 @@ public class OAuthUserInfo {
 		this.email = email;
 	}
 
-	public String getName() {
-		return name;
+	public String getFirstname() {
+		return firstname;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setFirstname(String firstname) {
+		this.firstname = firstname;
+	}
+
+	public String getLastname() {
+		return lastname;
+	}
+
+	public void setLastname(String lastname) {
+		this.lastname = lastname;
 	}
 
 	public String getAvatarUrl() {

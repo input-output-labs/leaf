@@ -42,7 +42,8 @@ public class GoogleTokenVerifier implements OAuthTokenVerifier {
 			info.setProvider("google");
 			info.setProviderUserId(payload.getSubject());
 			info.setEmail(payload.getEmail()); // Warning from Google documentation: Don't use email address as an identifier because a Google Account can have multiple email addresses at different points in time. Always use the "sub" field as the identifier for the user.
-			info.setName((String) payload.get("name"));
+			info.setFirstname((String) payload.get("given_name"));
+			info.setLastname((String) payload.get("family_name"));
 			info.setAvatarUrl((String) payload.get("picture"));
 			return info;
 		} catch (UnauthorizedException e) {
