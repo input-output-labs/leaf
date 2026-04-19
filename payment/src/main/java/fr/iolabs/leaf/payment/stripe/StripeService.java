@@ -185,6 +185,9 @@ public class StripeService {
 
 	public PaymentIntent capturePayment(PaymentIntentCaptureAction paymentIntentCaptureAction) throws StripeException {
 		PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentCaptureAction.getIntentId());
+		if ("succeeded".equalsIgnoreCase(paymentIntent.getStatus())) {
+			return paymentIntent;
+		}
 		Map<String, Object> params = new HashMap<>();
 		params.put("amount", paymentIntentCaptureAction.getAmount());
 
