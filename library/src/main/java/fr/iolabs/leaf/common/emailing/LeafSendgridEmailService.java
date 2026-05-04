@@ -54,6 +54,14 @@ public class LeafSendgridEmailService {
 
 	public String sendEmailWithTemplateAndAttachment(String to, String templateId, Map<String, Object> templateData,
 			String emailingCategoryName, List<EmailAttachment> attachments) {
+		return this.sendEmailWithTemplateAndAttachment(to, templateId, templateData, emailingCategoryName, attachments, null);
+	}
+
+	/**
+	 * @param ccEmailAddresses optional CC recipients (applied to the same personalization as {@code to})
+	 */
+	public String sendEmailWithTemplateAndAttachment(String to, String templateId, Map<String, Object> templateData,
+			String emailingCategoryName, List<EmailAttachment> attachments, List<String> ccEmailAddresses) {
 		Email from = new Email(sendgridEmailFrom);
 		Email toEmail = new Email(to);
 		Content content = new Content("text/html", "<html><body>some text here</body></html>");
@@ -83,6 +91,22 @@ public class LeafSendgridEmailService {
 				}
 				url = protocol + "://" + hostAndPath;
 				mail.personalization.get(0).addDynamicTemplateData("unsubscribeUrl", url);
+			}
+		}
+
+		if (ccEmailAddresses != null && !ccEmailAddresses.isEmpty()) {
+			for (String ccAddress : ccEmailAddresses) {
+				if (ccAddress == null) {
+					continue;
+				}
+				String trimmedCc = ccAddress.trim();
+				if (trimmedCc.isEmpty()) {
+					continue;
+				}
+				if (to != null && trimmedCc.equalsIgnoreCase(to.trim())) {
+					continue;
+				}
+				mail.personalization.get(0).addCc(new Email(trimmedCc));
 			}
 		}
 
