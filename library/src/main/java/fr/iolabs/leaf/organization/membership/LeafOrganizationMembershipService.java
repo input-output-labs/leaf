@@ -7,6 +7,7 @@ import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.common.emailing.LeafSendgridEmailService;
 import fr.iolabs.leaf.common.errors.BadRequestException;
 import fr.iolabs.leaf.common.errors.NotFoundException;
+import fr.iolabs.leaf.common.errors.UnauthorizedException;
 import fr.iolabs.leaf.notifications.LeafNotification;
 import fr.iolabs.leaf.notifications.LeafNotificationService;
 import fr.iolabs.leaf.organization.LeafOrganizationAuthorizationsService;
@@ -100,39 +101,77 @@ public class LeafOrganizationMembershipService {
 		accountRepository.saveAll(accounts);
 	}
 
-	@Transactional
 	public LeafOrganization removeUserFromOrganization(String accountId) {
+		return this.removeUserFromOrganization(accountId, false);
+	}
+
+	@Transactional
+	public LeafOrganization removeUserFromOrganization(String accountId, boolean avoidLastAdminCheck) {
 		LeafOrganization organization = this.coreContext.getOrganization();
 		if (organization == null) {
 			throw new NotFoundException("Organization must be provided in Organization header");
 		}
-		this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
-		LeafAccount account = accountRepository.findById(accountId)
+		return this.removeUserFromOrganizationInternal(organization, accountId, true, avoidLastAdminCheck);
+	}
+
+	/**
+	 * Removes {@code accountId} from {@code organization}. The caller must be a platform administrator.
+	 * Membership of the current user in {@code organization} is not required (unlike
+	 * {@link #removeUserFromOrganization(String, boolean)}). Intended for trusted flows such as purging
+	 * members before deleting an organization.
+	 */
+	@Transactional
+	public LeafOrganization removeUserFromOrganization(
+		LeafOrganization organization,
+		String accountId,
+		boolean avoidLastAdminCheck
+	) {
+		if (this.coreContext.getAccount() == null || !this.coreContext.getAccount().isAdmin()) {
+			throw new UnauthorizedException();
+		}
+		return this.removeUserFromOrganizationInternal(organization, accountId, false, avoidLastAdminCheck);
+	}
+
+	private LeafOrganization removeUserFromOrganizationInternal(
+		LeafOrganization organization,
+		String accountId,
+		boolean checkCallerIsOrganizationMember,
+		boolean avoidLastAdminCheck
+	) {
+		if (checkCallerIsOrganizationMember) {
+			this.organizationAuthorizationsService.checkIsOrganizationMember(organization);
+		}
+		LeafAccount account = this.accountRepository.findById(accountId)
 				.orElseThrow(() -> new NotFoundException("Account not found"));
 
 		if (!OrganizationHelper.isMemberOfOrganization(organization, accountId)) {
 			throw new NotFoundException("This user is not a member of this organization");
 		}
 
-		organization.setMembers(organization.getMembers().stream()
-				.filter(member -> !member.getAccountId().equals(account.getId())).collect(Collectors.toList()));
-		
-		int adminCount = 0;
-		String creatorRole = organizationConfig.getCreatorDefaultName();
-		for (OrganizationMembership member : organization.getMembers()) {
-			String memberRole = member.getRole();
-			if (memberRole != null && memberRole.equals(creatorRole)) {
-				adminCount++;
+		organization.setMembers(
+			organization.getMembers().stream()
+				.filter(member -> !member.getAccountId().equals(account.getId()))
+				.collect(Collectors.toList())
+		);
+
+		if (!avoidLastAdminCheck) {
+			int adminCount = 0;
+			String creatorRole = this.organizationConfig.getCreatorDefaultName();
+			for (OrganizationMembership member : organization.getMembers()) {
+				String memberRole = member.getRole();
+				if (memberRole != null && memberRole.equals(creatorRole)) {
+					adminCount++;
+				}
+			}
+			if (adminCount == 0) {
+				throw new BadRequestException("Cannot remove last " + creatorRole + " of the organization");
 			}
 		}
-		if (adminCount == 0) {
-			throw new BadRequestException("Cannot remove last " + creatorRole + " of the organization");
-		}
-		
+
 		account.getOrganizationIds().remove(organization.getId());
 
-		accountRepository.save(account);
-		return organizationRepository.save(organization);
+		this.accountRepository.save(account);
+		return this.organizationRepository.save(organization);
 	}
 
 	public LeafOrganization setUserRole(String accountId, String role) {
