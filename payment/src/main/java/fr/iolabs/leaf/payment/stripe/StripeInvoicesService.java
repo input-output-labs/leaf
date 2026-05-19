@@ -96,9 +96,12 @@ public class StripeInvoicesService {
 		}
 		
 		Invoice updatedInvoice = Invoice.retrieve(invoice.getId());
-		InvoicePayParams invoicePayParams = InvoicePayParams.builder().setPaidOutOfBand(action.isPayOutOfBand()).build();
-		Invoice paidInvoice = updatedInvoice.pay(invoicePayParams);
-		return paidInvoice;
+		if (action.isPayOutOfBand()) {
+			InvoicePayParams invoicePayParams = InvoicePayParams.builder().setPaidOutOfBand(true).build();
+			Invoice paidInvoice = updatedInvoice.pay(invoicePayParams);
+			return paidInvoice;
+		}
+		return updatedInvoice;
 	}
 
 	public LeafInvoice stripeToLeafInvoice(Invoice invoice) {
