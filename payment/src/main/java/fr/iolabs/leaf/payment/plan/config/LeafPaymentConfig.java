@@ -26,6 +26,7 @@ public class LeafPaymentConfig {
 	private PlanAttachment planAttachment;
 	private List<LeafPaymentPlan> plans;
 	private List<LeafService> services;
+	private List<StripeTaxRateMapping> stripeTaxRates;
 	private Map<String, String> redirect;
 	private int defaultFreeTrialRemaining;
 
@@ -86,5 +87,13 @@ public class LeafPaymentConfig {
 
 	public void setServices(List<LeafService> services) {
 		this.services = services;
+	}
+
+	public List<StripeTaxRateMapping> getStripeTaxRates() {
+		return stripeTaxRates;
+	}
+
+	public void setStripeTaxRates(List<StripeTaxRateMapping> stripeTaxRates) {
+		this.stripeTaxRates = stripeTaxRates;
 	}
 }

@@ -1,5 +1,15 @@
 collectTaxId: true
 planAttachment: ORGANIZATION
+# VAT ratio (0.2) or percentage (20.0) ranges -> Stripe tax rate ids
+stripeTaxRates:
+  -
+    from: 0.0
+    to: 0.05
+    stripeTaxRateId: txr_1234567890000
+  -
+    from: 19.5
+    to: 20.05
+    stripeTaxRateId: txr_123456789nnnn
 defaultFreeTrialRemaining: 1
 plans:
  -

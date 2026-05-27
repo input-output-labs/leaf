@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Resource;
 
@@ -37,6 +38,9 @@ public class StripeInvoicesService {
 
 	@Autowired
 	private LeafCustomerService customerService;
+
+	@Autowired
+	private StripeTaxRateResolver stripeTaxRateResolver;
 
 	public List<LeafInvoice> getCustomerInvoices(PaymentModule paymentModule) throws StripeException {
 		InvoiceUpcomingParams upcomingInvoiceParams = InvoiceUpcomingParams.builder()
@@ -87,12 +91,19 @@ public class StripeInvoicesService {
 		Invoice invoice = Invoice.create(invoiceParams);
 		
 		for (InvoiceItemCreationAction itemAction : action.getItems()) {
-			InvoiceItemCreateParams invoiceItemParams = InvoiceItemCreateParams.builder().setCustomer(customerId)
+			InvoiceItemCreateParams.Builder invoiceItemBuilder = InvoiceItemCreateParams.builder()
+					.setCustomer(customerId)
 					.setInvoice(invoice.getId())
 					.setAmount(itemAction.getAmount())
 					.setCurrency(itemAction.getCurrency())
-					.setDescription(itemAction.getDescription()).build();
-			InvoiceItem.create(invoiceItemParams);
+					.setDescription(itemAction.getDescription());
+			if (itemAction.getVatRatio() != null) {
+				Optional<String> taxRateId = this.stripeTaxRateResolver.resolveTaxRateId(itemAction.getVatRatio());
+				if (taxRateId.isPresent()) {
+					invoiceItemBuilder.addTaxRate(taxRateId.get());
+				}
+			}
+			InvoiceItem.create(invoiceItemBuilder.build());
 		}
 		
 		Invoice updatedInvoice = Invoice.retrieve(invoice.getId());
