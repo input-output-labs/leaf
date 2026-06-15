@@ -8,7 +8,7 @@ if [[ -z $1 ]]; then
 fi
 
 # Update pom.xml files in demo, messenger, sponsoring, and library directories
-for dir in demo messenger payment sponsoring redirect; do
+for dir in demo messenger payment sponsoring redirect odoo-integration; do
     pom_file="${dir}/pom.xml"
     echo "Should update ${pom_file}"
     sed -i '' "s|<version>[0-9.]*-SNAPSHOT</version>|<version>${NEW_VERSION}</version>|g" "${pom_file}"

@@ -3,9 +3,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.io-labs</groupId>
-	<artifactId>leaf-sponsoring</artifactId>
+	<artifactId>leaf-odoo-integration</artifactId>
 	<version>1.163-SNAPSHOT</version>
-	<name>leaf-sponsoring</name>
+	<name>leaf-odoo-integration</name>
 
 	<properties>
 		<java.version>17</java.version>
@@ -17,14 +17,12 @@
 	</properties>
 
 	<dependencies>
-		<!-- Leaf dependencies -->
 		<dependency>
 			<groupId>fr.io-labs</groupId>
 			<artifactId>leaf</artifactId>
 			<version>${leaf.version}</version>
 		</dependency>
 
-		<!-- Spring dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -38,7 +36,6 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- Jackson Date Serializer dependency -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
@@ -49,9 +46,9 @@
 
 	<distributionManagement>
 		<repository>
-		  <id>github</id>
-		  <name>GitHub Packages</name>
-		  <url>https://maven.pkg.github.com/input-output-labs/leaf</url>
+			<id>github</id>
+			<name>GitHub Packages</name>
+			<url>https://maven.pkg.github.com/input-output-labs/leaf</url>
 		</repository>
 	</distributionManagement>
 </project>

@@ -20,6 +20,7 @@
     <module>sponsoring</module>
     <module>payment</module>
     <module>redirect</module>
+    <module>odoo-integration</module>
     <!--module>demo</module-->
   </modules>
 

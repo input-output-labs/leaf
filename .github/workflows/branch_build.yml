@@ -36,3 +36,5 @@ jobs:
         mvn --batch-mode deploy
         cd ../redirect
         mvn --batch-mode deploy
+        cd ../odoo-integration
+        mvn --batch-mode deploy

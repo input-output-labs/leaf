@@ -1,5 +1,6 @@
 package fr.iolabs.leaf.notifications;
 
+import java.util.Comparator;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -17,6 +18,7 @@ import fr.iolabs.leaf.LeafContext;
 @RestController
 @RequestMapping("/api/notifications")
 public class LeafNotificationController {
+	private static final long MAX_NOTIFICATION_RETURNED = 50; 
 
 	@Resource(name = "coreContext")
 	private LeafContext coreContext;
@@ -29,7 +31,11 @@ public class LeafNotificationController {
 	public List<LeafNotification> listMyNotifications() {
 		return this.notificationRepository.findUINotificationPerAccountAndStatus(coreContext.getAccount().getId(),
 				new String[] { LeafNotificationChannelSendingStatus.CREATED.toString(),
-						LeafNotificationChannelSendingStatus.UI_SEEN.toString() });
+						LeafNotificationChannelSendingStatus.UI_SEEN.toString() })
+				.stream()
+				.sorted(Comparator.comparing(LeafNotification::getCreationDate).reversed())
+				.limit(MAX_NOTIFICATION_RETURNED)
+				.toList();
 	}
 
 	@CrossOrigin

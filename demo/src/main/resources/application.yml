@@ -57,3 +57,8 @@ leaf:
         authToken: "${TWILIO_AUTH_TOKEN:}"
         phoneNumber: "${TWILIO_PHONE_NUMBER:}"
 x_api_key: "${X_API_KEY:}"
+odoo:
+  url: "${ODOO_URL:}"
+  db: "${ODOO_DB:}"
+  username: "${ODOO_USERNAME:}"
+  password: "${ODOO_PASSWORD:}"
