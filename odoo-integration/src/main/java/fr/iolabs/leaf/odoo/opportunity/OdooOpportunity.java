@@ -1,5 +1,6 @@
 package fr.iolabs.leaf.odoo.opportunity;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class OdooOpportunity {
 	private Integer stageId;
 	private String stageName;
 	private List<String> tags = new ArrayList<>();
+	private ZonedDateTime createdAt;
 
 	public OdooOpportunity() {}
 
@@ -114,5 +116,13 @@ public class OdooOpportunity {
 
 	public void setTags(List<String> tags) {
 		this.tags = tags != null ? tags : new ArrayList<>();
+	}
+
+	public ZonedDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(ZonedDateTime createdAt) {
+		this.createdAt = createdAt;
 	}
 }

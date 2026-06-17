@@ -116,6 +116,12 @@ public class OdooRpcClient {
 		return OdooValueMapper.toRecordList(result);
 	}
 
+	public int searchCount(OdooCredentials credentials, int uid, String model, List<?> domain) {
+		Object result = executeKw(credentials, uid, model, "search_count", List.of(domain), Map.of());
+		Integer count = OdooValueMapper.asInteger(result);
+		return count != null ? count : 0;
+	}
+
 	public Map<String, Object> fieldsGet(OdooCredentials credentials, int uid, String model) {
 		Object result = executeKw(credentials, uid, model, "fields_get", List.of(), Map.of());
 		return OdooValueMapper.toStringKeyMap(result);

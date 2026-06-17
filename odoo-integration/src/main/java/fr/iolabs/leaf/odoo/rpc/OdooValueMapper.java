@@ -1,5 +1,11 @@
 package fr.iolabs.leaf.odoo.rpc;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,6 +15,8 @@ import java.util.Set;
 import org.springframework.util.StringUtils;
 
 public final class OdooValueMapper {
+
+	private static final DateTimeFormatter ODOO_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
 	private OdooValueMapper() {}
 
@@ -121,6 +129,35 @@ public final class OdooValueMapper {
 			return asInteger(list.get(0));
 		}
 		return asInteger(value);
+	}
+
+	public static ZonedDateTime asZonedDateTime(Object value) {
+		if (value instanceof ZonedDateTime zonedDateTime) {
+			return zonedDateTime;
+		}
+		if (value instanceof LocalDateTime localDateTime) {
+			return localDateTime.atZone(ZoneOffset.UTC);
+		}
+
+		String text = asString(value);
+		if (text == null) {
+			return null;
+		}
+
+		String normalized = text.replace('T', ' ');
+		if (normalized.length() >= 19) {
+			try {
+				return LocalDateTime.parse(normalized.substring(0, 19), ODOO_DATE_TIME).atZone(ZoneOffset.UTC);
+			} catch (DateTimeParseException ignored) {
+				// fall through
+			}
+		}
+
+		try {
+			return Instant.parse(text).atZone(ZoneOffset.UTC);
+		} catch (DateTimeParseException ignored) {
+			return null;
+		}
 	}
 
 	public static List<Integer> asIntegerList(Object value) {

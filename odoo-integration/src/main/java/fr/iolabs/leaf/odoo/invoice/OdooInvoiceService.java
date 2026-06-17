@@ -4,6 +4,7 @@ import fr.iolabs.leaf.odoo.OdooCredentials;
 import fr.iolabs.leaf.odoo.OdooCredentialsResolver;
 import fr.iolabs.leaf.odoo.rpc.OdooRpcClient;
 import fr.iolabs.leaf.odoo.rpc.OdooValueMapper;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +30,72 @@ public class OdooInvoiceService {
 
 	@Autowired
 	private OdooCredentialsResolver odooCredentialsResolver;
+
+	@Autowired
+	private OdooInvoiceQueryService odooInvoiceQueryService;
+
+	public List<OdooInvoice> listInvoicesPaidBetween(ZonedDateTime fromInclusive, ZonedDateTime toInclusive) {
+		return this.odooInvoiceQueryService.listInvoicesPaidBetween(fromInclusive, toInclusive);
+	}
+
+	public List<OdooInvoice> listInvoicesPaidBetween(
+		String organizationId,
+		ZonedDateTime fromInclusive,
+		ZonedDateTime toInclusive
+	) {
+		return this.odooInvoiceQueryService.listInvoicesPaidBetween(organizationId, fromInclusive, toInclusive);
+	}
+
+	public List<OdooInvoice> listInvoicesPaidBetween(
+		OdooCredentials credentials,
+		ZonedDateTime fromInclusive,
+		ZonedDateTime toInclusive
+	) {
+		return this.odooInvoiceQueryService.listInvoicesPaidBetween(credentials, fromInclusive, toInclusive);
+	}
+
+	public List<OdooInvoice> listInvoicesUnpaidDuringPeriod(
+		ZonedDateTime fromInclusive,
+		ZonedDateTime toInclusive
+	) {
+		return this.odooInvoiceQueryService.listInvoicesUnpaidDuringPeriod(fromInclusive, toInclusive);
+	}
+
+	public List<OdooInvoice> listInvoicesUnpaidDuringPeriod(
+		String organizationId,
+		ZonedDateTime fromInclusive,
+		ZonedDateTime toInclusive
+	) {
+		return this.odooInvoiceQueryService.listInvoicesUnpaidDuringPeriod(organizationId, fromInclusive, toInclusive);
+	}
+
+	public List<OdooInvoice> listInvoicesUnpaidDuringPeriod(
+		OdooCredentials credentials,
+		ZonedDateTime fromInclusive,
+		ZonedDateTime toInclusive
+	) {
+		return this.odooInvoiceQueryService.listInvoicesUnpaidDuringPeriod(credentials, fromInclusive, toInclusive);
+	}
+
+	public List<OdooInvoiceLine> listPaidInvoiceLinesBetween(ZonedDateTime fromInclusive, ZonedDateTime toInclusive) {
+		return this.odooInvoiceQueryService.listPaidInvoiceLinesBetween(fromInclusive, toInclusive);
+	}
+
+	public List<OdooInvoiceLine> listPaidInvoiceLinesBetween(
+		String organizationId,
+		ZonedDateTime fromInclusive,
+		ZonedDateTime toInclusive
+	) {
+		return this.odooInvoiceQueryService.listPaidInvoiceLinesBetween(organizationId, fromInclusive, toInclusive);
+	}
+
+	public List<OdooInvoiceLine> listPaidInvoiceLinesBetween(
+		OdooCredentials credentials,
+		ZonedDateTime fromInclusive,
+		ZonedDateTime toInclusive
+	) {
+		return this.odooInvoiceQueryService.listPaidInvoiceLinesBetween(credentials, fromInclusive, toInclusive);
+	}
 
 	public OdooInvoiceCreationResult createInvoice(OdooCreateInvoiceRequest request) {
 		return this.createInvoice(this.odooCredentialsResolver.resolveFromCurrentOrganization(), request);

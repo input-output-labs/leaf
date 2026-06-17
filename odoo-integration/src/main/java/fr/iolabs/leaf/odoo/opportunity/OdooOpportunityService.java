@@ -5,6 +5,9 @@ import fr.iolabs.leaf.odoo.OdooCredentialsResolver;
 import fr.iolabs.leaf.odoo.OdooIntegrationException;
 import fr.iolabs.leaf.odoo.rpc.OdooRpcClient;
 import fr.iolabs.leaf.odoo.rpc.OdooValueMapper;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -12,6 +15,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,12 +32,66 @@ public class OdooOpportunityService {
 	private static final String PARTNER_MODEL = "res.partner";
 	private static final int PAGE_SIZE = 200;
 	private static final int MAX_TOTAL_RECORDS = 10_000;
+	private static final DateTimeFormatter ODOO_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
 	@Autowired
 	private OdooRpcClient odooRpcClient;
 
 	@Autowired
 	private OdooCredentialsResolver odooCredentialsResolver;
+
+	public int countOpportunitiesCreatedBetween(ZonedDateTime fromInclusive, ZonedDateTime toInclusive) {
+		return this.countOpportunitiesCreatedBetween(
+			this.odooCredentialsResolver.resolveFromApplicationConfig(),
+			fromInclusive,
+			toInclusive
+		);
+	}
+
+	public int countOpportunitiesCreatedBetween(
+		OdooCredentials credentials,
+		ZonedDateTime fromInclusive,
+		ZonedDateTime toInclusive
+	) {
+		Objects.requireNonNull(fromInclusive, "fromInclusive is required");
+		Objects.requireNonNull(toInclusive, "toInclusive is required");
+		if (fromInclusive.isAfter(toInclusive)) {
+			throw new IllegalArgumentException("fromInclusive must be before or equal to toInclusive");
+		}
+
+		try {
+			int uid = this.odooRpcClient.authenticate(credentials);
+			List<Object> domain = this.resolveOpportunityDomainWithCreateDateBetween(fromInclusive, toInclusive);
+			int count = this.odooRpcClient.searchCount(credentials, uid, CRM_LEAD_MODEL, domain);
+			LOGGER.info(
+				"Counted {} Odoo opportunities created between {} and {} (db={})",
+				count,
+				fromInclusive,
+				toInclusive,
+				credentials.getDb()
+			);
+			return count;
+		} catch (OdooIntegrationException exception) {
+			LOGGER.error(
+				"Failed to count Odoo opportunities created between {} and {}",
+				fromInclusive,
+				toInclusive,
+				exception
+			);
+			throw exception;
+		} catch (RuntimeException exception) {
+			LOGGER.error(
+				"Failed to count Odoo opportunities created between {} and {}",
+				fromInclusive,
+				toInclusive,
+				exception
+			);
+			throw new OdooIntegrationException(
+				"Failed to count Odoo opportunities: " + exception.getMessage(),
+				exception
+			);
+		}
+	}
 
 	public List<OdooOpportunity> listOpportunities(Integer limit) {
 		return this.listOpportunities(this.odooCredentialsResolver.resolveFromApplicationConfig(), limit);
@@ -205,6 +263,20 @@ public class OdooOpportunityService {
 		return List.of(List.of("type", "=", "opportunity"), List.of("active", "=", true));
 	}
 
+	private List<Object> resolveOpportunityDomainWithCreateDateBetween(
+		ZonedDateTime fromInclusive,
+		ZonedDateTime toInclusive
+	) {
+		List<Object> domain = new ArrayList<>(this.resolveOpportunityDomain());
+		domain.add(List.of("create_date", ">=", this.toOdooDateTime(fromInclusive)));
+		domain.add(List.of("create_date", "<=", this.toOdooDateTime(toInclusive)));
+		return domain;
+	}
+
+	private String toOdooDateTime(ZonedDateTime value) {
+		return value.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime().format(ODOO_DATE_TIME);
+	}
+
 	private List<OdooOpportunity> mapOpportunityRows(
 		OdooCredentials credentials,
 		int uid,
@@ -227,7 +299,8 @@ public class OdooOpportunityService {
 				"partner_name",
 				"partner_id",
 				"stage_id",
-				"tag_ids"
+				"tag_ids",
+				"create_date"
 			)) {
 			if (availableFields.contains(candidate)) {
 				fields.add(candidate);
@@ -366,6 +439,7 @@ public class OdooOpportunityService {
 			opportunity.setStageId(OdooValueMapper.asMany2OneId(row.get("stage_id")));
 			opportunity.setStageName(OdooValueMapper.asMany2OneDisplayName(row.get("stage_id")));
 			opportunity.setTags(this.mapTagNames(row.get("tag_ids"), tagNamesById));
+			opportunity.setCreatedAt(OdooValueMapper.asZonedDateTime(row.get("create_date")));
 			opportunities.add(opportunity);
 		}
 		return opportunities;
