@@ -3,6 +3,9 @@ package fr.iolabs.leaf.odoo.invoice;
 import fr.iolabs.leaf.odoo.OdooCredentials;
 import fr.iolabs.leaf.odoo.OdooCredentialsResolver;
 import fr.iolabs.leaf.odoo.OdooIntegrationException;
+import fr.iolabs.leaf.odoo.accounting.OdooInvoicePaymentsWidgetParser;
+import fr.iolabs.leaf.odoo.product.OdooProduct;
+import fr.iolabs.leaf.odoo.product.OdooProductQueryService;
 import fr.iolabs.leaf.odoo.rpc.OdooRpcClient;
 import fr.iolabs.leaf.odoo.rpc.OdooValueMapper;
 import java.time.LocalDate;
@@ -30,28 +33,20 @@ public class OdooInvoiceQueryService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(OdooInvoiceQueryService.class);
 	private static final String ACCOUNT_MOVE_MODEL = "account.move";
 	private static final String ACCOUNT_MOVE_LINE_MODEL = "account.move.line";
-	private static final String ACCOUNT_PAYMENT_MODEL = "account.payment";
 	private static final int INVOICE_ID_CHUNK_SIZE = 100;
 	private static final int PAGE_SIZE = 200;
 	private static final int MAX_TOTAL_RECORDS = 10_000;
 	private static final DateTimeFormatter ODOO_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	private static final DateTimeFormatter ODOO_DATE = DateTimeFormatter.ISO_LOCAL_DATE;
-	private static final List<String> PAYMENT_DATE_FIELD_CANDIDATES = List.of(
-		"payment_date",
-		"date_last_payment",
-		"last_payment_date",
-		"invoice_date_paid"
-	);
-	private static final List<String> PAYMENT_INVOICE_LINK_FIELD_CANDIDATES = List.of(
-		"reconciled_invoice_ids",
-		"invoice_ids"
-	);
 
 	@Autowired
 	private OdooRpcClient odooRpcClient;
 
 	@Autowired
 	private OdooCredentialsResolver odooCredentialsResolver;
+
+	@Autowired
+	private OdooProductQueryService odooProductQueryService;
 
 	public List<OdooInvoice> listInvoicesPaidBetween(ZonedDateTime fromInclusive, ZonedDateTime toInclusive) {
 		return this.listInvoicesPaidBetween(
@@ -84,24 +79,22 @@ public class OdooInvoiceQueryService {
 			int uid = this.odooRpcClient.authenticate(credentials);
 			Map<String, Object> moveFields = this.odooRpcClient.fieldsGet(credentials, uid, ACCOUNT_MOVE_MODEL);
 			Set<String> availableMoveFields = OdooValueMapper.toFieldNames(moveFields);
-			String paymentDateField = this.resolvePaymentDateField(availableMoveFields);
+			List<String> fields = this.resolveInvoiceFields(availableMoveFields, null, true);
+			List<Object> domain = this.resolvePaidInvoiceDomain();
+			List<Map<String, Object>> rows =
+				this.fetchAllInvoiceRows(credentials, uid, domain, fields, "create_date desc");
 
-			List<Map<String, Object>> rows;
-			if (paymentDateField != null) {
-				List<Object> domain =
-					this.resolvePaidInvoiceDomain(paymentDateField, fromInclusive, toInclusive, moveFields.get(paymentDateField));
-				List<String> fields = this.resolveInvoiceFields(availableMoveFields, paymentDateField);
-				rows = this.fetchAllInvoiceRows(credentials, uid, domain, fields, paymentDateField + " desc");
-			} else {
-				LOGGER.info("No payment date field on account.move, resolving paid invoices via account.payment");
-				Set<Integer> invoiceIds =
-					this.resolveInvoiceIdsPaidViaPayments(credentials, uid, fromInclusive, toInclusive);
-				rows = this.readInvoicesByIds(credentials, uid, invoiceIds, availableMoveFields, null);
+			List<OdooInvoice> invoices = new ArrayList<>();
+			for (Map<String, Object> row : rows) {
+				OdooInvoice invoice = this.mapInvoice(credentials, row, null, true);
+				if (invoice.getSignedAt() == null || !this.isWithinPeriod(invoice.getSignedAt(), fromInclusive, toInclusive)) {
+					continue;
+				}
+				invoices.add(invoice);
 			}
 
-			List<OdooInvoice> invoices = this.mapInvoices(credentials, rows, paymentDateField);
 			LOGGER.info(
-				"Listed {} Odoo invoices paid between {} and {} (db={})",
+				"Listed {} Odoo invoices paid between {} and {} via invoice_payments_widget (db={})",
 				invoices.size(),
 				fromInclusive,
 				toInclusive,
@@ -165,13 +158,14 @@ public class OdooInvoiceQueryService {
 			if (invoiceIds.isEmpty()) {
 				return List.of();
 			}
-
 			int uid = this.odooRpcClient.authenticate(credentials);
 			Set<String> availableLineFields =
 				OdooValueMapper.toFieldNames(this.odooRpcClient.fieldsGet(credentials, uid, ACCOUNT_MOVE_LINE_MODEL));
 			List<String> lineFields = this.resolveInvoiceLineFields(availableLineFields);
 			List<Map<String, Object>> rows = this.fetchInvoiceLineRows(credentials, uid, invoiceIds, lineFields);
-			List<OdooInvoiceLine> lines = this.mapInvoiceLines(rows, invoicesById);
+			Set<Integer> productIds = this.collectProductIds(rows);
+			Map<Integer, OdooProduct> productsById = this.odooProductQueryService.findByIds(credentials, uid, productIds);
+			List<OdooInvoiceLine> lines = this.mapInvoiceLines(rows, invoicesById, productsById);
 			LOGGER.info(
 				"Listed {} Odoo paid invoice lines between {} and {} (db={})",
 				lines.size(),
@@ -233,30 +227,20 @@ public class OdooInvoiceQueryService {
 			int uid = this.odooRpcClient.authenticate(credentials);
 			Map<String, Object> moveFields = this.odooRpcClient.fieldsGet(credentials, uid, ACCOUNT_MOVE_MODEL);
 			Set<String> availableMoveFields = OdooValueMapper.toFieldNames(moveFields);
-			String paymentDateField = this.resolvePaymentDateField(availableMoveFields);
-
-			List<Object> domain;
-			List<String> fields = this.resolveInvoiceFields(availableMoveFields, paymentDateField);
-			if (paymentDateField != null) {
-				domain =
-					this.resolveUnpaidDuringPeriodDomain(
-						paymentDateField,
-						toInclusive,
-						moveFields.get(paymentDateField)
-					);
-			} else {
-				domain = this.resolveUnpaidDuringPeriodDomainWithoutPaymentDate(toInclusive);
-			}
+			List<String> fields = this.resolveInvoiceFields(availableMoveFields, null, true);
+			List<Object> domain = this.resolveUnpaidDuringPeriodDomain(toInclusive);
 
 			List<Map<String, Object>> rows = this.fetchAllInvoiceRows(credentials, uid, domain, fields, "create_date desc");
-			List<OdooInvoice> invoices =
-				this.mapInvoices(credentials, rows, paymentDateField)
-					.stream()
-					.filter(invoice -> this.isUnpaidDuringPeriod(invoice, toInclusive))
-					.toList();
+			List<OdooInvoice> invoices = new ArrayList<>();
+			for (Map<String, Object> row : rows) {
+				OdooInvoice invoice = this.mapInvoice(credentials, row, null, true);
+				if (this.isUnpaidDuringPeriod(invoice, toInclusive)) {
+					invoices.add(invoice);
+				}
+			}
 
 			LOGGER.info(
-				"Listed {} Odoo invoices unpaid during period {} to {} (db={})",
+				"Listed {} Odoo invoices unpaid during period {} to {} via invoice_payments_widget (db={})",
 				invoices.size(),
 				fromInclusive,
 				toInclusive,
@@ -293,46 +277,29 @@ public class OdooInvoiceQueryService {
 		}
 	}
 
-	private String resolvePaymentDateField(Set<String> availableFields) {
-		for (String candidate : PAYMENT_DATE_FIELD_CANDIDATES) {
-			if (availableFields.contains(candidate)) {
-				return candidate;
-			}
-		}
-		return null;
-	}
-
-	private List<Object> resolvePaidInvoiceDomain(
-		String paymentDateField,
-		ZonedDateTime fromInclusive,
-		ZonedDateTime toInclusive,
-		Object paymentDateFieldDefinition
-	) {
+	private List<Object> resolvePaidInvoiceDomain() {
 		List<Object> domain = new ArrayList<>(this.basePostedCustomerInvoiceDomain());
-		domain.add(List.of("payment_state", "in", List.of("paid", "partial")));
-		domain.add(List.of(paymentDateField, "!=", false));
-		domain.add(
-			List.of(
-				paymentDateField,
-				">=",
-				this.formatOdooFilterValue(paymentDateFieldDefinition, fromInclusive)
-			)
-		);
-		domain.add(
-			List.of(
-				paymentDateField,
-				"<=",
-				this.formatOdooFilterValue(paymentDateFieldDefinition, toInclusive)
-			)
-		);
+		domain.add(List.of("payment_state", "=", "paid"));
 		return domain;
 	}
 
-	private List<Object> resolveUnpaidDuringPeriodDomain(
-		String paymentDateField,
-		ZonedDateTime periodEndInclusive,
-		Object paymentDateFieldDefinition
-	) {
+	private boolean isWithinPeriod(ZonedDateTime date, ZonedDateTime fromInclusive, ZonedDateTime toInclusive) {
+		return !date.isBefore(fromInclusive) && !date.isAfter(toInclusive);
+	}
+
+	private boolean isUnpaidDuringPeriod(OdooInvoice invoice, ZonedDateTime periodEndInclusive) {
+		String paymentStatus = invoice.getPaymentStatus();
+		if ("not_paid".equals(paymentStatus) || "partial".equals(paymentStatus) || "in_payment".equals(paymentStatus)) {
+			return true;
+		}
+		if ("paid".equals(paymentStatus)) {
+			ZonedDateTime paymentDate = invoice.getSignedAt();
+			return paymentDate != null && paymentDate.isAfter(periodEndInclusive);
+		}
+		return false;
+	}
+
+	private List<Object> resolveUnpaidDuringPeriodDomain(ZonedDateTime periodEndInclusive) {
 		List<Object> domain = new ArrayList<>(this.basePostedCustomerInvoiceDomain());
 		domain.add(
 			List.of(
@@ -341,24 +308,6 @@ public class OdooInvoiceQueryService {
 				this.toOdooDateTime(periodEndInclusive)
 			)
 		);
-		domain.add("|");
-		domain.add(List.of("payment_state", "in", List.of("not_paid", "partial", "in_payment")));
-		domain.add("&");
-		domain.add(List.of("payment_state", "=", "paid"));
-		domain.add(
-			List.of(
-				paymentDateField,
-				">",
-				this.formatOdooFilterValue(paymentDateFieldDefinition, periodEndInclusive)
-			)
-		);
-		return domain;
-	}
-
-	private List<Object> resolveUnpaidDuringPeriodDomainWithoutPaymentDate(ZonedDateTime periodEndInclusive) {
-		List<Object> domain = new ArrayList<>(this.basePostedCustomerInvoiceDomain());
-		domain.add(List.of("create_date", "<=", this.toOdooDateTime(periodEndInclusive)));
-		domain.add(List.of("payment_state", "in", List.of("not_paid", "partial", "in_payment", "paid")));
 		return domain;
 	}
 
@@ -371,104 +320,18 @@ public class OdooInvoiceQueryService {
 		);
 	}
 
-	private boolean isUnpaidDuringPeriod(OdooInvoice invoice, ZonedDateTime periodEndInclusive) {
-		if (invoice.getCreatedAt() != null && invoice.getCreatedAt().isAfter(periodEndInclusive)) {
-			return false;
-		}
 
-		if (!"paid".equals(invoice.getPaymentStatus())) {
-			return true;
-		}
-
-		ZonedDateTime signedAt = invoice.getSignedAt();
-		return signedAt == null || signedAt.isAfter(periodEndInclusive);
-	}
-
-	private Set<Integer> resolveInvoiceIdsPaidViaPayments(
-		OdooCredentials credentials,
-		int uid,
-		ZonedDateTime fromInclusive,
-		ZonedDateTime toInclusive
+	private List<String> resolveInvoiceFields(
+		Set<String> availableFields,
+		String paymentDateField,
+		boolean includePaymentsWidget
 	) {
-		Set<String> paymentFields =
-			OdooValueMapper.toFieldNames(this.odooRpcClient.fieldsGet(credentials, uid, ACCOUNT_PAYMENT_MODEL));
-		String invoiceLinkField = this.resolvePaymentInvoiceLinkField(paymentFields);
-		if (invoiceLinkField == null) {
-			throw new OdooIntegrationException(
-				"No invoice link field found on account.payment. Expected one of: " + PAYMENT_INVOICE_LINK_FIELD_CANDIDATES
-			);
-		}
-
-		List<Object> domain = List.of(
-			List.of("payment_type", "=", "inbound"),
-			List.of("partner_type", "=", "customer"),
-			List.of("state", "=", "posted"),
-			List.of("date", ">=", this.toOdooDate(fromInclusive)),
-			List.of("date", "<=", this.toOdooDate(toInclusive))
-		);
-
-		Set<Integer> invoiceIds = new HashSet<>();
-		int offset = 0;
-		while (true) {
-			List<Map<String, Object>> page =
-				this.odooRpcClient.searchRead(
-						credentials,
-						uid,
-						ACCOUNT_PAYMENT_MODEL,
-						domain,
-						List.of("id", invoiceLinkField, "date"),
-						PAGE_SIZE,
-						offset,
-						"date desc"
-					);
-			for (Map<String, Object> row : page) {
-				invoiceIds.addAll(OdooValueMapper.asIntegerList(row.get(invoiceLinkField)));
-			}
-			if (page.size() < PAGE_SIZE) {
-				break;
-			}
-			offset += page.size();
-			if (offset >= MAX_TOTAL_RECORDS) {
-				LOGGER.warn("Stopped Odoo payment pagination after {} records", offset);
-				break;
-			}
-		}
-		return invoiceIds;
-	}
-
-	private String resolvePaymentInvoiceLinkField(Set<String> availableFields) {
-		for (String candidate : PAYMENT_INVOICE_LINK_FIELD_CANDIDATES) {
-			if (availableFields.contains(candidate)) {
-				return candidate;
-			}
-		}
-		return null;
-	}
-
-	private List<Map<String, Object>> readInvoicesByIds(
-		OdooCredentials credentials,
-		int uid,
-		Set<Integer> invoiceIds,
-		Set<String> availableMoveFields,
-		String paymentDateField
-	) {
-		if (invoiceIds.isEmpty()) {
-			return List.of();
-		}
-		List<String> fields = this.resolveInvoiceFields(availableMoveFields, paymentDateField);
-		List<Integer> ids = new ArrayList<>(invoiceIds);
-		List<Map<String, Object>> rows = new ArrayList<>();
-		for (int offset = 0; offset < ids.size(); offset += PAGE_SIZE) {
-			List<Integer> chunk = ids.subList(offset, Math.min(offset + PAGE_SIZE, ids.size()));
-			rows.addAll(this.odooRpcClient.read(credentials, uid, ACCOUNT_MOVE_MODEL, chunk, fields));
-		}
-		return rows;
-	}
-
-	private List<String> resolveInvoiceFields(Set<String> availableFields, String paymentDateField) {
 		List<String> fields = new ArrayList<>(List.of("id", "name"));
 		if (paymentDateField != null) {
 			fields.add(paymentDateField);
+		}
+		if (includePaymentsWidget && availableFields.contains("invoice_payments_widget")) {
+			fields.add("invoice_payments_widget");
 		}
 		for (String candidate :
 			Arrays.asList(
@@ -492,7 +355,7 @@ public class OdooInvoiceQueryService {
 
 	private List<String> resolveInvoiceLineFields(Set<String> availableFields) {
 		List<String> fields = new ArrayList<>(List.of("id", "name", "move_id"));
-		for (String candidate : Arrays.asList("price_subtotal", "display_type")) {
+		for (String candidate : Arrays.asList("price_subtotal", "display_type", "product_id", "quantity", "purchase_price")) {
 			if (availableFields.contains(candidate)) {
 				fields.add(candidate);
 			}
@@ -500,9 +363,21 @@ public class OdooInvoiceQueryService {
 		return fields;
 	}
 
+	private Set<Integer> collectProductIds(List<Map<String, Object>> rows) {
+		Set<Integer> productIds = new HashSet<>();
+		for (Map<String, Object> row : rows) {
+			Integer productId = OdooValueMapper.asMany2OneId(row.get("product_id"));
+			if (productId != null) {
+				productIds.add(productId);
+			}
+		}
+		return productIds;
+	}
+
 	private List<OdooInvoiceLine> mapInvoiceLines(
 		List<Map<String, Object>> rows,
-		Map<Integer, OdooInvoice> invoicesById
+		Map<Integer, OdooInvoice> invoicesById,
+		Map<Integer, OdooProduct> productsById
 	) {
 		List<OdooInvoiceLine> lines = new ArrayList<>();
 		for (Map<String, Object> row : rows) {
@@ -526,16 +401,43 @@ public class OdooInvoiceQueryService {
 				continue;
 			}
 
+			Integer productId = OdooValueMapper.asMany2OneId(row.get("product_id"));
+			Double quantity = this.asDouble(row.get("quantity"));
+			if (quantity == null) {
+				quantity = 0d;
+			}
+			Double unitCost = this.resolveUnitCost(row, productsById, productId);
+			Double totalCost = quantity * unitCost;
+
 			OdooInvoiceLine line = new OdooInvoiceLine();
 			line.setId(lineId);
 			line.setInvoiceId(invoiceId);
 			line.setInvoiceName(invoice.getName());
 			line.setLabel(OdooValueMapper.asString(row.get("name")));
 			line.setAmountUntaxed(amountUntaxed);
+			line.setProductId(productId);
+			line.setQuantity(quantity);
+			line.setUnitCost(unitCost);
+			line.setTotalCost(totalCost);
 			line.setPaidAt(invoice.getSignedAt());
 			lines.add(line);
 		}
 		return lines;
+	}
+
+	private Double resolveUnitCost(Map<String, Object> row, Map<Integer, OdooProduct> productsById, Integer productId) {
+		Double purchasePrice = this.asDouble(row.get("purchase_price"));
+		if (purchasePrice != null && purchasePrice > 0d) {
+			return purchasePrice;
+		}
+		if (productId == null) {
+			return 0d;
+		}
+		OdooProduct product = productsById.get(productId);
+		if (product == null || product.getStandardPrice() == null) {
+			return 0d;
+		}
+		return product.getStandardPrice();
 	}
 
 	private boolean isProductLine(Map<String, Object> row) {
@@ -594,38 +496,67 @@ public class OdooInvoiceQueryService {
 	private List<OdooInvoice> mapInvoices(
 		OdooCredentials credentials,
 		List<Map<String, Object>> rows,
-		String paymentDateField
+		String paymentDateField,
+		boolean usePaymentsWidget
 	) {
 		Map<Integer, OdooInvoice> uniqueById = new LinkedHashMap<>();
 		for (Map<String, Object> row : rows) {
-			Integer id = OdooValueMapper.asInteger(row.get("id"));
-			if (id == null) {
-				continue;
+			OdooInvoice invoice = this.mapInvoice(credentials, row, paymentDateField, usePaymentsWidget);
+			if (invoice.getId() != null) {
+				uniqueById.put(invoice.getId(), invoice);
 			}
-
-			OdooInvoice invoice = new OdooInvoice();
-			invoice.setId(id);
-			invoice.setName(OdooValueMapper.asString(row.get("name")));
-			invoice.setOdooUrl(this.buildInvoiceUrl(credentials, id));
-			invoice.setCreatedAt(OdooValueMapper.asZonedDateTime(row.get("create_date")));
-			invoice.setInvoiceDate(this.asLocalDate(row.get("invoice_date")));
-			invoice.setDueDate(this.asLocalDate(row.get("invoice_date_due")));
-			invoice.setSignedAt(
-				paymentDateField != null ? OdooValueMapper.asZonedDateTime(row.get(paymentDateField)) : null
-			);
-			invoice.setStatus(OdooValueMapper.asString(row.get("state")));
-			invoice.setStatusLabel(this.toStatusLabel(invoice.getStatus()));
-			invoice.setPaymentStatus(OdooValueMapper.asString(row.get("payment_state")));
-			invoice.setPaymentStatusLabel(this.toPaymentStatusLabel(invoice.getPaymentStatus()));
-			invoice.setPartnerId(OdooValueMapper.asMany2OneId(row.get("partner_id")));
-			invoice.setPartnerName(OdooValueMapper.asMany2OneDisplayName(row.get("partner_id")));
-			invoice.setAmountTotal(this.asDouble(row.get("amount_total")));
-			invoice.setAmountUntaxed(this.asDouble(row.get("amount_untaxed")));
-			invoice.setAmountResidual(this.asDouble(row.get("amount_residual")));
-			invoice.setCurrencyCode(OdooValueMapper.asMany2OneDisplayName(row.get("currency_id")));
-			uniqueById.put(id, invoice);
 		}
 		return new ArrayList<>(uniqueById.values());
+	}
+
+	private OdooInvoice mapInvoice(
+		OdooCredentials credentials,
+		Map<String, Object> row,
+		String paymentDateField,
+		boolean usePaymentsWidget
+	) {
+		Integer id = OdooValueMapper.asInteger(row.get("id"));
+		if (id == null) {
+			return new OdooInvoice();
+		}
+
+		OdooInvoice invoice = new OdooInvoice();
+		invoice.setId(id);
+		invoice.setName(OdooValueMapper.asString(row.get("name")));
+		invoice.setOdooUrl(this.buildInvoiceUrl(credentials, id));
+		invoice.setCreatedAt(OdooValueMapper.asZonedDateTime(row.get("create_date")));
+		invoice.setInvoiceDate(this.asLocalDate(row.get("invoice_date")));
+		invoice.setDueDate(this.asLocalDate(row.get("invoice_date_due")));
+		invoice.setSignedAt(this.resolvePaymentDate(row, paymentDateField, usePaymentsWidget));
+		invoice.setStatus(OdooValueMapper.asString(row.get("state")));
+		invoice.setStatusLabel(this.toStatusLabel(invoice.getStatus()));
+		invoice.setPaymentStatus(OdooValueMapper.asString(row.get("payment_state")));
+		invoice.setPaymentStatusLabel(this.toPaymentStatusLabel(invoice.getPaymentStatus()));
+		invoice.setPartnerId(OdooValueMapper.asMany2OneId(row.get("partner_id")));
+		invoice.setPartnerName(OdooValueMapper.asMany2OneDisplayName(row.get("partner_id")));
+		invoice.setAmountTotal(this.asDouble(row.get("amount_total")));
+		invoice.setAmountUntaxed(this.asDouble(row.get("amount_untaxed")));
+		invoice.setAmountResidual(this.asDouble(row.get("amount_residual")));
+		invoice.setCurrencyCode(OdooValueMapper.asMany2OneDisplayName(row.get("currency_id")));
+		return invoice;
+	}
+
+	private ZonedDateTime resolvePaymentDate(
+		Map<String, Object> row,
+		String paymentDateField,
+		boolean usePaymentsWidget
+	) {
+		if (usePaymentsWidget && "paid".equals(OdooValueMapper.asString(row.get("payment_state")))) {
+			ZonedDateTime paymentDate =
+				OdooInvoicePaymentsWidgetParser.resolveLatestPaymentDate(row.get("invoice_payments_widget"));
+			if (paymentDate != null) {
+				return paymentDate;
+			}
+		}
+		if (paymentDateField != null) {
+			return OdooValueMapper.asZonedDateTime(row.get(paymentDateField));
+		}
+		return null;
 	}
 
 	private List<Map<String, Object>> fetchAllInvoiceRows(
@@ -730,13 +661,6 @@ public class OdooInvoiceQueryService {
 			ZonedDateTime dateTime = OdooValueMapper.asZonedDateTime(value);
 			return dateTime != null ? dateTime.toLocalDate() : null;
 		}
-	}
-
-	private String formatOdooFilterValue(Object fieldDefinition, ZonedDateTime value) {
-		if (fieldDefinition instanceof Map<?, ?> definitionMap && "date".equals(definitionMap.get("type"))) {
-			return this.toOdooDate(value);
-		}
-		return this.toOdooDateTime(value);
 	}
 
 	private String toOdooDateTime(ZonedDateTime value) {

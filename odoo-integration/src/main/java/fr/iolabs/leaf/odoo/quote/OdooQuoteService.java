@@ -82,7 +82,6 @@ public class OdooQuoteService {
 			List<Object> domain = this.resolveSignedQuoteDomain(signatureDateField, fromInclusive, toInclusive);
 			List<String> fields = this.resolveQuoteFields(availableFields, signatureDateField);
 			List<Map<String, Object>> rows = this.fetchAllQuoteRows(credentials, uid, domain, fields, null);
-			System.out.println("rows size : " + rows.size());
 			List<OdooQuote> quotes = this.mapQuotes(credentials, rows, signatureDateField);
 			LOGGER.info(
 				"Listed {} Odoo quotes signed between {} and {} using field {} (db={})",

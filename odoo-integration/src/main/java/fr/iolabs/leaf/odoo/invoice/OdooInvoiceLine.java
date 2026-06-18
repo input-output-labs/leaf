@@ -9,6 +9,10 @@ public class OdooInvoiceLine {
 	private String invoiceName;
 	private String label;
 	private Double amountUntaxed;
+	private Integer productId;
+	private Double quantity;
+	private Double unitCost;
+	private Double totalCost;
 	private ZonedDateTime paidAt;
 
 	public Integer getId() {
@@ -49,6 +53,38 @@ public class OdooInvoiceLine {
 
 	public void setAmountUntaxed(Double amountUntaxed) {
 		this.amountUntaxed = amountUntaxed;
+	}
+
+	public Integer getProductId() {
+		return productId;
+	}
+
+	public void setProductId(Integer productId) {
+		this.productId = productId;
+	}
+
+	public Double getQuantity() {
+		return quantity;
+	}
+
+	public void setQuantity(Double quantity) {
+		this.quantity = quantity;
+	}
+
+	public Double getUnitCost() {
+		return unitCost;
+	}
+
+	public void setUnitCost(Double unitCost) {
+		this.unitCost = unitCost;
+	}
+
+	public Double getTotalCost() {
+		return totalCost;
+	}
+
+	public void setTotalCost(Double totalCost) {
+		this.totalCost = totalCost;
 	}
 
 	public ZonedDateTime getPaidAt() {
