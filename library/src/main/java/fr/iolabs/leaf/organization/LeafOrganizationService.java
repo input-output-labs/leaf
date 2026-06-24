@@ -83,8 +83,8 @@ public class LeafOrganizationService {
 		organization.getMembers().add(firstMember);
 
 		this.applicationEventPublisher.publishEvent(new OrganizationCreationEvent(this, organization));
-
 		LeafOrganization savedOrganization = organizationRepository.save(organization);
+		this.applicationEventPublisher.publishEvent(new OrganizationCreatedEvent(this, organization));
 
 		coreContext.getAccount().getOrganizationIds().add(savedOrganization.getId());
 		this.accountRepository.save(coreContext.getAccount());
