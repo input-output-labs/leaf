@@ -6,6 +6,8 @@ public class OdooProduct {
 	private String name;
 	private String defaultCode;
 	private Double standardPrice;
+	/** Prix de vente Odoo (`list_price`). */
+	private Double listPrice;
 	private String imageUrl;
 
 	public Integer getId() {
@@ -38,6 +40,14 @@ public class OdooProduct {
 
 	public void setStandardPrice(Double standardPrice) {
 		this.standardPrice = standardPrice;
+	}
+
+	public Double getListPrice() {
+		return listPrice;
+	}
+
+	public void setListPrice(Double listPrice) {
+		this.listPrice = listPrice;
 	}
 
 	public String getImageUrl() {

@@ -8,6 +8,7 @@ import fr.iolabs.leaf.odoo.invoice.OdooInvoice;
 import fr.iolabs.leaf.odoo.invoice.OdooInvoiceService;
 import fr.iolabs.leaf.odoo.product.OdooProduct;
 import fr.iolabs.leaf.odoo.product.OdooProductQueryService;
+import fr.iolabs.leaf.odoo.quote.OdooCreateQuoteRequest;
 import fr.iolabs.leaf.odoo.quote.OdooQuote;
 import fr.iolabs.leaf.odoo.quote.OdooQuoteService;
 import java.time.ZonedDateTime;
@@ -16,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -67,6 +70,13 @@ public class LeafOdooController {
 	public List<OdooProduct> listProducts(@RequestParam(name = "limit", required = false) Integer limit) {
 		OdooCredentials credentials = this.odooCredentialsResolver.resolveForApi();
 		return this.odooProductQueryService.listProducts(credentials, limit);
+	}
+
+	@CrossOrigin
+	@PostMapping("/quotes")
+	public OdooQuote createQuote(@RequestBody OdooCreateQuoteRequest request) {
+		OdooCredentials credentials = this.odooCredentialsResolver.resolveForApi();
+		return this.odooQuoteService.createQuote(credentials, request);
 	}
 
 	@CrossOrigin

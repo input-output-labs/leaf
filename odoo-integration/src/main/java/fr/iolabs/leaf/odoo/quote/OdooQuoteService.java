@@ -283,4 +283,22 @@ public class OdooQuoteService {
 	private String toOdooDateTime(ZonedDateTime value) {
 		return value.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime().format(ODOO_DATE_TIME);
 	}
+
+	/**
+	 * Stub: création d'un devis Odoo (sale.order) lié à une opportunité.
+	 * Non implémenté pour l'instant.
+	 */
+	public OdooQuote createQuote(OdooCreateQuoteRequest request) {
+		return this.createQuote(this.odooCredentialsResolver.resolveForApi(), request);
+	}
+
+	public OdooQuote createQuote(OdooCredentials credentials, OdooCreateQuoteRequest request) {
+		throw new OdooIntegrationException(
+			"Odoo quote creation is not implemented yet (opportunityId="
+				+ (request != null ? request.getOpportunityId() : null)
+				+ ", partnerId="
+				+ (request != null ? request.getPartnerId() : null)
+				+ ")"
+		);
+	}
 }

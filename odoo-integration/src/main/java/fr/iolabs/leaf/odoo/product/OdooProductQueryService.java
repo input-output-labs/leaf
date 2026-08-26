@@ -99,7 +99,7 @@ public class OdooProductQueryService {
 
 	private List<String> resolveProductFields(Set<String> availableFields, boolean includeImage) {
 		List<String> fields = new ArrayList<>(List.of("id", "name"));
-		for (String candidate : Arrays.asList("display_name", "default_code", "standard_price")) {
+		for (String candidate : Arrays.asList("display_name", "default_code", "standard_price", "list_price")) {
 			if (availableFields.contains(candidate)) {
 				fields.add(candidate);
 			}
@@ -118,6 +118,7 @@ public class OdooProductQueryService {
 		product.setName(displayName != null ? displayName : OdooValueMapper.asString(row.get("name")));
 		product.setDefaultCode(OdooValueMapper.asString(row.get("default_code")));
 		product.setStandardPrice(this.asDouble(row.get("standard_price")));
+		product.setListPrice(this.asDouble(row.get("list_price")));
 		if (includeImage) {
 			product.setImageUrl(this.resolveImageUrl(credentials, id, row.get("image_128")));
 		}
