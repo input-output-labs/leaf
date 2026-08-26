@@ -142,17 +142,20 @@ public class LeafOrganizationService {
 			criteria = new OrganizationSearchCriteria();
 		}
 
-		Query query = new Query();
+		Query countQuery = new Query();
 		if (Strings.isNotBlank(criteria.getName())) {
-			query.addCriteria(Criteria.where("name").regex(Pattern.quote(criteria.getName().trim()), "i"));
+			countQuery.addCriteria(Criteria.where("name").regex(Pattern.quote(criteria.getName().trim()), "i"));
 		}
 
-		long totalCount = this.mongoTemplate.count(query, LeafOrganization.class);
+		long totalCount = this.mongoTemplate.count(countQuery, LeafOrganization.class);
 
-		query.with(this.resolveSort(criteria.getOrderBy()));
-		query.with(PageRequest.of(criteria.getPage(), criteria.getPageSize()));
+		Query pageQuery = new Query();
+		if (Strings.isNotBlank(criteria.getName())) {
+			pageQuery.addCriteria(Criteria.where("name").regex(Pattern.quote(criteria.getName().trim()), "i"));
+		}
+		pageQuery.with(PageRequest.of(criteria.getPage(), criteria.getPageSize(), this.resolveSort(criteria.getOrderBy())));
 
-		List<LeafOrganization> organizations = this.mongoTemplate.find(query, LeafOrganization.class);
+		List<LeafOrganization> organizations = this.mongoTemplate.find(pageQuery, LeafOrganization.class);
 		int pageCount = (int) Math.ceil((double) totalCount / criteria.getPageSize());
 
 		return new OrganizationSearchResponse(organizations, totalCount, pageCount, criteria.getPage());

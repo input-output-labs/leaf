@@ -54,8 +54,9 @@ public class LeafOrganizationController {
 	@CrossOrigin
 	@AdminOnly
 	@PostMapping("/search")
-	public OrganizationSearchResponse searchOrganizations(@RequestBody OrganizationSearchCriteria criteria) {
-		return this.organizationService.search(criteria);
+	public OrganizationSearchResponse searchOrganizations(
+			@RequestBody(required = false) OrganizationSearchCriteria criteria) {
+		return this.organizationService.search(criteria != null ? criteria : new OrganizationSearchCriteria());
 	}
 
 	@CrossOrigin

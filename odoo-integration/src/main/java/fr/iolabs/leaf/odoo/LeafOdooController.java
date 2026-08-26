@@ -6,6 +6,8 @@ import fr.iolabs.leaf.odoo.opportunity.OdooOpportunity;
 import fr.iolabs.leaf.odoo.opportunity.OdooOpportunityService;
 import fr.iolabs.leaf.odoo.invoice.OdooInvoice;
 import fr.iolabs.leaf.odoo.invoice.OdooInvoiceService;
+import fr.iolabs.leaf.odoo.product.OdooProduct;
+import fr.iolabs.leaf.odoo.product.OdooProductQueryService;
 import fr.iolabs.leaf.odoo.quote.OdooQuote;
 import fr.iolabs.leaf.odoo.quote.OdooQuoteService;
 import java.time.ZonedDateTime;
@@ -37,6 +39,9 @@ public class LeafOdooController {
 	@Autowired
 	private OdooInvoiceService odooInvoiceService;
 
+	@Autowired
+	private OdooProductQueryService odooProductQueryService;
+
 	@CrossOrigin
 	@GetMapping("/contacts")
 	public List<OdooContact> listContacts(@RequestParam(name = "limit", required = false) Integer limit) {
@@ -55,6 +60,13 @@ public class LeafOdooController {
 			return this.odooOpportunityService.listOpportunitiesPage(credentials, limit, offset);
 		}
 		return this.odooOpportunityService.listOpportunities(credentials, limit);
+	}
+
+	@CrossOrigin
+	@GetMapping("/products")
+	public List<OdooProduct> listProducts(@RequestParam(name = "limit", required = false) Integer limit) {
+		OdooCredentials credentials = this.odooCredentialsResolver.resolveForApi();
+		return this.odooProductQueryService.listProducts(credentials, limit);
 	}
 
 	@CrossOrigin
