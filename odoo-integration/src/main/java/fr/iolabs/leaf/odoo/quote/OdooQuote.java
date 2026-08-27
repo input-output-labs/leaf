@@ -1,6 +1,8 @@
 package fr.iolabs.leaf.odoo.quote;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OdooQuote {
 
@@ -16,6 +18,7 @@ public class OdooQuote {
 	private Double amountTotal;
 	private Double amountUntaxed;
 	private String currencyCode;
+	private List<OdooQuoteLine> lines = new ArrayList<>();
 
 	public Integer getId() {
 		return id;
@@ -111,5 +114,16 @@ public class OdooQuote {
 
 	public void setCurrencyCode(String currencyCode) {
 		this.currencyCode = currencyCode;
+	}
+
+	public List<OdooQuoteLine> getLines() {
+		if (lines == null) {
+			lines = new ArrayList<>();
+		}
+		return lines;
+	}
+
+	public void setLines(List<OdooQuoteLine> lines) {
+		this.lines = lines != null ? new ArrayList<>(lines) : new ArrayList<>();
 	}
 }

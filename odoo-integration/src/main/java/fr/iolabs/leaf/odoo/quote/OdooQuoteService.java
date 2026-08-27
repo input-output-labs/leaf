@@ -1,5 +1,6 @@
 package fr.iolabs.leaf.odoo.quote;
 
+import fr.iolabs.leaf.common.errors.NotFoundException;
 import fr.iolabs.leaf.odoo.OdooCredentials;
 import fr.iolabs.leaf.odoo.OdooCredentialsResolver;
 import fr.iolabs.leaf.odoo.OdooIntegrationException;
@@ -10,6 +11,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -25,6 +27,7 @@ public class OdooQuoteService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OdooQuoteService.class);
 	private static final String SALE_ORDER_MODEL = "sale.order";
+	private static final String SALE_ORDER_LINE_MODEL = "sale.order.line";
 	private static final int PAGE_SIZE = 200;
 	private static final int MAX_TOTAL_RECORDS = 10_000;
 	private static final DateTimeFormatter ODOO_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -284,21 +287,221 @@ public class OdooQuoteService {
 		return value.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime().format(ODOO_DATE_TIME);
 	}
 
-	/**
-	 * Stub: création d'un devis Odoo (sale.order) lié à une opportunité.
-	 * Non implémenté pour l'instant.
-	 */
 	public OdooQuote createQuote(OdooCreateQuoteRequest request) {
 		return this.createQuote(this.odooCredentialsResolver.resolveForApi(), request);
 	}
 
+	public OdooQuote getQuoteById(int quoteId) {
+		return this.getQuoteById(this.odooCredentialsResolver.resolveForApi(), quoteId);
+	}
+
+	public OdooQuote getQuoteById(OdooCredentials credentials, int quoteId) {
+		if (quoteId <= 0) {
+			throw new IllegalArgumentException("quoteId must be a valid Odoo sale.order id");
+		}
+
+		try {
+			int uid = this.odooRpcClient.authenticate(credentials);
+			Set<String> availableFields =
+				OdooValueMapper.toFieldNames(this.odooRpcClient.fieldsGet(credentials, uid, SALE_ORDER_MODEL));
+			OdooQuote quote = this.readCreatedQuote(credentials, uid, quoteId, availableFields, false);
+			if (quote == null) {
+				throw new NotFoundException("Odoo quote not found: " + quoteId);
+			}
+			quote.setLines(this.readQuoteLines(credentials, uid, quoteId));
+			return quote;
+		} catch (NotFoundException exception) {
+			throw exception;
+		} catch (OdooIntegrationException exception) {
+			LOGGER.error("Failed to fetch Odoo quote {}", quoteId, exception);
+			throw exception;
+		} catch (RuntimeException exception) {
+			LOGGER.error("Failed to fetch Odoo quote {}", quoteId, exception);
+			throw new OdooIntegrationException("Failed to fetch Odoo quote: " + exception.getMessage(), exception);
+		}
+	}
+
 	public OdooQuote createQuote(OdooCredentials credentials, OdooCreateQuoteRequest request) {
-		throw new OdooIntegrationException(
-			"Odoo quote creation is not implemented yet (opportunityId="
-				+ (request != null ? request.getOpportunityId() : null)
-				+ ", partnerId="
-				+ (request != null ? request.getPartnerId() : null)
-				+ ")"
-		);
+		this.validateCreateRequest(request);
+
+		try {
+			int uid = this.odooRpcClient.authenticate(credentials);
+			Set<String> availableFields =
+				OdooValueMapper.toFieldNames(this.odooRpcClient.fieldsGet(credentials, uid, SALE_ORDER_MODEL));
+
+			List<Object> orderLinesPayload = new ArrayList<>();
+			for (OdooCreateQuoteLineRequest line : request.getLines()) {
+				Map<String, Object> lineValues = new HashMap<>();
+				lineValues.put("product_id", line.getProductId());
+				lineValues.put("product_uom_qty", line.getQuantity());
+				if (line.getUnitPrice() != null) {
+					lineValues.put("price_unit", line.getUnitPrice());
+				}
+				orderLinesPayload.add(List.of(0, 0, lineValues));
+			}
+
+			Map<String, Object> orderValues = new HashMap<>();
+			orderValues.put("partner_id", request.getPartnerId());
+			orderValues.put("order_line", orderLinesPayload);
+			if (request.getOpportunityId() != null && availableFields.contains("opportunity_id")) {
+				orderValues.put("opportunity_id", request.getOpportunityId());
+			}
+
+			LOGGER.info(
+				"Creating Odoo quote (partnerId={}, opportunityId={}, lines={})",
+				request.getPartnerId(),
+				request.getOpportunityId(),
+				orderLinesPayload.size()
+			);
+
+			int createdQuoteId = this.odooRpcClient.createRecord(credentials, uid, SALE_ORDER_MODEL, orderValues);
+			OdooQuote created = this.readCreatedQuote(credentials, uid, createdQuoteId, availableFields, true);
+			LOGGER.info(
+				"Odoo quote created successfully (quoteId={}, name={}, url={})",
+				created.getId(),
+				created.getName(),
+				created.getOdooUrl()
+			);
+			return created;
+		} catch (OdooIntegrationException exception) {
+			LOGGER.error("Failed to create Odoo quote", exception);
+			throw exception;
+		} catch (RuntimeException exception) {
+			LOGGER.error("Failed to create Odoo quote", exception);
+			throw new OdooIntegrationException("Failed to create Odoo quote: " + exception.getMessage(), exception);
+		}
+	}
+
+	private void validateCreateRequest(OdooCreateQuoteRequest request) {
+		if (request == null) {
+			throw new IllegalArgumentException("Quote creation payload is required");
+		}
+		if (request.getPartnerId() == null || request.getPartnerId() <= 0) {
+			throw new IllegalArgumentException("partnerId must be a valid Odoo partner id");
+		}
+		if (request.getLines() == null || request.getLines().isEmpty()) {
+			throw new IllegalArgumentException("At least one quote line is required");
+		}
+		for (OdooCreateQuoteLineRequest line : request.getLines()) {
+			if (line == null || line.getProductId() == null || line.getProductId() <= 0) {
+				throw new IllegalArgumentException("Each quote line must have a valid productId");
+			}
+			if (line.getQuantity() == null || line.getQuantity() <= 0) {
+				throw new IllegalArgumentException("Each quote line must have a quantity > 0");
+			}
+		}
+	}
+
+	private OdooQuote readCreatedQuote(
+		OdooCredentials credentials,
+		int uid,
+		int quoteId,
+		Set<String> availableFields,
+		boolean fallbackIfMissing
+	) {
+		List<String> fields = new ArrayList<>(List.of("id", "name"));
+		for (String candidate :
+			Arrays.asList(
+				"state",
+				"create_date",
+				"date_order",
+				"partner_id",
+				"amount_total",
+				"amount_untaxed",
+				"currency_id"
+			)) {
+			if (availableFields.contains(candidate)) {
+				fields.add(candidate);
+			}
+		}
+
+		List<Map<String, Object>> rows =
+			this.odooRpcClient.read(credentials, uid, SALE_ORDER_MODEL, List.of(quoteId), fields);
+		if (rows.isEmpty()) {
+			if (!fallbackIfMissing) {
+				return null;
+			}
+			OdooQuote fallback = new OdooQuote();
+			fallback.setId(quoteId);
+			fallback.setName("SO/" + quoteId);
+			fallback.setOdooUrl(this.buildQuoteUrl(credentials, quoteId));
+			fallback.setStatus("draft");
+			fallback.setStatusLabel(this.toStatusLabel("draft"));
+			return fallback;
+		}
+
+		Map<String, Object> row = rows.get(0);
+		OdooQuote quote = new OdooQuote();
+		quote.setId(quoteId);
+		quote.setName(OdooValueMapper.asString(row.get("name")));
+		quote.setOdooUrl(this.buildQuoteUrl(credentials, quoteId));
+		quote.setCreatedAt(OdooValueMapper.asZonedDateTime(row.get("create_date")));
+		quote.setStatus(OdooValueMapper.asString(row.get("state")));
+		quote.setStatusLabel(this.toStatusLabel(quote.getStatus()));
+		quote.setPartnerId(OdooValueMapper.asMany2OneId(row.get("partner_id")));
+		quote.setPartnerName(OdooValueMapper.asMany2OneDisplayName(row.get("partner_id")));
+		quote.setAmountTotal(this.asDouble(row.get("amount_total")));
+		quote.setAmountUntaxed(this.asDouble(row.get("amount_untaxed")));
+		quote.setCurrencyCode(OdooValueMapper.asMany2OneDisplayName(row.get("currency_id")));
+		return quote;
+	}
+
+	private List<OdooQuoteLine> readQuoteLines(OdooCredentials credentials, int uid, int quoteId) {
+		Set<String> availableFields =
+			OdooValueMapper.toFieldNames(this.odooRpcClient.fieldsGet(credentials, uid, SALE_ORDER_LINE_MODEL));
+		List<String> fields = new ArrayList<>(List.of("id"));
+		for (String candidate :
+			Arrays.asList(
+				"product_id",
+				"name",
+				"product_uom_qty",
+				"price_unit",
+				"display_type"
+			)) {
+			if (availableFields.contains(candidate)) {
+				fields.add(candidate);
+			}
+		}
+
+		List<Object> domain = List.of(List.of("order_id", "=", quoteId));
+		List<Map<String, Object>> rows =
+			this.odooRpcClient.searchRead(
+				credentials,
+				uid,
+				SALE_ORDER_LINE_MODEL,
+				domain,
+				fields,
+				500,
+				"id asc"
+			);
+
+		List<OdooQuoteLine> lines = new ArrayList<>();
+		for (Map<String, Object> row : rows) {
+			String displayType = OdooValueMapper.asString(row.get("display_type"));
+			if (StringUtils.hasText(displayType)) {
+				continue;
+			}
+
+			Integer productId = OdooValueMapper.asMany2OneId(row.get("product_id"));
+			if (productId == null) {
+				productId = OdooValueMapper.asInteger(row.get("product_id"));
+			}
+			if (productId == null) {
+				continue;
+			}
+
+			OdooQuoteLine line = new OdooQuoteLine();
+			line.setId(OdooValueMapper.asInteger(row.get("id")));
+			line.setProductId(productId);
+			String productName = OdooValueMapper.asMany2OneDisplayName(row.get("product_id"));
+			if (!StringUtils.hasText(productName)) {
+				productName = OdooValueMapper.asString(row.get("name"));
+			}
+			line.setProductName(productName);
+			line.setQuantity(this.asDouble(row.get("product_uom_qty")));
+			line.setUnitPrice(this.asDouble(row.get("price_unit")));
+			lines.add(line);
+		}
+		return lines;
 	}
 }
