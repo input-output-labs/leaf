@@ -16,6 +16,7 @@ public class OdooOpportunityData {
 	private String city;
 	private String zip;
 	private int priorityStars;
+	private Integer partnerId;
 
 	public String getName() {
 		return name;
@@ -103,6 +104,14 @@ public class OdooOpportunityData {
 
 	public void setPriorityStars(int priorityStars) {
 		this.priorityStars = priorityStars;
+	}
+
+	public Integer getPartnerId() {
+		return partnerId;
+	}
+
+	public void setPartnerId(Integer partnerId) {
+		this.partnerId = partnerId;
 	}
 
 	public void validate() {

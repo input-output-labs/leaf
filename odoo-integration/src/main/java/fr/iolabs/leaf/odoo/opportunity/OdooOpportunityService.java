@@ -244,6 +244,9 @@ public class OdooOpportunityService {
 		if (data.getExpectedRevenue() != null) {
 			values.put("expected_revenue", data.getExpectedRevenue());
 		}
+		if (data.getPartnerId() != null) {
+			values.put("partner_id", data.getPartnerId());
+		}
 		int priorityStars = clampPriorityStars(data.getPriorityStars());
 		if (priorityStars > 0) {
 			values.put("priority", odooPriorityValue(priorityStars));
