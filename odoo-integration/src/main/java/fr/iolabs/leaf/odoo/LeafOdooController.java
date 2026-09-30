@@ -48,9 +48,12 @@ public class LeafOdooController {
 
 	@CrossOrigin
 	@GetMapping("/contacts")
-	public List<OdooContact> listContacts(@RequestParam(name = "limit", required = false) Integer limit) {
+	public List<OdooContact> listContacts(
+		@RequestParam(name = "limit", required = false) Integer limit,
+		@RequestParam(name = "q", required = false) String query
+	) {
 		OdooCredentials credentials = this.odooCredentialsResolver.resolveForApi();
-		return this.odooContactService.listContacts(credentials, limit);
+		return this.odooContactService.listContacts(credentials, limit, query);
 	}
 
 	@CrossOrigin

@@ -39,11 +39,17 @@ public class OdooContactService {
 	}
 
 	public List<OdooContact> listContacts(OdooCredentials credentials, Integer limit) {
+		return this.listContacts(credentials, limit, null);
+	}
+
+	public List<OdooContact> listContacts(OdooCredentials credentials, Integer limit, String query) {
 		int safeLimit = sanitizeLimit(limit);
+		String normalizedQuery = this.normalizeQuery(query);
 		try {
 			int uid = this.odooRpcClient.authenticate(credentials);
-			List<Object> domain = List.of(List.of("active", "=", true), List.of("type", "!=", "private"));
 			ContactFieldSelection fieldSelection = this.resolveContactFieldSelection(credentials, uid);
+			List<Object> domain = this.resolveContactDomain(normalizedQuery, fieldSelection);
+			String order = normalizedQuery == null ? "id desc" : "name asc";
 			List<Map<String, Object>> rows =
 				this.odooRpcClient.searchRead(
 						credentials,
@@ -52,9 +58,11 @@ public class OdooContactService {
 						domain,
 						fieldSelection.fields(),
 						safeLimit,
-						"id desc"
+						order
 					);
-			return mapContacts(rows, fieldSelection.companyFieldName());
+			List<OdooContact> contacts = mapContacts(rows, fieldSelection.companyFieldName());
+			LOGGER.debug("Listed {} Odoo contacts (query={})", contacts.size(), normalizedQuery != null);
+			return contacts;
 		} catch (OdooIntegrationException exception) {
 			LOGGER.error("Failed to list Odoo contacts", exception);
 			throw exception;
@@ -167,6 +175,54 @@ public class OdooContactService {
 			);
 		}
 		return contacts;
+	}
+
+	private List<Object> resolveContactDomain(String query, ContactFieldSelection fieldSelection) {
+		List<Object> domain = new ArrayList<>();
+		domain.add(List.of("active", "=", true));
+		domain.add(List.of("type", "!=", "private"));
+		if (query == null) {
+			return domain;
+		}
+
+		List<List<Object>> matches = new ArrayList<>();
+		for (String field : List.of("name", "email", "phone", "mobile")) {
+			if (fieldSelection.fields().contains(field)) {
+				matches.add(List.of(field, "ilike", query));
+			}
+		}
+		if (fieldSelection.companyFieldName() != null) {
+			matches.add(List.of(fieldSelection.companyFieldName(), "ilike", query));
+		}
+		Integer contactId = this.parseContactId(query);
+		if (contactId != null) {
+			matches.add(List.of("id", "=", contactId));
+		}
+		for (int i = 0; i < matches.size() - 1; i++) {
+			domain.add("|");
+		}
+		domain.addAll(matches);
+		return domain;
+	}
+
+	private String normalizeQuery(String query) {
+		if (!StringUtils.hasText(query)) {
+			return null;
+		}
+		String trimmed = query.trim();
+		return trimmed.length() > 100 ? trimmed.substring(0, 100) : trimmed;
+	}
+
+	private Integer parseContactId(String query) {
+		if (query.chars().anyMatch(character -> !Character.isDigit(character))) {
+			return null;
+		}
+		try {
+			int contactId = Integer.parseInt(query);
+			return contactId > 0 ? contactId : null;
+		} catch (NumberFormatException exception) {
+			return null;
+		}
 	}
 
 	private int sanitizeLimit(Integer limit) {
