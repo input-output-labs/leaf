@@ -7,6 +7,7 @@ import fr.iolabs.leaf.odoo.rpc.OdooRpcClient;
 import fr.iolabs.leaf.odoo.rpc.OdooValueMapper;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -115,6 +116,55 @@ public class OdooContactService {
 		}
 	}
 
+	public OdooContact createContact(OdooCredentials credentials, OdooCreateContactRequest request) {
+		if (request == null) {
+			throw new IllegalArgumentException("Contact payload is required");
+		}
+		String name = this.trimToNull(request.getName());
+		String companyName = this.trimToNull(request.getCompanyName());
+		String email = this.trimToNull(request.getEmail());
+		String phone = this.trimToNull(request.getPhone());
+		if (name == null && companyName == null) {
+			throw new IllegalArgumentException("A name is required to create an Odoo contact");
+		}
+
+		boolean companyOnly = name == null;
+		String partnerName = companyOnly ? companyName : name;
+		try {
+			int uid = this.odooRpcClient.authenticate(credentials);
+			Set<String> availableFields =
+				OdooValueMapper.toFieldNames(this.odooRpcClient.fieldsGet(credentials, uid, PARTNER_MODEL));
+			Map<String, Object> values = new HashMap<>();
+			values.put("name", partnerName);
+			if (companyOnly && availableFields.contains("is_company")) {
+				values.put("is_company", true);
+			}
+			if (email != null && availableFields.contains("email")) {
+				values.put("email", email);
+			}
+			if (phone != null && availableFields.contains("phone")) {
+				values.put("phone", phone);
+			}
+			if (!companyOnly && companyName != null && availableFields.contains("company_name")) {
+				values.put("company_name", companyName);
+			}
+
+			int createdId = this.odooRpcClient.createRecord(credentials, uid, PARTNER_MODEL, values);
+			OdooContact created = this.getContactById(credentials, String.valueOf(createdId));
+			if (created == null) {
+				throw new OdooIntegrationException("Odoo contact creation returned an empty result");
+			}
+			LOGGER.info("Odoo contact created successfully (contactId={})", created.getId());
+			return created;
+		} catch (OdooIntegrationException exception) {
+			LOGGER.error("Failed to create Odoo contact", exception);
+			throw exception;
+		} catch (RuntimeException exception) {
+			LOGGER.error("Failed to create Odoo contact", exception);
+			throw new OdooIntegrationException("Failed to create Odoo contact: " + exception.getMessage(), exception);
+		}
+	}
+
 	private ContactFieldSelection resolveContactFieldSelection(OdooCredentials credentials, int uid) {
 		Set<String> availableFields = OdooValueMapper.toFieldNames(this.odooRpcClient.fieldsGet(credentials, uid, PARTNER_MODEL));
 
@@ -203,6 +253,13 @@ public class OdooContactService {
 		}
 		domain.addAll(matches);
 		return domain;
+	}
+
+	private String trimToNull(String value) {
+		if (!StringUtils.hasText(value)) {
+			return null;
+		}
+		return value.trim();
 	}
 
 	private String normalizeQuery(String query) {

@@ -1,7 +1,9 @@
 package fr.iolabs.leaf.odoo;
 
+import fr.iolabs.leaf.common.errors.NotFoundException;
 import fr.iolabs.leaf.odoo.contact.OdooContact;
 import fr.iolabs.leaf.odoo.contact.OdooContactService;
+import fr.iolabs.leaf.odoo.contact.OdooCreateContactRequest;
 import fr.iolabs.leaf.odoo.opportunity.OdooOpportunity;
 import fr.iolabs.leaf.odoo.opportunity.OdooOpportunityService;
 import fr.iolabs.leaf.odoo.invoice.OdooInvoice;
@@ -57,6 +59,24 @@ public class LeafOdooController {
 	}
 
 	@CrossOrigin
+	@PostMapping("/contacts")
+	public OdooContact createContact(@RequestBody OdooCreateContactRequest request) {
+		OdooCredentials credentials = this.odooCredentialsResolver.resolveForApi();
+		return this.odooContactService.createContact(credentials, request);
+	}
+
+	@CrossOrigin
+	@GetMapping("/contacts/{id}")
+	public OdooContact getContact(@PathVariable("id") String id) {
+		OdooCredentials credentials = this.odooCredentialsResolver.resolveForApi();
+		OdooContact contact = this.odooContactService.getContactById(credentials, id);
+		if (contact == null) {
+			throw new NotFoundException("Odoo contact not found: " + id);
+		}
+		return contact;
+	}
+
+	@CrossOrigin
 	@GetMapping("/opportunities")
 	public List<OdooOpportunity> listOpportunities(
 		@RequestParam(name = "limit", required = false) Integer limit,
@@ -98,6 +118,13 @@ public class LeafOdooController {
 	public OdooQuote getQuoteById(@PathVariable("id") int id) {
 		OdooCredentials credentials = this.odooCredentialsResolver.resolveForApi();
 		return this.odooQuoteService.getQuoteById(credentials, id);
+	}
+
+	@CrossOrigin
+	@GetMapping("/invoices/{id}")
+	public OdooInvoice getInvoiceById(@PathVariable("id") int id) {
+		OdooCredentials credentials = this.odooCredentialsResolver.resolveForApi();
+		return this.odooInvoiceService.getInvoiceById(credentials, id);
 	}
 
 	@CrossOrigin

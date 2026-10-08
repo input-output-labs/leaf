@@ -1,5 +1,6 @@
 package fr.iolabs.leaf.odoo.invoice;
 
+import fr.iolabs.leaf.common.errors.NotFoundException;
 import fr.iolabs.leaf.odoo.OdooCredentials;
 import fr.iolabs.leaf.odoo.OdooCredentialsResolver;
 import fr.iolabs.leaf.odoo.OdooIntegrationException;
@@ -47,6 +48,73 @@ public class OdooInvoiceQueryService {
 
 	@Autowired
 	private OdooProductQueryService odooProductQueryService;
+
+	public OdooInvoice getCustomerInvoice(OdooCredentials credentials, String reference) {
+		String value = reference == null ? "" : reference.trim();
+		if (!StringUtils.hasText(value)) {
+			throw new IllegalArgumentException("Invoice reference is required");
+		}
+		if (value.matches("\\d+")) {
+			try {
+				return this.getInvoiceById(credentials, Integer.parseInt(value));
+			} catch (NumberFormatException exception) {
+				throw new NotFoundException("Odoo invoice not found: " + value);
+			}
+		}
+		return this.getInvoiceById(credentials, this.findCustomerInvoiceIdByName(credentials, value));
+	}
+
+	public OdooInvoice getInvoiceById(OdooCredentials credentials, int invoiceId) {
+		if (invoiceId <= 0) {
+			throw new IllegalArgumentException("invoiceId must be a valid Odoo account.move id");
+		}
+
+		try {
+			int uid = this.odooRpcClient.authenticate(credentials);
+			Map<String, Object> moveFields = this.odooRpcClient.fieldsGet(credentials, uid, ACCOUNT_MOVE_MODEL);
+			Set<String> availableMoveFields = OdooValueMapper.toFieldNames(moveFields);
+			List<String> fields = this.resolveInvoiceFields(availableMoveFields, null, true);
+			if (availableMoveFields.contains("move_type") && !fields.contains("move_type")) {
+				fields.add("move_type");
+			}
+			List<Object> domain = List.of(List.of("id", "=", invoiceId));
+			List<Map<String, Object>> rows =
+				this.odooRpcClient.searchRead(credentials, uid, ACCOUNT_MOVE_MODEL, domain, fields, 1, 0, "id asc");
+			if (rows.isEmpty()) {
+				throw new NotFoundException("Odoo invoice not found: " + invoiceId);
+			}
+
+			Map<String, Object> row = rows.get(0);
+			String moveType = OdooValueMapper.asString(row.get("move_type"));
+			if (StringUtils.hasText(moveType) && !"out_invoice".equals(moveType) && !"out_refund".equals(moveType)) {
+				throw new OdooIntegrationException("Odoo document " + invoiceId + " is not a customer invoice");
+			}
+
+			OdooInvoice invoice = this.mapInvoice(credentials, row, null, true);
+			Set<String> availableLineFields =
+				OdooValueMapper.toFieldNames(this.odooRpcClient.fieldsGet(credentials, uid, ACCOUNT_MOVE_LINE_MODEL));
+			List<String> lineFields = new ArrayList<>(List.of("id", "name", "move_id"));
+			for (String candidate : List.of("price_unit", "price_subtotal", "display_type", "product_id", "quantity")) {
+				if (availableLineFields.contains(candidate)) {
+					lineFields.add(candidate);
+				}
+			}
+			List<Map<String, Object>> lineRows =
+				this.fetchInvoiceLineRows(credentials, uid, List.of(invoiceId), lineFields);
+			Set<Integer> productIds = this.collectProductIds(lineRows);
+			Map<Integer, OdooProduct> productsById = this.odooProductQueryService.findByIds(credentials, uid, productIds);
+			invoice.setLines(this.mapInvoiceContentLines(lineRows, productsById));
+			return invoice;
+		} catch (NotFoundException exception) {
+			throw exception;
+		} catch (OdooIntegrationException exception) {
+			LOGGER.error("Failed to fetch Odoo invoice {}", invoiceId, exception);
+			throw exception;
+		} catch (RuntimeException exception) {
+			LOGGER.error("Failed to fetch Odoo invoice {}", invoiceId, exception);
+			throw new OdooIntegrationException("Failed to fetch Odoo invoice: " + exception.getMessage(), exception);
+		}
+	}
 
 	public List<OdooInvoice> listInvoicesPaidBetween(ZonedDateTime fromInclusive, ZonedDateTime toInclusive) {
 		return this.listInvoicesPaidBetween(
@@ -269,6 +337,41 @@ public class OdooInvoiceQueryService {
 		}
 	}
 
+	private int findCustomerInvoiceIdByName(OdooCredentials credentials, String name) {
+		try {
+			int uid = this.odooRpcClient.authenticate(credentials);
+			List<Object> domain = List.of(
+				List.of("name", "=", name),
+				List.of("move_type", "in", List.of("out_invoice", "out_refund"))
+			);
+			List<Map<String, Object>> rows =
+				this.odooRpcClient.searchRead(
+					credentials,
+					uid,
+					ACCOUNT_MOVE_MODEL,
+					domain,
+					List.of("id", "name"),
+					1,
+					0,
+					"id desc"
+				);
+			if (rows.isEmpty()) {
+				throw new NotFoundException("Odoo invoice not found: " + name);
+			}
+			Integer id = OdooValueMapper.asInteger(rows.get(0).get("id"));
+			if (id == null || id <= 0) {
+				throw new NotFoundException("Odoo invoice not found: " + name);
+			}
+			return id;
+		} catch (NotFoundException exception) {
+			throw exception;
+		} catch (OdooIntegrationException exception) {
+			throw exception;
+		} catch (RuntimeException exception) {
+			throw new OdooIntegrationException("Failed to find Odoo invoice " + name + ": " + exception.getMessage(), exception);
+		}
+	}
+
 	private void validatePeriod(ZonedDateTime fromInclusive, ZonedDateTime toInclusive) {
 		Objects.requireNonNull(fromInclusive, "fromInclusive is required");
 		Objects.requireNonNull(toInclusive, "toInclusive is required");
@@ -438,6 +541,41 @@ public class OdooInvoiceQueryService {
 			return 0d;
 		}
 		return product.getStandardPrice();
+	}
+
+	private List<OdooInvoiceLine> mapInvoiceContentLines(
+		List<Map<String, Object>> rows,
+		Map<Integer, OdooProduct> productsById
+	) {
+		List<OdooInvoiceLine> lines = new ArrayList<>();
+		for (Map<String, Object> row : rows) {
+			if (!this.isProductLine(row)) {
+				continue;
+			}
+
+			Integer lineId = OdooValueMapper.asInteger(row.get("id"));
+			if (lineId == null) {
+				continue;
+			}
+
+			Integer productId = OdooValueMapper.asMany2OneId(row.get("product_id"));
+			OdooProduct product = productId != null ? productsById.get(productId) : null;
+			String label = OdooValueMapper.asString(row.get("name"));
+			String productName = product != null && StringUtils.hasText(product.getName()) ? product.getName() : label;
+			Double quantity = this.asDouble(row.get("quantity"));
+
+			OdooInvoiceLine line = new OdooInvoiceLine();
+			line.setId(lineId);
+			line.setProductId(productId);
+			line.setLabel(label);
+			line.setProductName(productName);
+			line.setProductDefaultCode(product != null ? product.getDefaultCode() : null);
+			line.setQuantity(quantity != null ? quantity : 0d);
+			line.setUnitPrice(this.asDouble(row.get("price_unit")));
+			line.setAmountUntaxed(this.asDouble(row.get("price_subtotal")));
+			lines.add(line);
+		}
+		return lines;
 	}
 
 	private boolean isProductLine(Map<String, Object> row) {

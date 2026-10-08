@@ -28,6 +28,7 @@ public class OdooOpportunityService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OdooOpportunityService.class);
 	private static final String CRM_LEAD_MODEL = "crm.lead";
+	private static final String CRM_STAGE_MODEL = "crm.stage";
 	private static final String CRM_TAG_MODEL = "crm.tag";
 	private static final String PARTNER_MODEL = "res.partner";
 	private static final int PAGE_SIZE = 200;
@@ -188,6 +189,88 @@ public class OdooOpportunityService {
 		}
 	}
 
+	/**
+	 * Moves an opportunity to the CRM stage with this exact name.
+	 * Does nothing when the opportunity is already on that stage.
+	 *
+	 * @return the stage id now set on the opportunity
+	 */
+	public Integer updateOpportunityStage(OdooCredentials credentials, int opportunityId, String stageName) {
+		if (!StringUtils.hasText(stageName)) {
+			throw new IllegalArgumentException("stageName is required");
+		}
+		String targetName = stageName.trim();
+		try {
+			int uid = this.odooRpcClient.authenticate(credentials);
+			Set<String> leadFields =
+				OdooValueMapper.toFieldNames(this.odooRpcClient.fieldsGet(credentials, uid, CRM_LEAD_MODEL));
+			List<String> readFields = new ArrayList<>(List.of("id", "stage_id"));
+			if (leadFields.contains("team_id")) {
+				readFields.add("team_id");
+			}
+			List<Map<String, Object>> leads =
+				this.odooRpcClient.read(credentials, uid, CRM_LEAD_MODEL, List.of(opportunityId), readFields);
+			if (leads.isEmpty()) {
+				throw new OdooIntegrationException("Odoo opportunity " + opportunityId + " was not found");
+			}
+			Map<String, Object> lead = leads.get(0);
+			String currentStageName = OdooValueMapper.asMany2OneDisplayName(lead.get("stage_id"));
+			Integer currentStageId = OdooValueMapper.asMany2OneId(lead.get("stage_id"));
+			if (targetName.equals(currentStageName)) {
+				return currentStageId;
+			}
+
+			Integer teamId = OdooValueMapper.asMany2OneId(lead.get("team_id"));
+			List<String> stageFields = new ArrayList<>(List.of("id", "name"));
+			Set<String> availableStageFields =
+				OdooValueMapper.toFieldNames(this.odooRpcClient.fieldsGet(credentials, uid, CRM_STAGE_MODEL));
+			if (availableStageFields.contains("team_id")) {
+				stageFields.add("team_id");
+			}
+			List<Map<String, Object>> stages =
+				this.odooRpcClient.searchRead(
+						credentials,
+						uid,
+						CRM_STAGE_MODEL,
+						List.of(List.of("name", "=", targetName)),
+						stageFields,
+						20,
+						"sequence asc, id asc"
+					);
+			Integer targetStageId = this.pickStageId(stages, teamId);
+			if (targetStageId == null) {
+				throw new OdooIntegrationException("Odoo CRM stage not found: " + targetName);
+			}
+			if (targetStageId.equals(currentStageId)) {
+				return currentStageId;
+			}
+
+			this.odooRpcClient.writeRecord(
+					credentials,
+					uid,
+					CRM_LEAD_MODEL,
+					opportunityId,
+					Map.of("stage_id", targetStageId)
+				);
+			LOGGER.info(
+				"Odoo opportunity {} moved to stage {} (id={})",
+				opportunityId,
+				targetName,
+				targetStageId
+			);
+			return targetStageId;
+		} catch (OdooIntegrationException exception) {
+			LOGGER.error("Failed to move Odoo opportunity {} to stage {}", opportunityId, targetName, exception);
+			throw exception;
+		} catch (RuntimeException exception) {
+			LOGGER.error("Failed to move Odoo opportunity {} to stage {}", opportunityId, targetName, exception);
+			throw new OdooIntegrationException(
+				"Failed to move Odoo opportunity: " + exception.getMessage(),
+				exception
+			);
+		}
+	}
+
 	public OdooOpportunityCreateResult createOpportunity(OdooOpportunityData data) {
 		return this.createOpportunity(this.odooCredentialsResolver.resolveFromApplicationConfig(), data);
 	}
@@ -260,6 +343,28 @@ public class OdooOpportunityService {
 
 	private String odooPriorityValue(int priorityStars) {
 		return String.valueOf(clampPriorityStars(priorityStars));
+	}
+
+	private Integer pickStageId(List<Map<String, Object>> stages, Integer teamId) {
+		Integer sharedStageId = null;
+		Integer firstStageId = null;
+		for (Map<String, Object> stage : stages) {
+			Integer stageId = OdooValueMapper.asInteger(stage.get("id"));
+			if (stageId == null) {
+				continue;
+			}
+			if (firstStageId == null) {
+				firstStageId = stageId;
+			}
+			Integer stageTeamId = OdooValueMapper.asMany2OneId(stage.get("team_id"));
+			if (teamId != null && teamId.equals(stageTeamId)) {
+				return stageId;
+			}
+			if (stageTeamId == null && sharedStageId == null) {
+				sharedStageId = stageId;
+			}
+		}
+		return sharedStageId != null ? sharedStageId : firstStageId;
 	}
 
 	private List<Object> resolveOpportunityDomain() {

@@ -34,6 +34,18 @@ public class OdooInvoiceService {
 	@Autowired
 	private OdooInvoiceQueryService odooInvoiceQueryService;
 
+	public OdooInvoice getInvoiceById(int invoiceId) {
+		return this.getInvoiceById(this.odooCredentialsResolver.resolveForApi(), invoiceId);
+	}
+
+	public OdooInvoice getInvoiceById(OdooCredentials credentials, int invoiceId) {
+		return this.odooInvoiceQueryService.getInvoiceById(credentials, invoiceId);
+	}
+
+	public OdooInvoice getCustomerInvoice(OdooCredentials credentials, String reference) {
+		return this.odooInvoiceQueryService.getCustomerInvoice(credentials, reference);
+	}
+
 	public List<OdooInvoice> listInvoicesPaidBetween(ZonedDateTime fromInclusive, ZonedDateTime toInclusive) {
 		return this.odooInvoiceQueryService.listInvoicesPaidBetween(fromInclusive, toInclusive);
 	}

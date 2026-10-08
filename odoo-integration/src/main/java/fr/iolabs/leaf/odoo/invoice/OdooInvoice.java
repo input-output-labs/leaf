@@ -2,6 +2,7 @@ package fr.iolabs.leaf.odoo.invoice;
 
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 public class OdooInvoice {
 
@@ -22,6 +23,7 @@ public class OdooInvoice {
 	private Double amountUntaxed;
 	private Double amountResidual;
 	private String currencyCode;
+	private List<OdooInvoiceLine> lines;
 
 	public Integer getId() {
 		return id;
@@ -157,5 +159,13 @@ public class OdooInvoice {
 
 	public void setCurrencyCode(String currencyCode) {
 		this.currencyCode = currencyCode;
+	}
+
+	public List<OdooInvoiceLine> getLines() {
+		return lines;
+	}
+
+	public void setLines(List<OdooInvoiceLine> lines) {
+		this.lines = lines;
 	}
 }

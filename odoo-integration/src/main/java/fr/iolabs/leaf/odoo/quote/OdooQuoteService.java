@@ -4,6 +4,8 @@ import fr.iolabs.leaf.common.errors.NotFoundException;
 import fr.iolabs.leaf.odoo.OdooCredentials;
 import fr.iolabs.leaf.odoo.OdooCredentialsResolver;
 import fr.iolabs.leaf.odoo.OdooIntegrationException;
+import fr.iolabs.leaf.odoo.invoice.OdooInvoice;
+import fr.iolabs.leaf.odoo.invoice.OdooInvoiceQueryService;
 import fr.iolabs.leaf.odoo.rpc.OdooRpcClient;
 import fr.iolabs.leaf.odoo.rpc.OdooValueMapper;
 import java.time.ZoneOffset;
@@ -28,6 +30,7 @@ public class OdooQuoteService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(OdooQuoteService.class);
 	private static final String SALE_ORDER_MODEL = "sale.order";
 	private static final String SALE_ORDER_LINE_MODEL = "sale.order.line";
+	private static final String SALE_INVOICE_WIZARD_MODEL = "sale.advance.payment.inv";
 	private static final int PAGE_SIZE = 200;
 	private static final int MAX_TOTAL_RECORDS = 10_000;
 	private static final DateTimeFormatter ODOO_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -45,6 +48,9 @@ public class OdooQuoteService {
 
 	@Autowired
 	private OdooCredentialsResolver odooCredentialsResolver;
+
+	@Autowired
+	private OdooInvoiceQueryService odooInvoiceQueryService;
 
 	public List<OdooQuote> listQuotesSignedBetween(ZonedDateTime fromInclusive, ZonedDateTime toInclusive) {
 		return this.listQuotesSignedBetween(
@@ -287,12 +293,134 @@ public class OdooQuoteService {
 		return value.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime().format(ODOO_DATE_TIME);
 	}
 
+	public OdooInvoice createInvoiceFromQuote(OdooCredentials credentials, int quoteId) {
+		if (quoteId <= 0) {
+			throw new IllegalArgumentException("quoteId must be a valid Odoo sale.order id");
+		}
+
+		try {
+			int uid = this.odooRpcClient.authenticate(credentials);
+			Map<String, Object> order = this.readSaleOrderForInvoicing(credentials, uid, quoteId);
+			String state = OdooValueMapper.asString(order.get("state"));
+			if ("cancel".equals(state)) {
+				throw new OdooIntegrationException("The Odoo quote is cancelled and cannot be invoiced");
+			}
+
+			List<Integer> existingInvoiceIds = OdooValueMapper.asIntegerList(order.get("invoice_ids"));
+			if (!existingInvoiceIds.isEmpty()) {
+				return this.odooInvoiceQueryService.getInvoiceById(credentials, this.latestId(existingInvoiceIds));
+			}
+
+			if (state == null || "draft".equals(state) || "sent".equals(state)) {
+				this.odooRpcClient.executeKw(
+					credentials,
+					uid,
+					SALE_ORDER_MODEL,
+					"action_confirm",
+					List.of(List.of(quoteId)),
+					Map.of()
+				);
+			}
+
+			this.createInvoiceThroughWizard(credentials, uid, quoteId);
+
+			Map<String, Object> refreshed = this.readSaleOrderForInvoicing(credentials, uid, quoteId);
+			List<Integer> createdInvoiceIds = OdooValueMapper.asIntegerList(refreshed.get("invoice_ids"));
+			if (createdInvoiceIds.isEmpty()) {
+				throw new OdooIntegrationException("Odoo did not create an invoice for this quote");
+			}
+			return this.odooInvoiceQueryService.getInvoiceById(credentials, this.latestId(createdInvoiceIds));
+		} catch (OdooIntegrationException exception) {
+			LOGGER.error("Failed to create an Odoo invoice from quote {}", quoteId, exception);
+			throw exception;
+		} catch (RuntimeException exception) {
+			LOGGER.error("Failed to create an Odoo invoice from quote {}", quoteId, exception);
+			throw new OdooIntegrationException(
+				"Failed to create an Odoo invoice from quote: " + exception.getMessage(),
+				exception
+			);
+		}
+	}
+
+	private void createInvoiceThroughWizard(OdooCredentials credentials, int uid, int quoteId) {
+		Map<String, Object> context = new HashMap<>();
+		context.put("active_model", SALE_ORDER_MODEL);
+		context.put("active_id", quoteId);
+		context.put("active_ids", List.of(quoteId));
+
+		Map<String, Object> values = new HashMap<>();
+		values.put("advance_payment_method", "delivered");
+		values.put("sale_order_ids", List.of(List.of(6, 0, List.of(quoteId))));
+
+		Object created = this.odooRpcClient.executeKw(
+			credentials,
+			uid,
+			SALE_INVOICE_WIZARD_MODEL,
+			"create",
+			List.of(values),
+			Map.of("context", context)
+		);
+		Integer wizardId = OdooValueMapper.extractCreatedId(created);
+		if (wizardId == null || wizardId <= 0) {
+			throw new OdooIntegrationException("Odoo did not open the invoice wizard for this quote");
+		}
+
+		this.odooRpcClient.executeKw(
+			credentials,
+			uid,
+			SALE_INVOICE_WIZARD_MODEL,
+			"create_invoices",
+			List.of(List.of(wizardId)),
+			Map.of("context", context)
+		);
+	}
+
+	private Map<String, Object> readSaleOrderForInvoicing(OdooCredentials credentials, int uid, int quoteId) {
+		List<Map<String, Object>> rows =
+			this.odooRpcClient.read(
+				credentials,
+				uid,
+				SALE_ORDER_MODEL,
+				List.of(quoteId),
+				List.of("id", "state", "invoice_ids")
+			);
+		if (rows.isEmpty()) {
+			throw new NotFoundException("Odoo quote not found: " + quoteId);
+		}
+		return rows.get(0);
+	}
+
+	private int latestId(List<Integer> ids) {
+		int latest = ids.get(0);
+		for (Integer id : ids) {
+			if (id != null && id > latest) {
+				latest = id;
+			}
+		}
+		return latest;
+	}
+
 	public OdooQuote createQuote(OdooCreateQuoteRequest request) {
 		return this.createQuote(this.odooCredentialsResolver.resolveForApi(), request);
 	}
 
 	public OdooQuote getQuoteById(int quoteId) {
 		return this.getQuoteById(this.odooCredentialsResolver.resolveForApi(), quoteId);
+	}
+
+	public OdooQuote getQuoteByReference(OdooCredentials credentials, String reference) {
+		String value = reference == null ? "" : reference.trim();
+		if (!StringUtils.hasText(value)) {
+			throw new IllegalArgumentException("Quote reference is required");
+		}
+		if (value.matches("\\d+")) {
+			try {
+				return this.getQuoteById(credentials, Integer.parseInt(value));
+			} catch (NumberFormatException exception) {
+				throw new NotFoundException("Odoo quote not found: " + value);
+			}
+		}
+		return this.getQuoteById(credentials, this.findQuoteIdByName(credentials, value));
 	}
 
 	public OdooQuote getQuoteById(OdooCredentials credentials, int quoteId) {
@@ -318,6 +446,29 @@ public class OdooQuoteService {
 		} catch (RuntimeException exception) {
 			LOGGER.error("Failed to fetch Odoo quote {}", quoteId, exception);
 			throw new OdooIntegrationException("Failed to fetch Odoo quote: " + exception.getMessage(), exception);
+		}
+	}
+
+	private int findQuoteIdByName(OdooCredentials credentials, String name) {
+		try {
+			int uid = this.odooRpcClient.authenticate(credentials);
+			List<Object> domain = List.of(List.of("name", "=", name));
+			List<Map<String, Object>> rows =
+				this.odooRpcClient.searchRead(credentials, uid, SALE_ORDER_MODEL, domain, List.of("id", "name"), 1, 0, "id desc");
+			if (rows.isEmpty()) {
+				throw new NotFoundException("Odoo quote not found: " + name);
+			}
+			Integer id = OdooValueMapper.asInteger(rows.get(0).get("id"));
+			if (id == null || id <= 0) {
+				throw new NotFoundException("Odoo quote not found: " + name);
+			}
+			return id;
+		} catch (NotFoundException exception) {
+			throw exception;
+		} catch (OdooIntegrationException exception) {
+			throw exception;
+		} catch (RuntimeException exception) {
+			throw new OdooIntegrationException("Failed to find Odoo quote " + name + ": " + exception.getMessage(), exception);
 		}
 	}
 
