@@ -109,6 +109,12 @@ public class LeafAccountActionController {
 	}
 
 	@CrossOrigin
+	@PostMapping("/me/legal-notice")
+	public LeafAccount acceptLegalNotice() {
+		return this.privacyHelper.protectAccount(this.accountService.acceptLegalNotice());
+	}
+
+	@CrossOrigin
 	@PostMapping("/me/verification")
 	public LeafAccount accountVerification(@RequestBody AccountVerification accountVerification) {
 		return this.privacyHelper.protectAccount(this.accountService.accountVerification(accountVerification));

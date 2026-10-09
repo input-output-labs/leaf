@@ -9,6 +9,7 @@ public class RegistrationAction {
 	private String avatarUrl;
 	@JsonProperty("isTemporary")
 	private boolean isTemporary;
+	private Boolean legalNoticeApproved;
 	
 	public String getEmail() {
 		return email;
@@ -41,5 +42,13 @@ public class RegistrationAction {
 
 	public void setTemporary(boolean temporary) {
 		isTemporary = temporary;
+	}
+
+	public Boolean getLegalNoticeApproved() {
+		return legalNoticeApproved;
+	}
+
+	public void setLegalNoticeApproved(Boolean legalNoticeApproved) {
+		this.legalNoticeApproved = legalNoticeApproved;
 	}
 }

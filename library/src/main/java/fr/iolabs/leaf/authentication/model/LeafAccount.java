@@ -8,6 +8,7 @@ import fr.iolabs.leaf.authentication.model.profile.LeafAccountProfile;
 import fr.iolabs.leaf.common.ILeafModular;
 import fr.iolabs.leaf.common.utils.StringHasher;
 
+import java.time.ZonedDateTime;
 import java.util.Set;
 import java.util.List;
 import java.util.Locale;
@@ -46,6 +47,8 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 
 	protected boolean admin;
 
+	protected ZonedDateTime legalNoticeApprovedAt;
+
 	public LeafAccount() {
 		this.admin = false;
 		this.authentication = new LeafAccountAuthentication();
@@ -76,6 +79,7 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 		this.accountVerification = from.accountVerification;
 		this.isTemporary = from.isTemporary;
 		this.isPartial = from.isPartial;
+		this.legalNoticeApprovedAt = from.legalNoticeApprovedAt;
 	}
 
 	public LeafAccountAuthentication getAuthentication() {
@@ -252,5 +256,11 @@ public class LeafAccount extends LeafUser implements ILeafModular {
 		this.isPartial = isPartial;
 	}
 
+	public ZonedDateTime getLegalNoticeApprovedAt() {
+		return legalNoticeApprovedAt;
+	}
 
+	public void setLegalNoticeApprovedAt(ZonedDateTime legalNoticeApprovedAt) {
+		this.legalNoticeApprovedAt = legalNoticeApprovedAt;
+	}
 }

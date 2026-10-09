@@ -1,6 +1,7 @@
 package fr.iolabs.leaf.authentication;
 
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -177,6 +178,9 @@ public class LeafAccountService {
 		}
 		if (Strings.isBlank(account.getProfile().getUsername())) {
 			account.getProfile().setUsername(action.getEmail());
+		}
+		if (Boolean.TRUE.equals(action.getLegalNoticeApproved())) {
+			account.setLegalNoticeApprovedAt(ZonedDateTime.now());
 		}
 	}
 
@@ -369,6 +373,13 @@ public class LeafAccountService {
 		return this.accountRepository.save(me);
 	}
 
+	public LeafAccount acceptLegalNotice() {
+		LeafAccount me = this.coreContext.getAccount();
+		me.setLegalNoticeApprovedAt(ZonedDateTime.now());
+		me.getMetadata().updateLastModification();
+		return this.accountRepository.save(me);
+	}
+
 	public LeafAccount updateProfile(LeafAccountProfile profile) {
 		LeafAccount me = this.coreContext.getAccount();
 		me.getProfile().updateWith(profile);
@@ -404,6 +415,9 @@ public class LeafAccountService {
 		}
 		if (account.getFlags() != null) {
 			existingAccount.setFlags(account.getFlags());
+		}
+		if (account.getLegalNoticeApprovedAt() != null) {
+			existingAccount.setLegalNoticeApprovedAt(account.getLegalNoticeApprovedAt());
 		}
 		existingAccount.setIsTemporary(account.isTemporary());
 		existingAccount.setIsPartial(account.isPartial());
