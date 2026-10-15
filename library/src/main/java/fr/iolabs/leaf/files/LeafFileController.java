@@ -53,4 +53,11 @@ public class LeafFileController {
 		return ResponseEntity.ok().header("Content-Type", file.getContentType()).body(file.getFile());
 	}
 
+	@PermitAll
+	@CrossOrigin
+	@GetMapping("/{id}/{filename:.+}")
+	public ResponseEntity<byte[]> findFile(@PathVariable String id, @PathVariable String filename) {
+		return this.findFile(id);
+	}
+
 }
