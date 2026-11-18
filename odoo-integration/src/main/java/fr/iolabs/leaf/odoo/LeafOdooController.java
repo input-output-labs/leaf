@@ -10,6 +10,9 @@ import fr.iolabs.leaf.odoo.invoice.OdooInvoice;
 import fr.iolabs.leaf.odoo.invoice.OdooInvoiceService;
 import fr.iolabs.leaf.odoo.product.OdooProduct;
 import fr.iolabs.leaf.odoo.product.OdooProductQueryService;
+import fr.iolabs.leaf.odoo.product.OdooProductStock;
+import fr.iolabs.leaf.odoo.product.OdooProductStockRequest;
+import fr.iolabs.leaf.odoo.product.OdooStockQueryService;
 import fr.iolabs.leaf.odoo.quote.OdooCreateQuoteRequest;
 import fr.iolabs.leaf.odoo.quote.OdooQuote;
 import fr.iolabs.leaf.odoo.quote.OdooQuoteService;
@@ -47,6 +50,9 @@ public class LeafOdooController {
 
 	@Autowired
 	private OdooProductQueryService odooProductQueryService;
+
+	@Autowired
+	private OdooStockQueryService odooStockQueryService;
 
 	@CrossOrigin
 	@GetMapping("/contacts")
@@ -94,6 +100,13 @@ public class LeafOdooController {
 	public List<OdooProduct> listProducts(@RequestParam(name = "limit", required = false) Integer limit) {
 		OdooCredentials credentials = this.odooCredentialsResolver.resolveForApi();
 		return this.odooProductQueryService.listProducts(credentials, limit);
+	}
+
+	@CrossOrigin
+	@PostMapping("/products/stock")
+	public List<OdooProductStock> readProductStock(@RequestBody OdooProductStockRequest request) {
+		List<Integer> productIds = request != null ? request.getProductIds() : List.of();
+		return this.odooStockQueryService.findByProductIds(productIds);
 	}
 
 	@CrossOrigin

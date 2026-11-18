@@ -67,7 +67,8 @@ public class LeafOrganizationController {
 	}
 
 	public LeafOrganization protectOrganization(LeafOrganization organization) {
-		return this.protectOrganizations(List.of(organization)).get(0);
+		List<LeafOrganization> protectedOrganizations = this.protectOrganizations(List.of(organization));
+		return protectedOrganizations.size() > 0 ? protectedOrganizations.get(0) : null;
 	}
 
 	public List<LeafOrganization> protectOrganizations(Iterable<LeafOrganization> organizations) {
@@ -78,23 +79,31 @@ public class LeafOrganizationController {
 			Map<String, LeafEligibility> eligibilities = new HashMap<>();
 			this.organizationEligibilitiesService.getEligibilities(this.coreContext.getAccount(), organization,
 					eligibilities, List.of("seeOrganization", "seeMembers", "seePolicies"));
-			if (!eligibilities.get("seeOrganization").eligible) {
+			LeafEligibility seeOrganization = eligibilities.get("seeOrganization");
+			LeafEligibility seeMembers = eligibilities.get("seeMembers");
+			LeafEligibility seePolicies = eligibilities.get("seePolicies");
+			boolean isAdmin = coreContext.getAccount() != null && coreContext.getAccount().isAdmin();
+			boolean canSeeOrganization = isAdmin || seeOrganization != null && seeOrganization.eligible;
+			boolean canSeeMembers = isAdmin || seeMembers != null && seeMembers.eligible;
+			boolean canSeePolicies = isAdmin || seePolicies != null && seePolicies.eligible;
+			
+			if (!canSeeOrganization) {
 				organization.setMetadata(null);
 				organization.setModules(null);
 			}
-			if (!eligibilities.get("seeMembers").eligible) {
+			if (canSeeOrganization) {
+				organizationsReturned.add(organization);
+			}
+			if (!canSeeMembers) {
 				organization.setMembers(null);
 				organization.setInvitations(null);
 			}
-			if (!eligibilities.get("seePolicies").eligible) {
+			if (!canSeePolicies) {
 				organization.setPolicies(null);
 			}
 			
-			if (coreContext.getAccount() == null || !coreContext.getAccount().isAdmin()) {
+			if (!isAdmin) {
 				organization.setGenericData(null);
-			}
-			if (eligibilities.get("seeOrganization").eligible) {
-				organizationsReturned.add(organization);
 			}
 		}
 		return organizationsReturned;
