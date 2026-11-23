@@ -34,15 +34,38 @@ public class LeafOrganizationEligibilitiesComposer implements ApplicationListene
 		LeafAccount account = event.getAccount();
 		LeafOrganization organization = event.getOrganization();
 		
-		if (account == null || organization == null) {
-			for(String policyName: organizationConfig.getPolicies().keySet()) {
-				if (event.eligibilities().get(policyName) == null) {
-					event.eligibilities().put(policyName, LeafEligibility.notEligible(List.of("Default to not eligible")));
-				}
-			}
+		if (account != null && organization != null) {
+			this.getEligibilities(account, organization, event.eligibilities(), event.eligibilityKey());
+		}
+		this.fillMissingEligibilities(event.eligibilities(), event.eligibilityKey());
+		this.grantAdminEligibilities(account, event.eligibilities(), event.eligibilityKey());
+	}
+
+	private void grantAdminEligibilities(
+		LeafAccount account,
+		Map<String, LeafEligibility> eligibilities,
+		List<String> eligibilityKeys
+	) {
+		if (account == null || !account.isAdmin()) {
 			return;
 		}
-		this.getEligibilities(account, organization, event.eligibilities(), event.eligibilityKey());
+		for (String policyName : this.organizationConfig.getPolicies().keySet()) {
+			if (eligibilityKeys != null && !eligibilityKeys.contains(policyName)) {
+				continue;
+			}
+			eligibilities.put(policyName, LeafEligibility.eligible());
+		}
+	}
+
+	private void fillMissingEligibilities(Map<String, LeafEligibility> eligibilities, List<String> eligibilityKeys) {
+		for (String policyName : organizationConfig.getPolicies().keySet()) {
+			if (eligibilityKeys != null && !eligibilityKeys.contains(policyName)) {
+				continue;
+			}
+			if (eligibilities.get(policyName) == null) {
+				eligibilities.put(policyName, LeafEligibility.notEligible(List.of("Default to not eligible")));
+			}
+		}
 	}
 
 	public void getEligibilities(LeafAccount account, LeafOrganization organization,

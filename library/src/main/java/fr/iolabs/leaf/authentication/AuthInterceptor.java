@@ -131,6 +131,9 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 	private boolean isOrganizationMember() {
 		LeafAccount account = this.coreContext.getAccount();
 		LeafOrganization organization = this.coreContext.getOrganization();
+		if (account != null && account.isAdmin() && organization != null) {
+			return true;
+		}
 		if (account != null && organization != null) {
 			for (OrganizationMembership member : organization.getMembers()) {
 				if (member.getAccountId().equals(account.getId())) {

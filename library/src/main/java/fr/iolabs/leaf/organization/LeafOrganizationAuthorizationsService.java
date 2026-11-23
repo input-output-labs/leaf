@@ -14,6 +14,9 @@ public class LeafOrganizationAuthorizationsService {
 	private LeafContext coreContext;
 
 	public void checkIsOrganizationMember(LeafOrganization organization) {
+		if (this.coreContext.getAccount() != null && this.coreContext.getAccount().isAdmin()) {
+			return;
+		}
 		if (!OrganizationHelper.isMemberOfOrganization(organization, this.coreContext.getAccount().getId())) {
 			throw new UnauthorizedException();
 		}
